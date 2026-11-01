@@ -1,0 +1,65 @@
+# Functions L
+
+| Go | PostgreSQL | Returns | Versions | Notes |
+|---|---|---|---|---|
+| `num.Lastval` | `lastval()` | `int8` | all | volatile |
+| `num.LcmInt4Int4` | `lcm(int4,int4)` | `int4` | all | immutable |
+| `num.LcmInt8Int8` | `lcm(int8,int8)` | `int8` | all | immutable |
+| `num.LcmNumericNumeric` | `lcm(numeric,numeric)` | `numeric` | all | immutable |
+| `text.Left` | `left(text,int4)` | `text` | all | immutable |
+| `binary.LengthBit` | `length(bit)` | `int4` | all | immutable |
+| `text.LengthBpchar` | `length(bpchar)` | `int4` | all | immutable |
+| `binary.LengthBytea` | `length(bytea)` | `int4` | all | immutable |
+| `sys.Length` | `length(bytea,name)` | `int4` | all | stable |
+| `geo.LengthLseg` | `length(lseg)` | `float8` | all | immutable |
+| `geo.LengthPath` | `length(path)` | `float8` | all | immutable |
+| `text.LengthText` | `length(text)` | `int4` | all | immutable |
+| `fts.Length` | `length(tsvector)` | `int4` | all | immutable |
+| `num.Lgamma` | `lgamma(float8)` | `float8` | 18+ | immutable |
+| `binary.Like` | `like(bytea,bytea)` | `bool` | all | immutable |
+| `sys.Like` | `like(name,text)` | `bool` | all | immutable |
+| `text.Like` | `like(text,text)` | `bool` | all | immutable |
+| `binary.LikeEscape` | `like_escape(bytea,bytea)` | `bytea` | all | immutable |
+| `text.LikeEscape` | `like_escape(text,text)` | `text` | all | immutable |
+| `geo.Line` | `line(point,point)` | `line` | all | immutable |
+| `geo.LineSend` | `line_send(line)` | `bytea` | all | immutable |
+| `num.LnFloat8` | `ln(float8)` | `float8` | all | immutable |
+| `num.LnNumeric` | `ln(numeric)` | `numeric` | all | immutable |
+| `num.LoClose` | `lo_close(int4)` | `int4` | all | volatile |
+| `sys.LoCreat` | `lo_creat(int4)` | `oid` | all | volatile |
+| `sys.LoCreate` | `lo_create(oid)` | `oid` | all | volatile |
+| `sys.LoExport` | `lo_export(oid,text)` | `int4` | all | volatile |
+| `sys.LoFromBytea` | `lo_from_bytea(oid,bytea)` | `oid` | all | volatile |
+| `sys.LoGetOid` | `lo_get(oid)` | `bytea` | all | volatile |
+| `sys.LoGetOidInt8Int4` | `lo_get(oid,int8,int4)` | `bytea` | all | volatile |
+| `sys.LoImportText` | `lo_import(text)` | `oid` | all | volatile |
+| `sys.LoImportTextOid` | `lo_import(text,oid)` | `oid` | all | volatile |
+| `num.LoLseek` | `lo_lseek(int4,int4,int4)` | `int4` | all | volatile |
+| `num.LoLseek64` | `lo_lseek64(int4,int8,int4)` | `int8` | all | volatile |
+| `sys.LoOpen` | `lo_open(oid,int4)` | `int4` | all | volatile |
+| `sys.LoPut` | `lo_put(oid,int8,bytea)` | `void` | all | volatile |
+| `num.LoTell` | `lo_tell(int4)` | `int4` | all | volatile |
+| `num.LoTell64` | `lo_tell64(int4)` | `int8` | all | volatile |
+| `num.LoTruncate` | `lo_truncate(int4,int4)` | `int4` | all | volatile |
+| `num.LoTruncate64` | `lo_truncate64(int4,int8)` | `int4` | all | volatile |
+| `sys.LoUnlink` | `lo_unlink(oid)` | `int4` | all | volatile |
+| `num.LogFloat8` | `log(float8)` | `float8` | all | immutable |
+| `num.LogNumeric` | `log(numeric)` | `numeric` | all | immutable |
+| `num.LogNumericNumeric` | `log(numeric,numeric)` | `numeric` | all | immutable |
+| `num.Log10Float8` | `log10(float8)` | `float8` | all | immutable |
+| `num.Log10Numeric` | `log10(numeric)` | `numeric` | all | immutable |
+| `binary.Loread` | `loread(int4,int4)` | `bytea` | all | volatile |
+| `ranges.LowerAnymultirange` | `lower(anymultirange)` | `anyelement` | all | immutable, may return NULL |
+| `ranges.LowerAnyrange` | `lower(anyrange)` | `anyelement` | all | immutable, may return NULL |
+| `text.Lower` | `lower(text)` | `text` | all | immutable |
+| `ranges.LowerIncAnymultirange` | `lower_inc(anymultirange)` | `bool` | all | immutable |
+| `ranges.LowerIncAnyrange` | `lower_inc(anyrange)` | `bool` | all | immutable |
+| `ranges.LowerInfAnymultirange` | `lower_inf(anymultirange)` | `bool` | all | immutable |
+| `ranges.LowerInfAnyrange` | `lower_inf(anyrange)` | `bool` | all | immutable |
+| `binary.Lowrite` | `lowrite(int4,bytea)` | `int4` | all | volatile |
+| `text.LpadTextInt4` | `lpad(text,int4)` | `text` | all | immutable |
+| `text.LpadTextInt4Text` | `lpad(text,int4,text)` | `text` | all | immutable |
+| `geo.LsegSend` | `lseg_send(lseg)` | `bytea` | all | immutable |
+| `binary.Ltrim` | `ltrim(bytea,bytea)` | `bytea` | all | immutable |
+| `text.LtrimText` | `ltrim(text)` | `text` | all | immutable |
+| `text.LtrimTextText` | `ltrim(text,text)` | `text` | all | immutable |

@@ -1,0 +1,33 @@
+-- xmlelement with attributes and content
+SELECT XMLELEMENT(NAME "user", XMLATTRIBUTES("users"."id" AS "id"), "users"."email") AS "x" FROM "public"."users"
+
+-- xmlforest
+SELECT XMLFOREST("users"."id" AS "id", "users"."email" AS "email") AS "x" FROM "public"."users"
+
+-- xmlconcat
+SELECT XMLCONCAT(CAST($1 AS xml), XMLPARSE(CONTENT "users"."email")) AS "x" FROM "public"."users"
+
+-- xmlparse document strip
+SELECT XMLPARSE(DOCUMENT "users"."email" STRIP WHITESPACE) AS "x" FROM "public"."users"
+
+-- xmlpi
+SELECT XMLPI(NAME "php") AS "a", XMLPI(NAME "php", "users"."email") AS "b" FROM "public"."users"
+
+-- xmlroot
+SELECT XMLROOT(CAST($1 AS xml), VERSION $2::text, STANDALONE YES) AS "x"
+
+-- xmlroot no value
+SELECT XMLROOT(CAST($1 AS xml), VERSION NO VALUE, STANDALONE NO VALUE) AS "x"
+
+-- xmlserialize indent
+SELECT XMLSERIALIZE(CONTENT CAST($1 AS xml) AS text INDENT) AS "t"
+
+-- xmlexists
+SELECT "users"."id" FROM "public"."users" WHERE XMLEXISTS(($1::text) PASSING BY VALUE (CAST($2 AS xml)))
+
+-- is document
+SELECT "users"."id" FROM "public"."users" WHERE (CAST($1 AS xml) IS DOCUMENT) AND (CAST($1 AS xml) IS NOT DOCUMENT)
+
+-- xmltable
+SELECT "x"."id", "x"."name" FROM XMLTABLE(XMLNAMESPACES(E'urn:example' AS "e", E'urn:other' AS "o"), ($1::text) PASSING (CAST($2 AS xml)) COLUMNS "n" FOR ORDINALITY, "id" int8 PATH ($3::text) NOT NULL, "name" text PATH ($4::text) DEFAULT ($5::text)) AS "x"
+

@@ -1,0 +1,2488 @@
+{
+  "productions": {
+    "AnalyzeStmt: analyze_keyword '(' utility_option_list ')' opt_vacuum_relation_list": {
+      "status": "supported",
+      "symbol": "qlx.AnalyzeTables"
+    },
+    "AnalyzeStmt: analyze_keyword VERBOSE opt_vacuum_relation_list": {
+      "status": "supported",
+      "symbol": "qlx.AnalyzeTables"
+    },
+    "AnalyzeStmt: analyze_keyword opt_utility_option_list opt_vacuum_relation_list": {
+      "status": "supported",
+      "symbol": "qlx.AnalyzeTables"
+    },
+    "AnalyzeStmt: analyze_keyword opt_verbose opt_vacuum_relation_list": {
+      "status": "supported",
+      "symbol": "qlx.AnalyzeTables"
+    },
+    "CallStmt: CALL func_application": {
+      "status": "supported",
+      "symbol": "qlx.Call"
+    },
+    "CheckPointStmt: CHECKPOINT": {
+      "status": "supported",
+      "symbol": "qlx.Checkpoint"
+    },
+    "CheckPointStmt: CHECKPOINT opt_utility_option_list": {
+      "status": "supported",
+      "symbol": "qlx.Checkpoint"
+    },
+    "ClosePortalStmt: CLOSE ALL": {
+      "status": "supported",
+      "symbol": "qlx.CloseCursor"
+    },
+    "ClosePortalStmt: CLOSE cursor_name": {
+      "status": "supported",
+      "symbol": "qlx.CloseCursor"
+    },
+    "CopyStmt: COPY '(' PreparableStmt ')' TO opt_program copy_file_name opt_with copy_options": {
+      "status": "supported",
+      "symbol": "qlx.CopyIn / CopyTableOut / CopyQueryOut"
+    },
+    "CopyStmt: COPY opt_binary qualified_name opt_column_list copy_from opt_program copy_file_name copy_delimiter opt_with copy_options where_clause": {
+      "status": "supported",
+      "symbol": "qlx.CopyIn / CopyTableOut / CopyQueryOut"
+    },
+    "DeallocateStmt: DEALLOCATE ALL": {
+      "status": "supported",
+      "symbol": "qlx.Deallocate / DeallocateAll"
+    },
+    "DeallocateStmt: DEALLOCATE PREPARE ALL": {
+      "status": "supported",
+      "symbol": "qlx.Deallocate / DeallocateAll"
+    },
+    "DeallocateStmt: DEALLOCATE PREPARE name": {
+      "status": "supported",
+      "symbol": "qlx.Deallocate / DeallocateAll"
+    },
+    "DeallocateStmt: DEALLOCATE name": {
+      "status": "supported",
+      "symbol": "qlx.Deallocate / DeallocateAll"
+    },
+    "DeclareCursorStmt: DECLARE cursor_name cursor_options CURSOR opt_hold FOR SelectStmt": {
+      "status": "supported",
+      "symbol": "qlx.DeclareCursor"
+    },
+    "DeleteStmt: opt_with_clause DELETE_P FROM relation_expr_opt_alias using_clause where_or_current_clause returning_clause": {
+      "status": "supported",
+      "symbol": "qlx.DeleteFrom"
+    },
+    "DiscardStmt: DISCARD ALL": {
+      "status": "supported",
+      "symbol": "qlx.Discard*"
+    },
+    "DiscardStmt: DISCARD PLANS": {
+      "status": "supported",
+      "symbol": "qlx.Discard*"
+    },
+    "DiscardStmt: DISCARD SEQUENCES": {
+      "status": "supported",
+      "symbol": "qlx.Discard*"
+    },
+    "DiscardStmt: DISCARD TEMP": {
+      "status": "supported",
+      "symbol": "qlx.Discard*"
+    },
+    "DiscardStmt: DISCARD TEMPORARY": {
+      "status": "supported",
+      "symbol": "qlx.Discard*"
+    },
+    "ExecuteStmt: CREATE OptTemp TABLE IF_P NOT EXISTS create_as_target AS EXECUTE name execute_param_clause opt_with_data": {
+      "status": "supported",
+      "symbol": "qlx.Execute"
+    },
+    "ExecuteStmt: CREATE OptTemp TABLE create_as_target AS EXECUTE name execute_param_clause opt_with_data": {
+      "status": "supported",
+      "symbol": "qlx.Execute"
+    },
+    "ExecuteStmt: EXECUTE name execute_param_clause": {
+      "status": "supported",
+      "symbol": "qlx.Execute"
+    },
+    "ExplainStmt: EXPLAIN '(' utility_option_list ')' ExplainableStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain"
+    },
+    "ExplainStmt: EXPLAIN ExplainableStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain"
+    },
+    "ExplainStmt: EXPLAIN VERBOSE ExplainableStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain"
+    },
+    "ExplainStmt: EXPLAIN analyze_keyword opt_verbose ExplainableStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain"
+    },
+    "ExplainableStmt: CreateAsStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: CreateMatViewStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: DeclareCursorStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: DeleteStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: ExecuteStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: InsertStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: MergeStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: RefreshMatViewStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: SelectStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "ExplainableStmt: UpdateStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain accepts Select/Insert/Update/Delete/Merge/Prepare-ables"
+    },
+    "FetchStmt: FETCH fetch_args": {
+      "status": "supported",
+      "symbol": "qlx.FetchFrom / MoveIn"
+    },
+    "FetchStmt: MOVE fetch_args": {
+      "status": "supported",
+      "symbol": "qlx.FetchFrom / MoveIn"
+    },
+    "GrantStmt: GRANT privileges ON privilege_target TO grantee_list opt_grant_grant_option opt_granted_by": {
+      "status": "supported",
+      "symbol": "qlx.Grant"
+    },
+    "InsertStmt: opt_with_clause INSERT INTO insert_target insert_rest opt_on_conflict returning_clause": {
+      "status": "supported",
+      "symbol": "qlx.InsertInto"
+    },
+    "ListenStmt: LISTEN ColId": {
+      "status": "supported",
+      "symbol": "qlx.Listen"
+    },
+    "LockStmt: LOCK_P opt_table relation_expr_list opt_lock opt_nowait": {
+      "status": "supported",
+      "symbol": "qlx.LockTable"
+    },
+    "MergeStmt: opt_with_clause MERGE INTO relation_expr_opt_alias USING table_ref ON a_expr merge_when_list returning_clause": {
+      "status": "supported",
+      "symbol": "qlx.Merge"
+    },
+    "NotifyStmt: NOTIFY ColId notify_payload": {
+      "status": "supported",
+      "symbol": "qlx.Notify"
+    },
+    "PrepareStmt: PREPARE name prep_type_clause AS PreparableStmt": {
+      "status": "supported",
+      "symbol": "qlx.Prepare"
+    },
+    "RevokeStmt: REVOKE GRANT OPTION FOR privileges ON privilege_target FROM grantee_list opt_granted_by opt_drop_behavior": {
+      "status": "supported",
+      "symbol": "qlx.Revoke"
+    },
+    "RevokeStmt: REVOKE privileges ON privilege_target FROM grantee_list opt_granted_by opt_drop_behavior": {
+      "status": "supported",
+      "symbol": "qlx.Revoke"
+    },
+    "SelectStmt: select_no_parens": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "SelectStmt: select_with_parens": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "TransactionStmt: ABORT_P opt_transaction opt_transaction_chain": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: COMMIT PREPARED Sconst": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: COMMIT opt_transaction opt_transaction_chain": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: PREPARE TRANSACTION Sconst": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: RELEASE ColId": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: RELEASE SAVEPOINT ColId": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: ROLLBACK PREPARED Sconst": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: ROLLBACK opt_transaction TO ColId": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: ROLLBACK opt_transaction TO SAVEPOINT ColId": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: ROLLBACK opt_transaction opt_transaction_chain": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: SAVEPOINT ColId": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TransactionStmt: START TRANSACTION transaction_mode_list_or_empty": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint family"
+    },
+    "TruncateStmt: TRUNCATE opt_table relation_expr_list opt_restart_seqs opt_drop_behavior": {
+      "status": "supported",
+      "symbol": "qlx.Truncate"
+    },
+    "UnlistenStmt: UNLISTEN '*'": {
+      "status": "supported",
+      "symbol": "qlx.Unlisten / UnlistenAll"
+    },
+    "UnlistenStmt: UNLISTEN ColId": {
+      "status": "supported",
+      "symbol": "qlx.Unlisten / UnlistenAll"
+    },
+    "UpdateStmt: opt_with_clause UPDATE relation_expr_opt_alias SET set_clause_list from_clause where_or_current_clause returning_clause": {
+      "status": "supported",
+      "symbol": "qlx.Update"
+    },
+    "VacuumStmt: VACUUM '(' utility_option_list ')' opt_vacuum_relation_list": {
+      "status": "supported",
+      "symbol": "qlx.Vacuum"
+    },
+    "VacuumStmt: VACUUM opt_full opt_freeze opt_verbose opt_analyze opt_vacuum_relation_list": {
+      "status": "supported",
+      "symbol": "qlx.Vacuum"
+    },
+    "VariableResetStmt: RESET reset_rest": {
+      "status": "supported",
+      "symbol": "qlx.Reset / ResetAll / ResetRole"
+    },
+    "VariableSetStmt: SET LOCAL set_rest": {
+      "status": "supported",
+      "symbol": "qlx.SetConfig / SetRole / SetSessionAuthorization / SetTransaction"
+    },
+    "VariableSetStmt: SET SESSION set_rest": {
+      "status": "supported",
+      "symbol": "qlx.SetConfig / SetRole / SetSessionAuthorization / SetTransaction"
+    },
+    "VariableSetStmt: SET set_rest": {
+      "status": "supported",
+      "symbol": "qlx.SetConfig / SetRole / SetSessionAuthorization / SetTransaction"
+    },
+    "a_expr: '+' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "a_expr: '-' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "a_expr: DEFAULT": {
+      "status": "supported",
+      "symbol": "Column.ToDefault"
+    },
+    "a_expr: NOT a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "a_expr: NOT_LA a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "a_expr: UNIQUE opt_unique_null_treatment select_with_parens": {
+      "reason": "the server parses UNIQUE (subquery) and then rejects it as not implemented",
+      "status": "unsupported"
+    },
+    "a_expr: a_expr '%' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '*' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '+' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '-' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '/' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '<' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '=' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '>' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr '^' a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr AND a_expr": {
+      "status": "supported",
+      "symbol": "Pred.And / Or"
+    },
+    "a_expr: a_expr AT LOCAL": {
+      "status": "supported",
+      "symbol": "TimeExpr.AtTimeZone / AtTimeZoneX / AtLocal (Go 1.27 generic methods)"
+    },
+    "a_expr: a_expr AT TIME ZONE a_expr": {
+      "status": "supported",
+      "symbol": "TimeExpr.AtTimeZone / AtTimeZoneX / AtLocal (Go 1.27 generic methods)"
+    },
+    "a_expr: a_expr BETWEEN SYMMETRIC b_expr AND a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr/TimeExpr.Between / NotBetween / BetweenSymmetric / NotBetweenSymmetric"
+    },
+    "a_expr: a_expr BETWEEN opt_asymmetric b_expr AND a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr/TimeExpr.Between / NotBetween / BetweenSymmetric / NotBetweenSymmetric"
+    },
+    "a_expr: a_expr COLLATE any_name": {
+      "status": "supported",
+      "symbol": "Expr.Collate"
+    },
+    "a_expr: a_expr GREATER_EQUALS a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr ILIKE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr ILIKE a_expr ESCAPE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr IN_P '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "Expr.In / InSelect / NotInSelect"
+    },
+    "a_expr: a_expr IN_P select_with_parens": {
+      "status": "supported",
+      "symbol": "Expr.In / InSelect / NotInSelect"
+    },
+    "a_expr: a_expr IS DISTINCT FROM a_expr": {
+      "status": "supported",
+      "symbol": "IsDistinctFrom / IsNotDistinctFrom"
+    },
+    "a_expr: a_expr IS DOCUMENT_P": {
+      "status": "supported",
+      "symbol": "qlx.IsDocument"
+    },
+    "a_expr: a_expr IS FALSE_P": {
+      "status": "supported",
+      "symbol": "Pred.IsTrue / IsFalse / IsUnknown / IsNot*"
+    },
+    "a_expr: a_expr IS NORMALIZED": {
+      "status": "supported",
+      "symbol": "pgcat/text.IsNormalized"
+    },
+    "a_expr: a_expr IS NOT DISTINCT FROM a_expr": {
+      "status": "supported",
+      "symbol": "IsDistinctFrom / IsNotDistinctFrom"
+    },
+    "a_expr: a_expr IS NOT DOCUMENT_P": {
+      "status": "supported",
+      "symbol": "qlx.IsNotDocument"
+    },
+    "a_expr: a_expr IS NOT FALSE_P": {
+      "status": "supported",
+      "symbol": "Pred.IsTrue / IsFalse / IsUnknown / IsNot*"
+    },
+    "a_expr: a_expr IS NOT NORMALIZED": {
+      "status": "supported",
+      "symbol": "pgcat/text.IsNormalized"
+    },
+    "a_expr: a_expr IS NOT NULL_P": {
+      "status": "supported",
+      "symbol": "Expr.IsNull / IsNotNull"
+    },
+    "a_expr: a_expr IS NOT TRUE_P": {
+      "status": "supported",
+      "symbol": "Pred.IsTrue / IsFalse / IsUnknown / IsNot*"
+    },
+    "a_expr: a_expr IS NOT UNKNOWN": {
+      "status": "supported",
+      "symbol": "Pred.IsTrue / IsFalse / IsUnknown / IsNot*"
+    },
+    "a_expr: a_expr IS NOT json_predicate_type_constraint json_key_uniqueness_constraint_opt": {
+      "status": "supported",
+      "symbol": "qlx.IsJSON"
+    },
+    "a_expr: a_expr IS NOT unicode_normal_form NORMALIZED": {
+      "status": "supported",
+      "symbol": "pgcat/text.IsNormalized"
+    },
+    "a_expr: a_expr IS NULL_P": {
+      "status": "supported",
+      "symbol": "Expr.IsNull / IsNotNull"
+    },
+    "a_expr: a_expr IS TRUE_P": {
+      "status": "supported",
+      "symbol": "Pred.IsTrue / IsFalse / IsUnknown / IsNot*"
+    },
+    "a_expr: a_expr IS UNKNOWN": {
+      "status": "supported",
+      "symbol": "Pred.IsTrue / IsFalse / IsUnknown / IsNot*"
+    },
+    "a_expr: a_expr IS json_predicate_type_constraint json_key_uniqueness_constraint_opt": {
+      "status": "supported",
+      "symbol": "qlx.IsJSON"
+    },
+    "a_expr: a_expr IS unicode_normal_form NORMALIZED": {
+      "status": "supported",
+      "symbol": "pgcat/text.IsNormalized"
+    },
+    "a_expr: a_expr ISNULL": {
+      "status": "supported",
+      "symbol": "Expr.IsNull / IsNotNull"
+    },
+    "a_expr: a_expr LESS_EQUALS a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr LIKE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr LIKE a_expr ESCAPE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr NOTNULL": {
+      "status": "supported",
+      "symbol": "Expr.IsNull / IsNotNull"
+    },
+    "a_expr: a_expr NOT_EQUALS a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "a_expr: a_expr NOT_LA BETWEEN SYMMETRIC b_expr AND a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr/TimeExpr.Between / NotBetween / BetweenSymmetric / NotBetweenSymmetric"
+    },
+    "a_expr: a_expr NOT_LA BETWEEN opt_asymmetric b_expr AND a_expr": {
+      "status": "supported",
+      "symbol": "NumExpr/TimeExpr.Between / NotBetween / BetweenSymmetric / NotBetweenSymmetric"
+    },
+    "a_expr: a_expr NOT_LA ILIKE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr NOT_LA ILIKE a_expr ESCAPE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr NOT_LA IN_P '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "Expr.In / InSelect / NotInSelect"
+    },
+    "a_expr: a_expr NOT_LA IN_P select_with_parens": {
+      "status": "supported",
+      "symbol": "Expr.In / InSelect / NotInSelect"
+    },
+    "a_expr: a_expr NOT_LA LIKE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr NOT_LA LIKE a_expr ESCAPE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr NOT_LA SIMILAR TO a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr NOT_LA SIMILAR TO a_expr ESCAPE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr OR a_expr": {
+      "status": "supported",
+      "symbol": "Pred.And / Or"
+    },
+    "a_expr: a_expr SIMILAR TO a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr SIMILAR TO a_expr ESCAPE a_expr": {
+      "status": "supported",
+      "symbol": "TextExpr.Like / ILike / NotLike / NotILike / SimilarTo / NotSimilarTo / LikeEscape"
+    },
+    "a_expr: a_expr TYPECAST Typename": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Expr.Cast (the :: spelling renders as CAST)"
+    },
+    "a_expr: a_expr qual_Op a_expr": {
+      "status": "supported",
+      "symbol": "generated operator wrappers (pgcat/<area>/ops.go)"
+    },
+    "a_expr: a_expr subquery_Op sub_type '(' a_expr ')'": {
+      "status": "supported",
+      "symbol": "qlx.AnySelect / AllSelect; Expr.Any / NotAll for array operands"
+    },
+    "a_expr: a_expr subquery_Op sub_type select_with_parens": {
+      "status": "supported",
+      "symbol": "qlx.AnySelect / AllSelect; Expr.Any / NotAll for array operands"
+    },
+    "a_expr: c_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "a_expr: qual_Op a_expr": {
+      "status": "supported",
+      "symbol": "generated operator wrappers (pgcat/<area>/ops.go)"
+    },
+    "a_expr: row OVERLAPS row": {
+      "status": "supported",
+      "symbol": "qlx.Overlaps"
+    },
+    "array_expr: '[' ']'": {
+      "status": "supported",
+      "symbol": "qlx.Array / ArrayFromQuery"
+    },
+    "array_expr: '[' array_expr_list ']'": {
+      "status": "supported",
+      "symbol": "qlx.Array / ArrayFromQuery"
+    },
+    "array_expr: '[' expr_list ']'": {
+      "status": "supported",
+      "symbol": "qlx.Array / ArrayFromQuery"
+    },
+    "b_expr: '+' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "b_expr: '-' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "b_expr: b_expr '%' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '*' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '+' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '-' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '/' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '<' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '=' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '>' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr '^' b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr GREATER_EQUALS b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr IS DISTINCT FROM b_expr": {
+      "status": "supported",
+      "symbol": "IsDistinctFrom / IsNotDistinctFrom"
+    },
+    "b_expr: b_expr IS DOCUMENT_P": {
+      "status": "supported",
+      "symbol": "qlx.IsDocument"
+    },
+    "b_expr: b_expr IS NOT DISTINCT FROM b_expr": {
+      "status": "supported",
+      "symbol": "IsDistinctFrom / IsNotDistinctFrom"
+    },
+    "b_expr: b_expr IS NOT DOCUMENT_P": {
+      "status": "supported",
+      "symbol": "qlx.IsNotDocument"
+    },
+    "b_expr: b_expr LESS_EQUALS b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr NOT_EQUALS b_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods; generated operator wrappers"
+    },
+    "b_expr: b_expr TYPECAST Typename": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Expr.Cast (the :: spelling renders as CAST)"
+    },
+    "b_expr: b_expr qual_Op b_expr": {
+      "status": "supported",
+      "symbol": "generated operator wrappers (pgcat/<area>/ops.go)"
+    },
+    "b_expr: c_expr": {
+      "status": "supported",
+      "symbol": "NumExpr arithmetic and comparison methods, Pred.And / Or, qlx.Not, generated operator wrappers"
+    },
+    "b_expr: qual_Op b_expr": {
+      "status": "supported",
+      "symbol": "generated operator wrappers (pgcat/<area>/ops.go)"
+    },
+    "c_expr: '(' a_expr ')' opt_indirection": {
+      "status": "supported",
+      "symbol": "table column symbols; parenthesisation is automatic"
+    },
+    "c_expr: ARRAY array_expr": {
+      "status": "supported",
+      "symbol": "qlx.Array / generated array wrappers"
+    },
+    "c_expr: ARRAY select_with_parens": {
+      "status": "supported",
+      "symbol": "qlx.ArrayFromQuery"
+    },
+    "c_expr: AexprConst": {
+      "status": "supported",
+      "symbol": "qlx.Val (always a bound parameter)"
+    },
+    "c_expr: EXISTS select_with_parens": {
+      "status": "supported",
+      "symbol": "qlx.Exists"
+    },
+    "c_expr: GROUPING '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.GroupingFn"
+    },
+    "c_expr: PARAM opt_indirection": {
+      "status": "supported",
+      "symbol": "qlx.Scalar / ScalarN; qlx.Param[T]"
+    },
+    "c_expr: case_expr": {
+      "status": "supported",
+      "symbol": "qlx.Case; function wrappers"
+    },
+    "c_expr: columnref": {
+      "status": "supported",
+      "symbol": "table column symbols; parenthesisation is automatic"
+    },
+    "c_expr: explicit_row": {
+      "status": "supported",
+      "symbol": "qlx.Row"
+    },
+    "c_expr: func_expr": {
+      "status": "supported",
+      "symbol": "qlx.Case; function wrappers"
+    },
+    "c_expr: implicit_row": {
+      "status": "supported",
+      "symbol": "qlx.Row"
+    },
+    "c_expr: select_with_parens": {
+      "status": "supported",
+      "symbol": "qlx.Scalar / ScalarN; qlx.Param[T]"
+    },
+    "c_expr: select_with_parens indirection": {
+      "status": "supported",
+      "symbol": "qlx.Scalar / ScalarN; qlx.Param[T]"
+    },
+    "case_expr: CASE case_arg when_clause_list case_default END_P": {
+      "status": "supported",
+      "symbol": "qlx.Case"
+    },
+    "common_table_expr: name opt_name_list AS opt_materialized '(' PreparableStmt ')' opt_search_clause opt_cycle_clause": {
+      "status": "supported",
+      "symbol": "qlx.CTE / Recursive"
+    },
+    "copy_from: FROM": {
+      "status": "supported",
+      "symbol": "CopyIn / CopyTableOut"
+    },
+    "copy_from: TO": {
+      "status": "supported",
+      "symbol": "CopyIn / CopyTableOut"
+    },
+    "copy_generic_opt_elem: ColLabel copy_generic_opt_arg": {
+      "status": "supported",
+      "symbol": "WithFormat ... WithHeader"
+    },
+    "copy_generic_opt_elem: FORMAT_LA copy_generic_opt_arg": {
+      "status": "supported",
+      "symbol": "WithFormat ... WithHeader"
+    },
+    "copy_opt_item: BINARY": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: CSV": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: DELIMITER opt_as Sconst": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: ENCODING Sconst": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: ESCAPE opt_as Sconst": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: FORCE NOT NULL_P '*'": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: FORCE NOT NULL_P columnList": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: FORCE NULL_P '*'": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: FORCE NULL_P columnList": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: FORCE QUOTE '*'": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: FORCE QUOTE columnList": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: FREEZE": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: HEADER_P": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: JSON": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: NULL_P opt_as Sconst": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_opt_item: QUOTE opt_as Sconst": {
+      "reason": "the pre-9.0 option spellings render as the modern WITH (...) form; PostgreSQL accepts both",
+      "status": "partial",
+      "symbol": "WithFormat / WithDelimiter / WithNull / WithHeader / WithQuote / WithForceQuote"
+    },
+    "copy_options: '(' copy_generic_opt_list ')'": {
+      "status": "supported",
+      "symbol": "Copy options"
+    },
+    "copy_options: copy_opt_list": {
+      "status": "supported",
+      "symbol": "Copy options"
+    },
+    "cte_list: common_table_expr": {
+      "status": "supported",
+      "symbol": "SelectQuery.With"
+    },
+    "cte_list: cte_list ',' common_table_expr": {
+      "status": "supported",
+      "symbol": "SelectQuery.With"
+    },
+    "cube_clause: CUBE '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Cube"
+    },
+    "distinct_clause: DISTINCT": {
+      "status": "supported",
+      "symbol": "SelectQuery.Distinct / DistinctOn"
+    },
+    "distinct_clause: DISTINCT ON '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "SelectQuery.Distinct / DistinctOn"
+    },
+    "empty_grouping_set: '(' ')'": {
+      "status": "supported",
+      "symbol": "qlx.SetOf()"
+    },
+    "filter_clause: <empty>": {
+      "status": "supported",
+      "symbol": "AggExpr.Filter"
+    },
+    "filter_clause: FILTER '(' WHERE a_expr ')'": {
+      "status": "supported",
+      "symbol": "AggExpr.Filter"
+    },
+    "first_or_next: FIRST_P": {
+      "status": "supported",
+      "symbol": "FetchFirst"
+    },
+    "first_or_next: NEXT": {
+      "status": "supported",
+      "symbol": "FetchFirst"
+    },
+    "for_locking_clause: FOR READ ONLY": {
+      "status": "supported",
+      "symbol": "SelectQuery.ForUpdate / ForShare ..."
+    },
+    "for_locking_clause: for_locking_items": {
+      "status": "supported",
+      "symbol": "SelectQuery.ForUpdate / ForShare ..."
+    },
+    "for_locking_item: for_locking_strength locked_rels_list opt_nowait_or_skip": {
+      "status": "supported",
+      "symbol": "SelectQuery.ForUpdate ... Of"
+    },
+    "for_locking_strength: FOR KEY SHARE": {
+      "status": "supported",
+      "symbol": "ForUpdate / ForNoKeyUpdate / ForShare / ForKeyShare"
+    },
+    "for_locking_strength: FOR NO KEY UPDATE": {
+      "status": "supported",
+      "symbol": "ForUpdate / ForNoKeyUpdate / ForShare / ForKeyShare"
+    },
+    "for_locking_strength: FOR SHARE": {
+      "status": "supported",
+      "symbol": "ForUpdate / ForNoKeyUpdate / ForShare / ForKeyShare"
+    },
+    "for_locking_strength: FOR UPDATE": {
+      "status": "supported",
+      "symbol": "ForUpdate / ForNoKeyUpdate / ForShare / ForKeyShare"
+    },
+    "frame_bound: CURRENT_P ROW": {
+      "status": "supported",
+      "symbol": "Preceding / Following / UnboundedPreceding / CurrentRow"
+    },
+    "frame_bound: UNBOUNDED FOLLOWING": {
+      "status": "supported",
+      "symbol": "Preceding / Following / UnboundedPreceding / CurrentRow"
+    },
+    "frame_bound: UNBOUNDED PRECEDING": {
+      "status": "supported",
+      "symbol": "Preceding / Following / UnboundedPreceding / CurrentRow"
+    },
+    "frame_bound: a_expr FOLLOWING": {
+      "status": "supported",
+      "symbol": "Preceding / Following / UnboundedPreceding / CurrentRow"
+    },
+    "frame_bound: a_expr PRECEDING": {
+      "status": "supported",
+      "symbol": "Preceding / Following / UnboundedPreceding / CurrentRow"
+    },
+    "frame_extent: BETWEEN frame_bound AND frame_bound": {
+      "status": "supported",
+      "symbol": "WindowSpec frame"
+    },
+    "frame_extent: frame_bound": {
+      "status": "supported",
+      "symbol": "WindowSpec frame"
+    },
+    "from_clause: <empty>": {
+      "status": "supported",
+      "symbol": "SelectQuery.From"
+    },
+    "from_clause: FROM from_list": {
+      "status": "supported",
+      "symbol": "SelectQuery.From"
+    },
+    "from_list: from_list ',' table_ref": {
+      "status": "supported",
+      "symbol": "SelectQuery.From / Join"
+    },
+    "from_list: table_ref": {
+      "status": "supported",
+      "symbol": "SelectQuery.From / Join"
+    },
+    "func_application: func_name '(' ')'": {
+      "status": "supported",
+      "symbol": "generated pgcat wrappers, AggExpr (DISTINCT via CountDistinct, ORDER BY via OrderedAgg)"
+    },
+    "func_application: func_name '(' '*' ')'": {
+      "status": "supported",
+      "symbol": "generated pgcat wrappers, AggExpr (DISTINCT via CountDistinct, ORDER BY via OrderedAgg)"
+    },
+    "func_application: func_name '(' ALL func_arg_list opt_sort_clause ')'": {
+      "status": "supported",
+      "symbol": "generated pgcat wrappers, AggExpr (DISTINCT via CountDistinct, ORDER BY via OrderedAgg)"
+    },
+    "func_application: func_name '(' DISTINCT func_arg_list opt_sort_clause ')'": {
+      "status": "supported",
+      "symbol": "generated pgcat wrappers, AggExpr (DISTINCT via CountDistinct, ORDER BY via OrderedAgg)"
+    },
+    "func_application: func_name '(' VARIADIC func_arg_expr opt_sort_clause ')'": {
+      "reason": "VARIADIC is applied by the wrapper, not spelled by the caller",
+      "status": "partial",
+      "symbol": "generated wrappers for variadic functions take a slice"
+    },
+    "func_application: func_name '(' func_arg_list ',' VARIADIC func_arg_expr opt_sort_clause ')'": {
+      "reason": "VARIADIC is applied by the wrapper, not spelled by the caller",
+      "status": "partial",
+      "symbol": "generated wrappers for variadic functions take a slice"
+    },
+    "func_application: func_name '(' func_arg_list opt_sort_clause ')'": {
+      "status": "supported",
+      "symbol": "generated pgcat wrappers, AggExpr (DISTINCT via CountDistinct, ORDER BY via OrderedAgg)"
+    },
+    "func_expr: func_application within_group_clause filter_clause null_treatment over_clause": {
+      "status": "supported",
+      "symbol": "qlx.FuncCall and generated wrappers"
+    },
+    "func_expr: func_application within_group_clause filter_clause over_clause": {
+      "status": "supported",
+      "symbol": "qlx.FuncCall and generated wrappers"
+    },
+    "func_expr: func_expr_common_subexpr": {
+      "status": "supported",
+      "symbol": "qlx.FuncCall and generated wrappers"
+    },
+    "func_expr: json_aggregate_func filter_clause over_clause": {
+      "status": "supported",
+      "symbol": "qlx.FuncCall and generated wrappers"
+    },
+    "func_expr_common_subexpr: CAST '(' a_expr AS Typename ')'": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Coalesce / Greatest / Least / NullIf / Extract"
+    },
+    "func_expr_common_subexpr: COALESCE '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Coalesce / Greatest / Least / NullIf / Extract"
+    },
+    "func_expr_common_subexpr: COLLATION FOR '(' a_expr ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: CURRENT_CATALOG": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: CURRENT_DATE": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: CURRENT_ROLE": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: CURRENT_SCHEMA": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: CURRENT_TIME": {
+      "status": "supported",
+      "symbol": "qlx.CurrentTime"
+    },
+    "func_expr_common_subexpr: CURRENT_TIME '(' Iconst ')'": {
+      "status": "supported",
+      "symbol": "qlx.CurrentTimeP"
+    },
+    "func_expr_common_subexpr: CURRENT_TIMESTAMP": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: CURRENT_TIMESTAMP '(' Iconst ')'": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: CURRENT_USER": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: EXTRACT '(' extract_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Coalesce / Greatest / Least / NullIf / Extract"
+    },
+    "func_expr_common_subexpr: GREATEST '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Coalesce / Greatest / Least / NullIf / Extract"
+    },
+    "func_expr_common_subexpr: JSON '(' json_value_expr json_key_uniqueness_constraint_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONParse"
+    },
+    "func_expr_common_subexpr: JSON_ARRAY '(' json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObject / JSONArray"
+    },
+    "func_expr_common_subexpr: JSON_ARRAY '(' json_value_expr_list json_array_constructor_null_clause_opt json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObject / JSONArray"
+    },
+    "func_expr_common_subexpr: JSON_ARRAY '(' select_no_parens json_format_clause_opt json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObject / JSONArray"
+    },
+    "func_expr_common_subexpr: JSON_EXISTS '(' json_value_expr ',' a_expr json_passing_clause_opt json_on_error_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONExists / JSONQuery / JSONValue"
+    },
+    "func_expr_common_subexpr: JSON_OBJECT '(' func_arg_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObject / JSONArray"
+    },
+    "func_expr_common_subexpr: JSON_OBJECT '(' json_name_and_value_list json_object_constructor_null_clause_opt json_key_uniqueness_constraint_opt json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObject / JSONArray"
+    },
+    "func_expr_common_subexpr: JSON_OBJECT '(' json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObject / JSONArray"
+    },
+    "func_expr_common_subexpr: JSON_QUERY '(' json_value_expr ',' a_expr json_passing_clause_opt json_returning_clause_opt json_wrapper_behavior json_quotes_clause_opt json_behavior_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONExists / JSONQuery / JSONValue"
+    },
+    "func_expr_common_subexpr: JSON_SCALAR '(' a_expr ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONScalar"
+    },
+    "func_expr_common_subexpr: JSON_SERIALIZE '(' json_value_expr json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONSerialize / JSONSerializeBytea"
+    },
+    "func_expr_common_subexpr: JSON_VALUE '(' json_value_expr ',' a_expr json_passing_clause_opt json_returning_clause_opt json_behavior_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONExists / JSONQuery / JSONValue"
+    },
+    "func_expr_common_subexpr: LEAST '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Coalesce / Greatest / Least / NullIf / Extract"
+    },
+    "func_expr_common_subexpr: LOCALTIME": {
+      "status": "supported",
+      "symbol": "qlx.LocalTime"
+    },
+    "func_expr_common_subexpr: LOCALTIME '(' Iconst ')'": {
+      "status": "supported",
+      "symbol": "qlx.LocalTimeP"
+    },
+    "func_expr_common_subexpr: LOCALTIMESTAMP": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: LOCALTIMESTAMP '(' Iconst ')'": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: MERGE_ACTION '(' ')'": {
+      "status": "supported",
+      "symbol": "qlx.MergeAction"
+    },
+    "func_expr_common_subexpr: NORMALIZE '(' a_expr ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: NORMALIZE '(' a_expr ',' unicode_normal_form ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: NULLIF '(' a_expr ',' a_expr ')'": {
+      "status": "supported",
+      "symbol": "qlx.Cast / Coalesce / Greatest / Least / NullIf / Extract"
+    },
+    "func_expr_common_subexpr: OVERLAY '(' func_arg_list_opt ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: OVERLAY '(' overlay_list ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: POSITION '(' position_list ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: SESSION_USER": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: SUBSTRING '(' func_arg_list_opt ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: SUBSTRING '(' substr_list ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: SYSTEM_USER": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: TREAT '(' a_expr AS Typename ')'": {
+      "reason": "the server parses TREAT and then rejects it as not implemented",
+      "status": "unsupported"
+    },
+    "func_expr_common_subexpr: TRIM '(' BOTH trim_list ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: TRIM '(' LEADING trim_list ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: TRIM '(' TRAILING trim_list ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: TRIM '(' trim_list ')'": {
+      "status": "supported",
+      "symbol": "pgcat/text wrappers (function form: normalize, overlay, position, substring, btrim/ltrim/rtrim), pg_collation_for"
+    },
+    "func_expr_common_subexpr: USER": {
+      "status": "supported",
+      "symbol": "qlx.CurrentUser / SessionUser / SystemUser / CurrentRole / CurrentSchema / CurrentCatalog / CurrentDate / CurrentTimestamp[P] / LocalTimestamp[P] (USER is CURRENT_USER)"
+    },
+    "func_expr_common_subexpr: XMLCONCAT '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLConcat"
+    },
+    "func_expr_common_subexpr: XMLELEMENT '(' NAME_P ColLabel ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLElement"
+    },
+    "func_expr_common_subexpr: XMLELEMENT '(' NAME_P ColLabel ',' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLElement"
+    },
+    "func_expr_common_subexpr: XMLELEMENT '(' NAME_P ColLabel ',' xml_attributes ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLElement"
+    },
+    "func_expr_common_subexpr: XMLELEMENT '(' NAME_P ColLabel ',' xml_attributes ',' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLElement"
+    },
+    "func_expr_common_subexpr: XMLEXISTS '(' c_expr xmlexists_argument ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLExists"
+    },
+    "func_expr_common_subexpr: XMLFOREST '(' labeled_expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLForest"
+    },
+    "func_expr_common_subexpr: XMLFOREST '(' xml_attribute_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLForest"
+    },
+    "func_expr_common_subexpr: XMLPARSE '(' document_or_content a_expr xml_whitespace_option ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLParse"
+    },
+    "func_expr_common_subexpr: XMLPI '(' NAME_P ColLabel ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLPI / XMLPIContent"
+    },
+    "func_expr_common_subexpr: XMLPI '(' NAME_P ColLabel ',' a_expr ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLPI / XMLPIContent"
+    },
+    "func_expr_common_subexpr: XMLROOT '(' a_expr ',' xml_root_version opt_xml_root_standalone ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLRoot"
+    },
+    "func_expr_common_subexpr: XMLSERIALIZE '(' document_or_content a_expr AS SimpleTypename xml_indent_option ')'": {
+      "status": "supported",
+      "symbol": "qlx.XMLSerialize"
+    },
+    "group_by_item: a_expr": {
+      "status": "supported",
+      "symbol": "GroupBy, Rollup, Cube, GroupingSets"
+    },
+    "group_by_item: cube_clause": {
+      "status": "supported",
+      "symbol": "GroupBy, Rollup, Cube, GroupingSets"
+    },
+    "group_by_item: empty_grouping_set": {
+      "status": "supported",
+      "symbol": "GroupBy, Rollup, Cube, GroupingSets"
+    },
+    "group_by_item: grouping_sets_clause": {
+      "status": "supported",
+      "symbol": "GroupBy, Rollup, Cube, GroupingSets"
+    },
+    "group_by_item: rollup_clause": {
+      "status": "supported",
+      "symbol": "GroupBy, Rollup, Cube, GroupingSets"
+    },
+    "group_by_list: group_by_item": {
+      "status": "supported",
+      "symbol": "SelectQuery.GroupBy"
+    },
+    "group_by_list: group_by_list ',' group_by_item": {
+      "status": "supported",
+      "symbol": "SelectQuery.GroupBy"
+    },
+    "group_clause: <empty>": {
+      "status": "supported",
+      "symbol": "SelectQuery.GroupBy"
+    },
+    "group_clause: GROUP_P BY set_quantifier group_by_list": {
+      "status": "supported",
+      "symbol": "SelectQuery.GroupBy"
+    },
+    "grouping_sets_clause: GROUPING SETS '(' group_by_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.GroupingSets"
+    },
+    "having_clause: <empty>": {
+      "status": "supported",
+      "symbol": "SelectQuery.Having"
+    },
+    "having_clause: HAVING a_expr": {
+      "status": "supported",
+      "symbol": "SelectQuery.Having"
+    },
+    "insert_rest: '(' insert_column_list ')' OVERRIDING override_kind VALUE_P SelectStmt": {
+      "status": "supported",
+      "symbol": "InsertQuery.Row / Values / Columns / FromQuery / DefaultValues"
+    },
+    "insert_rest: '(' insert_column_list ')' SelectStmt": {
+      "status": "supported",
+      "symbol": "InsertQuery.Row / Values / Columns / FromQuery / DefaultValues"
+    },
+    "insert_rest: DEFAULT VALUES": {
+      "status": "supported",
+      "symbol": "InsertQuery.Row / Values / Columns / FromQuery / DefaultValues"
+    },
+    "insert_rest: OVERRIDING override_kind VALUE_P SelectStmt": {
+      "status": "supported",
+      "symbol": "InsertQuery.Row / Values / Columns / FromQuery / DefaultValues"
+    },
+    "insert_rest: SelectStmt": {
+      "status": "supported",
+      "symbol": "InsertQuery.Row / Values / Columns / FromQuery / DefaultValues"
+    },
+    "insert_target: qualified_name": {
+      "status": "supported",
+      "symbol": "qlx.InsertInto"
+    },
+    "insert_target: qualified_name AS ColId": {
+      "status": "supported",
+      "symbol": "qlx.InsertInto"
+    },
+    "join_qual: ON a_expr": {
+      "status": "supported",
+      "symbol": "JoinBuilder.On / OnFK / Using"
+    },
+    "join_qual: USING '(' name_list ')' opt_alias_clause_for_join_using": {
+      "status": "supported",
+      "symbol": "JoinBuilder.On / OnFK / Using"
+    },
+    "join_type: FULL opt_outer": {
+      "status": "supported",
+      "symbol": "Join family"
+    },
+    "join_type: INNER_P": {
+      "status": "supported",
+      "symbol": "Join family"
+    },
+    "join_type: LEFT opt_outer": {
+      "status": "supported",
+      "symbol": "Join family"
+    },
+    "join_type: RIGHT opt_outer": {
+      "status": "supported",
+      "symbol": "Join family"
+    },
+    "joined_table: '(' joined_table ')'": {
+      "status": "supported",
+      "symbol": "SelectQuery.Join / LeftJoin / RightJoin / FullJoin / CrossJoin"
+    },
+    "joined_table: table_ref CROSS JOIN table_ref": {
+      "status": "supported",
+      "symbol": "SelectQuery.Join / LeftJoin / RightJoin / FullJoin / CrossJoin"
+    },
+    "joined_table: table_ref JOIN table_ref join_qual": {
+      "status": "supported",
+      "symbol": "SelectQuery.Join / LeftJoin / RightJoin / FullJoin / CrossJoin"
+    },
+    "joined_table: table_ref NATURAL JOIN table_ref": {
+      "status": "supported",
+      "symbol": "SelectQuery.Join / LeftJoin / RightJoin / FullJoin / CrossJoin"
+    },
+    "joined_table: table_ref NATURAL join_type JOIN table_ref": {
+      "status": "supported",
+      "symbol": "SelectQuery.Join / LeftJoin / RightJoin / FullJoin / CrossJoin"
+    },
+    "joined_table: table_ref join_type JOIN table_ref join_qual": {
+      "status": "supported",
+      "symbol": "SelectQuery.Join / LeftJoin / RightJoin / FullJoin / CrossJoin"
+    },
+    "json_aggregate_func: JSON_ARRAYAGG '(' json_value_expr json_array_aggregate_order_by_clause_opt json_array_constructor_null_clause_opt json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObjectAgg / JSONArrayAgg"
+    },
+    "json_aggregate_func: JSON_OBJECTAGG '(' json_name_and_value json_object_constructor_null_clause_opt json_key_uniqueness_constraint_opt json_returning_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONObjectAgg / JSONArrayAgg"
+    },
+    "json_behavior: DEFAULT a_expr": {
+      "status": "supported",
+      "symbol": "JSONValue/Query/Exists On* methods"
+    },
+    "json_behavior: json_behavior_type": {
+      "status": "supported",
+      "symbol": "JSONValue/Query/Exists On* methods"
+    },
+    "json_object_constructor_null_clause_opt: <empty>": {
+      "status": "supported",
+      "symbol": "JSONObjectBuilder.NullOnNull / AbsentOnNull"
+    },
+    "json_object_constructor_null_clause_opt: ABSENT ON NULL_P": {
+      "status": "supported",
+      "symbol": "JSONObjectBuilder.NullOnNull / AbsentOnNull"
+    },
+    "json_object_constructor_null_clause_opt: NULL_P ON NULL_P": {
+      "status": "supported",
+      "symbol": "JSONObjectBuilder.NullOnNull / AbsentOnNull"
+    },
+    "json_table: JSON_TABLE '(' json_value_expr ',' a_expr json_table_path_name_opt json_passing_clause_opt COLUMNS '(' json_table_column_definition_list ')' json_on_error_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONTable"
+    },
+    "json_table: JSON_TABLE '(' json_value_expr ',' a_expr json_table_path_name_opt json_passing_clause_opt COLUMNS '(' json_table_column_definition_list ')' json_table_plan_clause_opt json_on_error_clause_opt ')'": {
+      "status": "supported",
+      "symbol": "qlx.JSONTable"
+    },
+    "json_value_expr: a_expr json_format_clause_opt": {
+      "status": "supported",
+      "symbol": "JSON constructors"
+    },
+    "limit_clause: FETCH first_or_next row_or_rows ONLY": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / FetchFirst / WithTies"
+    },
+    "limit_clause: FETCH first_or_next row_or_rows WITH TIES": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / FetchFirst / WithTies"
+    },
+    "limit_clause: FETCH first_or_next select_fetch_first_value row_or_rows ONLY": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / FetchFirst / WithTies"
+    },
+    "limit_clause: FETCH first_or_next select_fetch_first_value row_or_rows WITH TIES": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / FetchFirst / WithTies"
+    },
+    "limit_clause: LIMIT select_limit_value": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / FetchFirst / WithTies"
+    },
+    "limit_clause: LIMIT select_limit_value ',' select_offset_value": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / FetchFirst / WithTies"
+    },
+    "merge_delete: DELETE_P": {
+      "status": "supported",
+      "symbol": "MergeQuery delete action"
+    },
+    "merge_insert: INSERT '(' insert_column_list ')' OVERRIDING override_kind VALUE_P merge_values_clause": {
+      "status": "supported",
+      "symbol": "MergeQuery insert action"
+    },
+    "merge_insert: INSERT '(' insert_column_list ')' merge_values_clause": {
+      "status": "supported",
+      "symbol": "MergeQuery insert action"
+    },
+    "merge_insert: INSERT DEFAULT VALUES": {
+      "status": "supported",
+      "symbol": "MergeQuery insert action"
+    },
+    "merge_insert: INSERT OVERRIDING override_kind VALUE_P merge_values_clause": {
+      "status": "supported",
+      "symbol": "MergeQuery insert action"
+    },
+    "merge_insert: INSERT merge_values_clause": {
+      "status": "supported",
+      "symbol": "MergeQuery insert action"
+    },
+    "merge_update: UPDATE SET set_clause_list": {
+      "status": "supported",
+      "symbol": "MergeQuery update action"
+    },
+    "merge_when_clause: merge_when_tgt_matched opt_merge_when_condition THEN DO NOTHING": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenMatched / WhenNotMatched"
+    },
+    "merge_when_clause: merge_when_tgt_matched opt_merge_when_condition THEN merge_delete": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenMatched / WhenNotMatched"
+    },
+    "merge_when_clause: merge_when_tgt_matched opt_merge_when_condition THEN merge_update": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenMatched / WhenNotMatched"
+    },
+    "merge_when_clause: merge_when_tgt_not_matched opt_merge_when_condition THEN DO NOTHING": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenMatched / WhenNotMatched"
+    },
+    "merge_when_clause: merge_when_tgt_not_matched opt_merge_when_condition THEN merge_insert": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenMatched / WhenNotMatched"
+    },
+    "merge_when_list: merge_when_clause": {
+      "status": "supported",
+      "symbol": "MergeQuery.When*"
+    },
+    "merge_when_list: merge_when_list merge_when_clause": {
+      "status": "supported",
+      "symbol": "MergeQuery.When*"
+    },
+    "merge_when_tgt_matched: WHEN MATCHED": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenMatched"
+    },
+    "merge_when_tgt_matched: WHEN NOT MATCHED BY SOURCE": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenMatched"
+    },
+    "merge_when_tgt_not_matched: WHEN NOT MATCHED": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenNotMatched / WhenNotMatchedBySource"
+    },
+    "merge_when_tgt_not_matched: WHEN NOT MATCHED BY TARGET": {
+      "status": "supported",
+      "symbol": "MergeQuery.WhenNotMatched / WhenNotMatchedBySource"
+    },
+    "offset_clause: OFFSET select_fetch_first_value row_or_rows": {
+      "status": "supported",
+      "symbol": "SelectQuery.Offset"
+    },
+    "offset_clause: OFFSET select_offset_value": {
+      "status": "supported",
+      "symbol": "SelectQuery.Offset"
+    },
+    "opt_asc_desc: <empty>": {
+      "status": "supported",
+      "symbol": "OrderTerm.Asc / Desc"
+    },
+    "opt_asc_desc: ASC": {
+      "status": "supported",
+      "symbol": "OrderTerm.Asc / Desc"
+    },
+    "opt_asc_desc: DESC": {
+      "status": "supported",
+      "symbol": "OrderTerm.Asc / Desc"
+    },
+    "opt_conf_expr: '(' index_params ')' where_clause": {
+      "status": "supported",
+      "symbol": "OnConflict / OnConflictConstraint"
+    },
+    "opt_conf_expr: <empty>": {
+      "status": "supported",
+      "symbol": "OnConflict / OnConflictConstraint"
+    },
+    "opt_conf_expr: ON CONSTRAINT name": {
+      "status": "supported",
+      "symbol": "OnConflict / OnConflictConstraint"
+    },
+    "opt_cycle_clause: <empty>": {
+      "status": "supported",
+      "symbol": "CTE.Cycle"
+    },
+    "opt_cycle_clause: CYCLE columnList SET ColId TO AexprConst DEFAULT AexprConst USING ColId": {
+      "status": "supported",
+      "symbol": "CTE.Cycle"
+    },
+    "opt_cycle_clause: CYCLE columnList SET ColId USING ColId": {
+      "status": "supported",
+      "symbol": "CTE.Cycle"
+    },
+    "opt_materialized: <empty>": {
+      "status": "supported",
+      "symbol": "CTE.Materialized / NotMaterialized"
+    },
+    "opt_materialized: MATERIALIZED": {
+      "status": "supported",
+      "symbol": "CTE.Materialized / NotMaterialized"
+    },
+    "opt_materialized: NOT MATERIALIZED": {
+      "status": "supported",
+      "symbol": "CTE.Materialized / NotMaterialized"
+    },
+    "opt_merge_when_condition: <empty>": {
+      "status": "supported",
+      "symbol": "MergeQuery And(pred)"
+    },
+    "opt_merge_when_condition: AND a_expr": {
+      "status": "supported",
+      "symbol": "MergeQuery And(pred)"
+    },
+    "opt_nowait_or_skip: <empty>": {
+      "status": "supported",
+      "symbol": "SkipLocked / NoWait"
+    },
+    "opt_nowait_or_skip: NOWAIT": {
+      "status": "supported",
+      "symbol": "SkipLocked / NoWait"
+    },
+    "opt_nowait_or_skip: SKIP LOCKED": {
+      "status": "supported",
+      "symbol": "SkipLocked / NoWait"
+    },
+    "opt_nulls_order: <empty>": {
+      "status": "supported",
+      "symbol": "OrderTerm.NullsFirst / NullsLast"
+    },
+    "opt_nulls_order: NULLS_LA FIRST_P": {
+      "status": "supported",
+      "symbol": "OrderTerm.NullsFirst / NullsLast"
+    },
+    "opt_nulls_order: NULLS_LA LAST_P": {
+      "status": "supported",
+      "symbol": "OrderTerm.NullsFirst / NullsLast"
+    },
+    "opt_on_conflict: <empty>": {
+      "status": "supported",
+      "symbol": "InsertQuery.OnConflict ... DoNothing / DoUpdate / DoSelect"
+    },
+    "opt_on_conflict: ON CONFLICT opt_conf_expr DO NOTHING": {
+      "status": "supported",
+      "symbol": "InsertQuery.OnConflict ... DoNothing / DoUpdate / DoSelect"
+    },
+    "opt_on_conflict: ON CONFLICT opt_conf_expr DO SELECT opt_for_locking_strength where_clause": {
+      "status": "supported",
+      "symbol": "InsertQuery.OnConflict ... DoNothing / DoUpdate / DoSelect"
+    },
+    "opt_on_conflict: ON CONFLICT opt_conf_expr DO UPDATE SET set_clause_list where_clause": {
+      "status": "supported",
+      "symbol": "InsertQuery.OnConflict ... DoNothing / DoUpdate / DoSelect"
+    },
+    "opt_search_clause: <empty>": {
+      "status": "supported",
+      "symbol": "CTE.SearchDepthFirst / SearchBreadthFirst"
+    },
+    "opt_search_clause: SEARCH BREADTH FIRST_P BY columnList SET ColId": {
+      "status": "supported",
+      "symbol": "CTE.SearchDepthFirst / SearchBreadthFirst"
+    },
+    "opt_search_clause: SEARCH DEPTH FIRST_P BY columnList SET ColId": {
+      "status": "supported",
+      "symbol": "CTE.SearchDepthFirst / SearchBreadthFirst"
+    },
+    "opt_window_exclusion_clause: <empty>": {
+      "status": "supported",
+      "symbol": "WindowSpec.Exclude*"
+    },
+    "opt_window_exclusion_clause: EXCLUDE CURRENT_P ROW": {
+      "status": "supported",
+      "symbol": "WindowSpec.Exclude*"
+    },
+    "opt_window_exclusion_clause: EXCLUDE GROUP_P": {
+      "status": "supported",
+      "symbol": "WindowSpec.Exclude*"
+    },
+    "opt_window_exclusion_clause: EXCLUDE NO OTHERS": {
+      "status": "supported",
+      "symbol": "WindowSpec.Exclude*"
+    },
+    "opt_window_exclusion_clause: EXCLUDE TIES": {
+      "status": "supported",
+      "symbol": "WindowSpec.Exclude*"
+    },
+    "over_clause: <empty>": {
+      "status": "supported",
+      "symbol": "AggExpr.Over / WinFn.Over"
+    },
+    "over_clause: OVER ColId": {
+      "status": "supported",
+      "symbol": "AggExpr.Over / WinFn.Over"
+    },
+    "over_clause: OVER window_specification": {
+      "status": "supported",
+      "symbol": "AggExpr.Over / WinFn.Over"
+    },
+    "override_kind: SYSTEM_P": {
+      "status": "supported",
+      "symbol": "InsertQuery.OverridingSystemValue / OverridingUserValue"
+    },
+    "override_kind: USER": {
+      "status": "supported",
+      "symbol": "InsertQuery.OverridingSystemValue / OverridingUserValue"
+    },
+    "returning_clause: <empty>": {
+      "status": "supported",
+      "symbol": "Returning"
+    },
+    "returning_clause: RETURNING returning_with_clause target_list": {
+      "status": "supported",
+      "symbol": "Returning"
+    },
+    "returning_option: returning_option_kind AS ColId": {
+      "status": "supported",
+      "symbol": "Returning with Old()/New()"
+    },
+    "returning_option_kind: NEW": {
+      "status": "supported",
+      "symbol": "Old / New"
+    },
+    "returning_option_kind: OLD": {
+      "status": "supported",
+      "symbol": "Old / New"
+    },
+    "returning_options: returning_option": {
+      "status": "supported",
+      "symbol": "Returning with Old()/New()"
+    },
+    "returning_options: returning_options ',' returning_option": {
+      "status": "supported",
+      "symbol": "Returning with Old()/New()"
+    },
+    "rollup_clause: ROLLUP '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Rollup"
+    },
+    "row: '(' expr_list ',' a_expr ')'": {
+      "status": "supported",
+      "symbol": "qlx.Row"
+    },
+    "row: ROW '(' ')'": {
+      "status": "supported",
+      "symbol": "qlx.Row"
+    },
+    "row: ROW '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Row"
+    },
+    "row_or_rows: ROW": {
+      "status": "supported",
+      "symbol": "FetchFirst"
+    },
+    "row_or_rows: ROWS": {
+      "status": "supported",
+      "symbol": "FetchFirst"
+    },
+    "select_clause: select_with_parens": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_clause: simple_select": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_fetch_first_value: '+' I_or_F_const": {
+      "status": "supported",
+      "symbol": "SelectQuery.FetchFirst"
+    },
+    "select_fetch_first_value: '-' I_or_F_const": {
+      "status": "supported",
+      "symbol": "SelectQuery.FetchFirst"
+    },
+    "select_fetch_first_value: c_expr": {
+      "status": "supported",
+      "symbol": "SelectQuery.FetchFirst"
+    },
+    "select_limit: limit_clause": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / Offset / FetchFirst"
+    },
+    "select_limit: limit_clause offset_clause": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / Offset / FetchFirst"
+    },
+    "select_limit: offset_clause": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / Offset / FetchFirst"
+    },
+    "select_limit: offset_clause limit_clause": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit / Offset / FetchFirst"
+    },
+    "select_limit_value: ALL": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit"
+    },
+    "select_limit_value: a_expr": {
+      "status": "supported",
+      "symbol": "SelectQuery.Limit"
+    },
+    "select_no_parens: select_clause opt_sort_clause for_locking_clause opt_select_limit": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_no_parens: select_clause opt_sort_clause select_limit opt_for_locking_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_no_parens: select_clause sort_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_no_parens: simple_select": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_no_parens: with_clause select_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_no_parens: with_clause select_clause opt_sort_clause for_locking_clause opt_select_limit": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_no_parens: with_clause select_clause opt_sort_clause select_limit opt_for_locking_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_no_parens: with_clause select_clause sort_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "select_with_parens: '(' select_no_parens ')'": {
+      "status": "supported",
+      "symbol": "qlx.Select (parenthesised as a subquery or set-operation operand)"
+    },
+    "select_with_parens: '(' select_with_parens ')'": {
+      "status": "supported",
+      "symbol": "qlx.Select (parenthesised as a subquery or set-operation operand)"
+    },
+    "set_clause: '(' set_target_list ')' '=' a_expr": {
+      "status": "supported",
+      "symbol": "Column.To / ToX / ToDefault; multi-column form via SetRow"
+    },
+    "set_clause: set_target '=' a_expr": {
+      "status": "supported",
+      "symbol": "Column.To / ToX / ToDefault; multi-column form via SetRow"
+    },
+    "set_clause_list: set_clause": {
+      "status": "supported",
+      "symbol": "UpdateQuery.Set"
+    },
+    "set_clause_list: set_clause_list ',' set_clause": {
+      "status": "supported",
+      "symbol": "UpdateQuery.Set"
+    },
+    "set_target: ColId opt_indirection": {
+      "status": "supported",
+      "symbol": "UpdateQuery.Set"
+    },
+    "simple_select: SELECT distinct_clause target_list into_clause from_clause where_clause group_clause having_clause window_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select / Values / Union / Intersect / Except"
+    },
+    "simple_select: SELECT opt_all_clause opt_target_list into_clause from_clause where_clause group_clause having_clause window_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select / Values / Union / Intersect / Except"
+    },
+    "simple_select: TABLE relation_expr": {
+      "status": "supported",
+      "symbol": "qlx.Select / Values / Union / Intersect / Except"
+    },
+    "simple_select: select_clause EXCEPT set_quantifier select_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select / Values / Union / Intersect / Except"
+    },
+    "simple_select: select_clause INTERSECT set_quantifier select_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select / Values / Union / Intersect / Except"
+    },
+    "simple_select: select_clause UNION set_quantifier select_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select / Values / Union / Intersect / Except"
+    },
+    "simple_select: values_clause": {
+      "status": "supported",
+      "symbol": "qlx.Select / Values / Union / Intersect / Except"
+    },
+    "sort_clause: ORDER BY sortby_list": {
+      "status": "supported",
+      "symbol": "SelectQuery.OrderBy"
+    },
+    "sortby: a_expr USING qual_all_Op opt_nulls_order": {
+      "status": "supported",
+      "symbol": "OrderTerm (Asc/Desc/NullsFirst/NullsLast, USING via operator wrappers)"
+    },
+    "sortby: a_expr opt_asc_desc opt_nulls_order": {
+      "status": "supported",
+      "symbol": "OrderTerm (Asc/Desc/NullsFirst/NullsLast, USING via operator wrappers)"
+    },
+    "table_ref: '(' joined_table ')' alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: LATERAL_P func_table func_alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: LATERAL_P json_table opt_alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: LATERAL_P select_with_parens opt_alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: LATERAL_P xmltable opt_alias_clause": {
+      "status": "supported",
+      "symbol": "qlx.XMLTable"
+    },
+    "table_ref: func_table func_alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: joined_table": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: json_table opt_alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: relation_expr opt_alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: relation_expr opt_alias_clause tablesample_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: select_with_parens opt_alias_clause": {
+      "status": "supported",
+      "symbol": "FromItem: tables, qlx.Subquery, Lateral, JSONTable, table functions, TableSample"
+    },
+    "table_ref: xmltable opt_alias_clause": {
+      "status": "supported",
+      "symbol": "qlx.XMLTable"
+    },
+    "type_list: Typename": {
+      "status": "supported",
+      "symbol": "Prepare/Declare"
+    },
+    "type_list: type_list ',' Typename": {
+      "status": "supported",
+      "symbol": "Prepare/Declare"
+    },
+    "using_clause: <empty>": {
+      "status": "supported",
+      "symbol": "DeleteQuery.Using"
+    },
+    "using_clause: USING from_list": {
+      "status": "supported",
+      "symbol": "DeleteQuery.Using"
+    },
+    "values_clause: VALUES '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Values1..4"
+    },
+    "values_clause: values_clause ',' '(' expr_list ')'": {
+      "status": "supported",
+      "symbol": "qlx.Values1..4"
+    },
+    "when_clause: WHEN a_expr THEN a_expr": {
+      "status": "supported",
+      "symbol": "CaseBuilder.When"
+    },
+    "where_clause: <empty>": {
+      "status": "supported",
+      "symbol": "SelectQuery.Where"
+    },
+    "where_clause: WHERE a_expr": {
+      "status": "supported",
+      "symbol": "SelectQuery.Where"
+    },
+    "window_clause: <empty>": {
+      "status": "supported",
+      "symbol": "SelectQuery.Windows"
+    },
+    "window_clause: WINDOW window_definition_list": {
+      "status": "supported",
+      "symbol": "SelectQuery.Windows"
+    },
+    "window_definition: ColId AS window_specification": {
+      "status": "supported",
+      "symbol": "qlx.NewWindow"
+    },
+    "window_specification: '(' opt_existing_window_name opt_partition_clause opt_sort_clause opt_frame_clause ')'": {
+      "status": "supported",
+      "symbol": "qlx.Window()"
+    },
+    "with_clause: WITH RECURSIVE cte_list": {
+      "status": "supported",
+      "symbol": "SelectQuery.With"
+    },
+    "with_clause: WITH cte_list": {
+      "status": "supported",
+      "symbol": "SelectQuery.With"
+    },
+    "with_clause: WITH_LA cte_list": {
+      "status": "supported",
+      "symbol": "SelectQuery.With"
+    },
+    "within_group_clause: <empty>": {
+      "status": "supported",
+      "symbol": "OrderedAgg.WithinGroup"
+    },
+    "within_group_clause: WITHIN GROUP_P '(' sort_clause ')'": {
+      "status": "supported",
+      "symbol": "OrderedAgg.WithinGroup"
+    }
+  },
+  "statements": {
+    "AlterCollationStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterCompositeTypeStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterDatabaseSetStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterDatabaseStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterDefaultPrivilegesStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterDomainStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterEnumStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterEventTrigStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterExtensionContentsStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterExtensionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterFdwStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterForeignServerStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterFunctionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterGroupStmt": {
+      "reason": "role administration",
+      "status": "out-of-scope"
+    },
+    "AlterObjectDependsStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterObjectSchemaStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterOpFamilyStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterOperatorStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterOwnerStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterPolicyStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterPublicationStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterRoleSetStmt": {
+      "reason": "role administration",
+      "status": "out-of-scope"
+    },
+    "AlterRoleStmt": {
+      "reason": "role administration",
+      "status": "out-of-scope"
+    },
+    "AlterSeqStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterStatsStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterSubscriptionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterSystemStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterTSConfigurationStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterTSDictionaryStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterTableStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterTblSpcStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterTypeStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AlterUserMappingStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "AnalyzeStmt": {
+      "status": "supported",
+      "symbol": "qlx.AnalyzeTables"
+    },
+    "CallStmt": {
+      "status": "supported",
+      "symbol": "qlx.Call"
+    },
+    "CheckPointStmt": {
+      "status": "supported",
+      "symbol": "qlx.Checkpoint"
+    },
+    "ClosePortalStmt": {
+      "status": "supported",
+      "symbol": "qlx.CloseCursor"
+    },
+    "ClusterStmt": {
+      "status": "supported",
+      "symbol": "qlx.Cluster"
+    },
+    "CommentStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "ConstraintsSetStmt": {
+      "status": "supported",
+      "symbol": "qlx.SetConstraints / SetConstraintsAll"
+    },
+    "CopyStmt": {
+      "status": "supported",
+      "symbol": "qlx.CopyIn / CopyTableOut / CopyQueryOut"
+    },
+    "CreateAmStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateAsStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateAssertionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateCastStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateConversionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateDomainStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateEventTrigStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateExtensionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateFdwStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateForeignServerStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateForeignTableStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateFunctionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateGroupStmt": {
+      "reason": "role administration",
+      "status": "out-of-scope"
+    },
+    "CreateMatViewStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateOpClassStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateOpFamilyStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreatePLangStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreatePolicyStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreatePublicationStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateRoleStmt": {
+      "status": "supported",
+      "symbol": "qlx.NewRole"
+    },
+    "CreateSchemaStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateSeqStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateStatsStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateSubscriptionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateTableSpaceStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateTransformStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateTrigStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateUserMappingStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "CreateUserStmt": {
+      "reason": "role administration (CREATE USER is CREATE ROLE ... LOGIN)",
+      "status": "out-of-scope"
+    },
+    "CreatedbStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DeallocateStmt": {
+      "status": "supported",
+      "symbol": "qlx.Deallocate / DeallocateAll"
+    },
+    "DeclareCursorStmt": {
+      "status": "supported",
+      "symbol": "qlx.DeclareCursor"
+    },
+    "DefineStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DeleteStmt": {
+      "status": "supported",
+      "symbol": "qlx.DeleteFrom"
+    },
+    "DiscardStmt": {
+      "status": "supported",
+      "symbol": "qlx.DiscardAll / DiscardPlans / DiscardSequences / DiscardTemp"
+    },
+    "DoStmt": {
+      "reason": "anonymous code blocks take their body as SQL/PL text, which QLX never accepts (no raw SQL in the API)",
+      "status": "out-of-scope"
+    },
+    "DropCastStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropOpClassStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropOpFamilyStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropOwnedStmt": {
+      "reason": "role administration, run by operators with a superuser tool",
+      "status": "out-of-scope"
+    },
+    "DropRoleStmt": {
+      "reason": "role administration",
+      "status": "out-of-scope"
+    },
+    "DropStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropSubscriptionStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropTableSpaceStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropTransformStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropUserMappingStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "DropdbStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "ExecuteStmt": {
+      "status": "supported",
+      "symbol": "qlx.Execute"
+    },
+    "ExplainStmt": {
+      "status": "supported",
+      "symbol": "qlx.Explain"
+    },
+    "FetchStmt": {
+      "status": "supported",
+      "symbol": "qlx.FetchFrom / MoveIn"
+    },
+    "GrantRoleStmt": {
+      "status": "supported",
+      "symbol": "qlx.Grant"
+    },
+    "GrantStmt": {
+      "status": "supported",
+      "symbol": "qlx.Grant"
+    },
+    "ImportForeignSchemaStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "IndexStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "InsertStmt": {
+      "status": "supported",
+      "symbol": "qlx.InsertInto"
+    },
+    "ListenStmt": {
+      "status": "supported",
+      "symbol": "qlx.Listen"
+    },
+    "LoadStmt": {
+      "reason": "loads a server-side shared library by file path: an administrator action, not an application query",
+      "status": "out-of-scope"
+    },
+    "LockStmt": {
+      "status": "supported",
+      "symbol": "qlx.LockTable"
+    },
+    "MergeStmt": {
+      "status": "supported",
+      "symbol": "qlx.Merge"
+    },
+    "NotifyStmt": {
+      "status": "supported",
+      "symbol": "qlx.Notify"
+    },
+    "PrepareStmt": {
+      "status": "supported",
+      "symbol": "qlx.Prepare"
+    },
+    "ReassignOwnedStmt": {
+      "reason": "role administration, run by operators with a superuser tool",
+      "status": "out-of-scope"
+    },
+    "RefreshMatViewStmt": {
+      "status": "supported",
+      "symbol": "qlx.RefreshMaterializedView"
+    },
+    "ReindexStmt": {
+      "status": "supported",
+      "symbol": "qlx.Reindex"
+    },
+    "RemoveAggrStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "RemoveFuncStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "RemoveOperStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "RenameStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "RepackStmt": {
+      "status": "supported",
+      "symbol": "qlx.Repack"
+    },
+    "RevokeRoleStmt": {
+      "status": "supported",
+      "symbol": "qlx.Revoke"
+    },
+    "RevokeStmt": {
+      "status": "supported",
+      "symbol": "qlx.Revoke"
+    },
+    "RuleStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "SecLabelStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "SelectStmt": {
+      "status": "supported",
+      "symbol": "qlx.Select"
+    },
+    "TransactionStmt": {
+      "status": "supported",
+      "symbol": "qlx.Begin / Commit / Rollback / Savepoint / PrepareTransaction"
+    },
+    "TruncateStmt": {
+      "status": "supported",
+      "symbol": "qlx.Truncate"
+    },
+    "UnlistenStmt": {
+      "status": "supported",
+      "symbol": "qlx.Unlisten / UnlistenAll"
+    },
+    "UpdateStmt": {
+      "status": "supported",
+      "symbol": "qlx.Update"
+    },
+    "VacuumStmt": {
+      "status": "supported",
+      "symbol": "qlx.Vacuum"
+    },
+    "VariableResetStmt": {
+      "status": "supported",
+      "symbol": "qlx.Reset / ResetAll / ResetRole"
+    },
+    "VariableSetStmt": {
+      "status": "supported",
+      "symbol": "qlx.SetConfig / SetRole / SetSessionAuthorization / SetTransaction"
+    },
+    "VariableShowStmt": {
+      "status": "supported",
+      "symbol": "qlx.Show / CurrentSetting"
+    },
+    "ViewStmt": {
+      "reason": "DDL: the schema is owned by SQL migrations (decision D2), QLX builds no DDL",
+      "status": "out-of-scope"
+    },
+    "WaitStmt": {
+      "status": "supported",
+      "symbol": "qlx.WaitForLSN"
+    }
+  }
+}

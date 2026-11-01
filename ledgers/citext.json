@@ -1,0 +1,830 @@
+{
+ "extension": "citext",
+ "schema": "public",
+ "versions": [
+  16,
+  17,
+  18,
+  19
+ ],
+ "funcs": [
+  {
+   "name": "citext",
+   "kind": "f",
+   "args": [
+    "bool"
+   ],
+   "ret": "citext",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext",
+   "kind": "f",
+   "args": [
+    "bpchar"
+   ],
+   "ret": "citext",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext",
+   "kind": "f",
+   "args": [
+    "inet"
+   ],
+   "ret": "citext",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_cmp",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_eq",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_ge",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_gt",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_hash",
+   "kind": "f",
+   "args": [
+    "citext"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_hash_extended",
+   "kind": "f",
+   "args": [
+    "citext",
+    "int8"
+   ],
+   "ret": "int8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_larger",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "citext",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_le",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_lt",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_ne",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_pattern_cmp",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_pattern_ge",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_pattern_gt",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_pattern_le",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_pattern_lt",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citext_smaller",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "citext",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citextin",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "citext",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citextout",
+   "kind": "f",
+   "args": [
+    "citext"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "citextrecv",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "citext",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "citextsend",
+   "kind": "f",
+   "args": [
+    "citext"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "max",
+   "kind": "a",
+   "args": [
+    "citext"
+   ],
+   "ret": "citext",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "min",
+   "kind": "a",
+   "args": [
+    "citext"
+   ],
+   "ret": "citext",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_match",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_match",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "text"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_matches",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "_text",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_matches",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "text"
+   ],
+   "ret": "_text",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_replace",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_replace",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "text",
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_split_to_array",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_split_to_array",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "text"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_split_to_table",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "text",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "regexp_split_to_table",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "text"
+   ],
+   "ret": "text",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "replace",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "citext"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "split_part",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "strpos",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticlike",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticlike",
+   "kind": "f",
+   "args": [
+    "citext",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticnlike",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticnlike",
+   "kind": "f",
+   "args": [
+    "citext",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticregexeq",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticregexeq",
+   "kind": "f",
+   "args": [
+    "citext",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticregexne",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "texticregexne",
+   "kind": "f",
+   "args": [
+    "citext",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "translate",
+   "kind": "f",
+   "args": [
+    "citext",
+    "citext",
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  }
+ ],
+ "ops": [
+  {
+   "name": "!~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticregexne",
+   "schema": "public"
+  },
+  {
+   "name": "!~",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticregexne",
+   "schema": "public"
+  },
+  {
+   "name": "!~*",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticregexne",
+   "schema": "public"
+  },
+  {
+   "name": "!~*",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticregexne",
+   "schema": "public"
+  },
+  {
+   "name": "!~~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticnlike",
+   "schema": "public"
+  },
+  {
+   "name": "!~~",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticnlike",
+   "schema": "public"
+  },
+  {
+   "name": "!~~*",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticnlike",
+   "schema": "public"
+  },
+  {
+   "name": "!~~*",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticnlike",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_lt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_le",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003e",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_ne",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_eq",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_gt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e=",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_ge",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticregexeq",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticregexeq",
+   "schema": "public"
+  },
+  {
+   "name": "~*",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticregexeq",
+   "schema": "public"
+  },
+  {
+   "name": "~*",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticregexeq",
+   "schema": "public"
+  },
+  {
+   "name": "~\u003c=~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_pattern_le",
+   "schema": "public"
+  },
+  {
+   "name": "~\u003c~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_pattern_lt",
+   "schema": "public"
+  },
+  {
+   "name": "~\u003e=~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_pattern_ge",
+   "schema": "public"
+  },
+  {
+   "name": "~\u003e~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "citext_pattern_gt",
+   "schema": "public"
+  },
+  {
+   "name": "~~",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticlike",
+   "schema": "public"
+  },
+  {
+   "name": "~~",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticlike",
+   "schema": "public"
+  },
+  {
+   "name": "~~*",
+   "left": "citext",
+   "right": "citext",
+   "ret": "bool",
+   "proc": "public.texticlike",
+   "schema": "public"
+  },
+  {
+   "name": "~~*",
+   "left": "citext",
+   "right": "text",
+   "ret": "bool",
+   "proc": "public.texticlike",
+   "schema": "public"
+  }
+ ],
+ "casts": [
+  {
+   "from": "bool",
+   "to": "citext",
+   "context": "a"
+  },
+  {
+   "from": "bpchar",
+   "to": "citext",
+   "context": "a"
+  },
+  {
+   "from": "citext",
+   "to": "bpchar",
+   "context": "a"
+  },
+  {
+   "from": "citext",
+   "to": "text",
+   "context": "i"
+  },
+  {
+   "from": "citext",
+   "to": "varchar",
+   "context": "i"
+  },
+  {
+   "from": "inet",
+   "to": "citext",
+   "context": "a"
+  },
+  {
+   "from": "text",
+   "to": "citext",
+   "context": "a"
+  },
+  {
+   "from": "varchar",
+   "to": "citext",
+   "context": "a"
+  }
+ ]
+}

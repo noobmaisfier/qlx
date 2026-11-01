@@ -1,0 +1,1855 @@
+{
+ "extension": "vector",
+ "schema": "public",
+ "versions": [
+  16,
+  17,
+  18,
+  19
+ ],
+ "funcs": [
+  {
+   "name": "array_to_halfvec",
+   "kind": "f",
+   "args": [
+    "_float4",
+    "int4",
+    "bool"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_halfvec",
+   "kind": "f",
+   "args": [
+    "_float8",
+    "int4",
+    "bool"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_halfvec",
+   "kind": "f",
+   "args": [
+    "_int4",
+    "int4",
+    "bool"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_halfvec",
+   "kind": "f",
+   "args": [
+    "_numeric",
+    "int4",
+    "bool"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_sparsevec",
+   "kind": "f",
+   "args": [
+    "_float4",
+    "int4",
+    "bool"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_sparsevec",
+   "kind": "f",
+   "args": [
+    "_float8",
+    "int4",
+    "bool"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_sparsevec",
+   "kind": "f",
+   "args": [
+    "_int4",
+    "int4",
+    "bool"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_sparsevec",
+   "kind": "f",
+   "args": [
+    "_numeric",
+    "int4",
+    "bool"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_vector",
+   "kind": "f",
+   "args": [
+    "_float4",
+    "int4",
+    "bool"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_vector",
+   "kind": "f",
+   "args": [
+    "_float8",
+    "int4",
+    "bool"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_vector",
+   "kind": "f",
+   "args": [
+    "_int4",
+    "int4",
+    "bool"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "array_to_vector",
+   "kind": "f",
+   "args": [
+    "_numeric",
+    "int4",
+    "bool"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "avg",
+   "kind": "a",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "halfvec",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "avg",
+   "kind": "a",
+   "args": [
+    "vector"
+   ],
+   "ret": "vector",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "binary_quantize",
+   "kind": "f",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "bit",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "binary_quantize",
+   "kind": "f",
+   "args": [
+    "vector"
+   ],
+   "ret": "bit",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "cosine_distance",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "cosine_distance",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "cosine_distance",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "int4",
+    "bool"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_accum",
+   "kind": "f",
+   "args": [
+    "_float8",
+    "halfvec"
+   ],
+   "ret": "_float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_add",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_avg",
+   "kind": "f",
+   "args": [
+    "_float8"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_cmp",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_combine",
+   "kind": "f",
+   "args": [
+    "_float8",
+    "_float8"
+   ],
+   "ret": "_float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_concat",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_eq",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_ge",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_gt",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_in",
+   "kind": "f",
+   "args": [
+    "cstring",
+    "oid",
+    "int4"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_l2_squared_distance",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_le",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_lt",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_mul",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_ne",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_negative_inner_product",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_out",
+   "kind": "f",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_recv",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "int4"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_send",
+   "kind": "f",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_spherical_distance",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_sub",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_to_float4",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "int4",
+    "bool"
+   ],
+   "ret": "_float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_to_sparsevec",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "int4",
+    "bool"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_to_vector",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "int4",
+    "bool"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "halfvec_typmod_in",
+   "kind": "f",
+   "args": [
+    "_cstring"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hamming_distance",
+   "kind": "f",
+   "args": [
+    "bit",
+    "bit"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hnsw_bit_support",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "hnsw_halfvec_support",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "hnsw_sparsevec_support",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "hnswhandler",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "index_am_handler",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "inner_product",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "inner_product",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "inner_product",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ivfflat_bit_support",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "ivfflat_halfvec_support",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "ivfflathandler",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "index_am_handler",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "jaccard_distance",
+   "kind": "f",
+   "args": [
+    "bit",
+    "bit"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l1_distance",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l1_distance",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l1_distance",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_distance",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_distance",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_distance",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_norm",
+   "kind": "f",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_norm",
+   "kind": "f",
+   "args": [
+    "sparsevec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_normalize",
+   "kind": "f",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_normalize",
+   "kind": "f",
+   "args": [
+    "sparsevec"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "l2_normalize",
+   "kind": "f",
+   "args": [
+    "vector"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "int4",
+    "bool"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_cmp",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_eq",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_ge",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_gt",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_in",
+   "kind": "f",
+   "args": [
+    "cstring",
+    "oid",
+    "int4"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_l2_squared_distance",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_le",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_lt",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_ne",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_negative_inner_product",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "sparsevec"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_out",
+   "kind": "f",
+   "args": [
+    "sparsevec"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_recv",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "int4"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_send",
+   "kind": "f",
+   "args": [
+    "sparsevec"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_to_halfvec",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "int4",
+    "bool"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_to_vector",
+   "kind": "f",
+   "args": [
+    "sparsevec",
+    "int4",
+    "bool"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sparsevec_typmod_in",
+   "kind": "f",
+   "args": [
+    "_cstring"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "subvector",
+   "kind": "f",
+   "args": [
+    "halfvec",
+    "int4",
+    "int4"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "subvector",
+   "kind": "f",
+   "args": [
+    "vector",
+    "int4",
+    "int4"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sum",
+   "kind": "a",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "halfvec",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "sum",
+   "kind": "a",
+   "args": [
+    "vector"
+   ],
+   "ret": "vector",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector",
+   "kind": "f",
+   "args": [
+    "vector",
+    "int4",
+    "bool"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_accum",
+   "kind": "f",
+   "args": [
+    "_float8",
+    "vector"
+   ],
+   "ret": "_float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_add",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_avg",
+   "kind": "f",
+   "args": [
+    "_float8"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_cmp",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_combine",
+   "kind": "f",
+   "args": [
+    "_float8",
+    "_float8"
+   ],
+   "ret": "_float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_concat",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_dims",
+   "kind": "f",
+   "args": [
+    "halfvec"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_dims",
+   "kind": "f",
+   "args": [
+    "vector"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_eq",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_ge",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_gt",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_in",
+   "kind": "f",
+   "args": [
+    "cstring",
+    "oid",
+    "int4"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_l2_squared_distance",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_le",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_lt",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_mul",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_ne",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_negative_inner_product",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_norm",
+   "kind": "f",
+   "args": [
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_out",
+   "kind": "f",
+   "args": [
+    "vector"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_recv",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "int4"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_send",
+   "kind": "f",
+   "args": [
+    "vector"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_spherical_distance",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_sub",
+   "kind": "f",
+   "args": [
+    "vector",
+    "vector"
+   ],
+   "ret": "vector",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_to_float4",
+   "kind": "f",
+   "args": [
+    "vector",
+    "int4",
+    "bool"
+   ],
+   "ret": "_float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_to_halfvec",
+   "kind": "f",
+   "args": [
+    "vector",
+    "int4",
+    "bool"
+   ],
+   "ret": "halfvec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_to_sparsevec",
+   "kind": "f",
+   "args": [
+    "vector",
+    "int4",
+    "bool"
+   ],
+   "ret": "sparsevec",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "vector_typmod_in",
+   "kind": "f",
+   "args": [
+    "_cstring"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  }
+ ],
+ "ops": [
+  {
+   "name": "\u003c%\u003e",
+   "left": "bit",
+   "right": "bit",
+   "ret": "float8",
+   "proc": "jaccard_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c~\u003e",
+   "left": "bit",
+   "right": "bit",
+   "ret": "float8",
+   "proc": "hamming_distance",
+   "schema": "public"
+  },
+  {
+   "name": "*",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "halfvec",
+   "proc": "halfvec_mul",
+   "schema": "public"
+  },
+  {
+   "name": "+",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "halfvec",
+   "proc": "halfvec_add",
+   "schema": "public"
+  },
+  {
+   "name": "-",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "halfvec",
+   "proc": "halfvec_sub",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "bool",
+   "proc": "halfvec_lt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c#\u003e",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "float8",
+   "proc": "halfvec_negative_inner_product",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c+\u003e",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "float8",
+   "proc": "public.l1_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "float8",
+   "proc": "public.l2_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "bool",
+   "proc": "halfvec_le",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=\u003e",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "float8",
+   "proc": "public.cosine_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003e",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "bool",
+   "proc": "halfvec_ne",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "bool",
+   "proc": "halfvec_eq",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "bool",
+   "proc": "halfvec_gt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e=",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "bool",
+   "proc": "halfvec_ge",
+   "schema": "public"
+  },
+  {
+   "name": "||",
+   "left": "halfvec",
+   "right": "halfvec",
+   "ret": "halfvec",
+   "proc": "halfvec_concat",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "bool",
+   "proc": "sparsevec_lt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c#\u003e",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "float8",
+   "proc": "sparsevec_negative_inner_product",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c+\u003e",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "float8",
+   "proc": "public.l1_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "float8",
+   "proc": "public.l2_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "bool",
+   "proc": "sparsevec_le",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=\u003e",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "float8",
+   "proc": "public.cosine_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003e",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "bool",
+   "proc": "sparsevec_ne",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "bool",
+   "proc": "sparsevec_eq",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "bool",
+   "proc": "sparsevec_gt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e=",
+   "left": "sparsevec",
+   "right": "sparsevec",
+   "ret": "bool",
+   "proc": "sparsevec_ge",
+   "schema": "public"
+  },
+  {
+   "name": "*",
+   "left": "vector",
+   "right": "vector",
+   "ret": "vector",
+   "proc": "vector_mul",
+   "schema": "public"
+  },
+  {
+   "name": "+",
+   "left": "vector",
+   "right": "vector",
+   "ret": "vector",
+   "proc": "vector_add",
+   "schema": "public"
+  },
+  {
+   "name": "-",
+   "left": "vector",
+   "right": "vector",
+   "ret": "vector",
+   "proc": "vector_sub",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c",
+   "left": "vector",
+   "right": "vector",
+   "ret": "bool",
+   "proc": "vector_lt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c#\u003e",
+   "left": "vector",
+   "right": "vector",
+   "ret": "float8",
+   "proc": "vector_negative_inner_product",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c+\u003e",
+   "left": "vector",
+   "right": "vector",
+   "ret": "float8",
+   "proc": "public.l1_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e",
+   "left": "vector",
+   "right": "vector",
+   "ret": "float8",
+   "proc": "public.l2_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=",
+   "left": "vector",
+   "right": "vector",
+   "ret": "bool",
+   "proc": "vector_le",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=\u003e",
+   "left": "vector",
+   "right": "vector",
+   "ret": "float8",
+   "proc": "public.cosine_distance",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003e",
+   "left": "vector",
+   "right": "vector",
+   "ret": "bool",
+   "proc": "vector_ne",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "vector",
+   "right": "vector",
+   "ret": "bool",
+   "proc": "vector_eq",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e",
+   "left": "vector",
+   "right": "vector",
+   "ret": "bool",
+   "proc": "vector_gt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e=",
+   "left": "vector",
+   "right": "vector",
+   "ret": "bool",
+   "proc": "vector_ge",
+   "schema": "public"
+  },
+  {
+   "name": "||",
+   "left": "vector",
+   "right": "vector",
+   "ret": "vector",
+   "proc": "vector_concat",
+   "schema": "public"
+  }
+ ],
+ "casts": [
+  {
+   "from": "_float4",
+   "to": "halfvec",
+   "context": "a"
+  },
+  {
+   "from": "_float4",
+   "to": "sparsevec",
+   "context": "a"
+  },
+  {
+   "from": "_float4",
+   "to": "vector",
+   "context": "a"
+  },
+  {
+   "from": "_float8",
+   "to": "halfvec",
+   "context": "a"
+  },
+  {
+   "from": "_float8",
+   "to": "sparsevec",
+   "context": "a"
+  },
+  {
+   "from": "_float8",
+   "to": "vector",
+   "context": "a"
+  },
+  {
+   "from": "_int4",
+   "to": "halfvec",
+   "context": "a"
+  },
+  {
+   "from": "_int4",
+   "to": "sparsevec",
+   "context": "a"
+  },
+  {
+   "from": "_int4",
+   "to": "vector",
+   "context": "a"
+  },
+  {
+   "from": "_numeric",
+   "to": "halfvec",
+   "context": "a"
+  },
+  {
+   "from": "_numeric",
+   "to": "sparsevec",
+   "context": "a"
+  },
+  {
+   "from": "_numeric",
+   "to": "vector",
+   "context": "a"
+  },
+  {
+   "from": "halfvec",
+   "to": "_float4",
+   "context": "a"
+  },
+  {
+   "from": "halfvec",
+   "to": "halfvec",
+   "context": "i"
+  },
+  {
+   "from": "halfvec",
+   "to": "sparsevec",
+   "context": "i"
+  },
+  {
+   "from": "halfvec",
+   "to": "vector",
+   "context": "a"
+  },
+  {
+   "from": "sparsevec",
+   "to": "halfvec",
+   "context": "a"
+  },
+  {
+   "from": "sparsevec",
+   "to": "sparsevec",
+   "context": "i"
+  },
+  {
+   "from": "sparsevec",
+   "to": "vector",
+   "context": "a"
+  },
+  {
+   "from": "vector",
+   "to": "_float4",
+   "context": "i"
+  },
+  {
+   "from": "vector",
+   "to": "halfvec",
+   "context": "i"
+  },
+  {
+   "from": "vector",
+   "to": "sparsevec",
+   "context": "i"
+  },
+  {
+   "from": "vector",
+   "to": "vector",
+   "context": "i"
+  }
+ ]
+}

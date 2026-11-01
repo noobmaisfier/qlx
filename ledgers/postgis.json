@@ -1,0 +1,11649 @@
+{
+ "extension": "postgis",
+ "schema": "public",
+ "versions": [
+  16,
+  17,
+  18,
+  19
+ ],
+ "funcs": [
+  {
+   "name": "_postgis_check_library_version",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "scripts_version",
+    "library_version"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_deprecate",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "oldname",
+    "newname",
+    "version"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_index_extent",
+   "kind": "f",
+   "args": [
+    "regclass",
+    "text"
+   ],
+   "arg_names": [
+    "tbl",
+    "col"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_join_selectivity",
+   "kind": "f",
+   "args": [
+    "regclass",
+    "text",
+    "regclass",
+    "text",
+    "text"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_pgsql_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_scripts_pgsql_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_scripts_version_cmp_key",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "arg_names": [
+    "ver"
+   ],
+   "ret": "_int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_selectivity",
+   "kind": "f",
+   "args": [
+    "regclass",
+    "text",
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "tbl",
+    "att_name",
+    "geom",
+    "mode"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "_postgis_stats",
+   "kind": "f",
+   "args": [
+    "regclass",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "tbl",
+    "att_name",
+    ""
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "_st_3ddfullywithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_3ddwithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_3dintersects",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_asgml",
+   "kind": "f",
+   "args": [
+    "int4",
+    "geometry",
+    "int4",
+    "int4",
+    "text",
+    "text"
+   ],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_asx3d",
+   "kind": "f",
+   "args": [
+    "int4",
+    "geometry",
+    "int4",
+    "int4",
+    "text"
+   ],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_bestsrid",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_bestsrid",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_contains",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_containsproperly",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_coveredby",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_coveredby",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_covers",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_covers",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_crosses",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_dfullywithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_distancetree",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_distancetree",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "float8",
+    "bool"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_distanceuncached",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_distanceuncached",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "bool"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_distanceuncached",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "float8",
+    "bool"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_dwithin",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2",
+    "tolerance",
+    "use_spheroid"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "_st_dwithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_dwithinuncached",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "float8"
+   ],
+   "ret": "bool",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_dwithinuncached",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "float8",
+    "bool"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_equals",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_expand",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_geomfromgml",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_intersects",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_linecrossingdirection",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "line1",
+    "line2"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_longestline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_maxdistance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_orderingequals",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_overlaps",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_pointoutside",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_sortablehash",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geom"
+   ],
+   "ret": "int8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_touches",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_st_voronoi",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "g1",
+    "clip",
+    "tolerance",
+    "return_polygons"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 3,
+   "schema": "public"
+  },
+  {
+   "name": "_st_within",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "addgeometrycolumn",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "int4",
+    "varchar",
+    "int4",
+    "bool"
+   ],
+   "arg_names": [
+    "table_name",
+    "column_name",
+    "new_srid",
+    "new_type",
+    "new_dim",
+    "use_typmod"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "addgeometrycolumn",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar",
+    "int4",
+    "varchar",
+    "int4",
+    "bool"
+   ],
+   "arg_names": [
+    "schema_name",
+    "table_name",
+    "column_name",
+    "new_srid",
+    "new_type",
+    "new_dim",
+    "use_typmod"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "s",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "addgeometrycolumn",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar",
+    "varchar",
+    "int4",
+    "varchar",
+    "int4",
+    "bool"
+   ],
+   "arg_names": [
+    "catalog_name",
+    "schema_name",
+    "table_name",
+    "column_name",
+    "new_srid_in",
+    "new_type",
+    "new_dim",
+    "use_typmod"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "box",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "box",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "box",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box2d",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box2d",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box2d_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box2d_out",
+   "kind": "f",
+   "args": [
+    "box2d"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box2df_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "box2df",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box2df_out",
+   "kind": "f",
+   "args": [
+    "box2df"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box3d",
+   "kind": "f",
+   "args": [
+    "box2d"
+   ],
+   "ret": "box3d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box3d",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "box3d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box3d_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "box3d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box3d_out",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "box3dtobox",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "box",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "bytea",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "bytea",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "contains_2d",
+   "kind": "f",
+   "args": [
+    "box2df",
+    "box2df"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "contains_2d",
+   "kind": "f",
+   "args": [
+    "box2df",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "contains_2d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "box2df"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "dropgeometrycolumn",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar"
+   ],
+   "arg_names": [
+    "table_name",
+    "column_name"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "dropgeometrycolumn",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar"
+   ],
+   "arg_names": [
+    "schema_name",
+    "table_name",
+    "column_name"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "dropgeometrycolumn",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar",
+    "varchar"
+   ],
+   "arg_names": [
+    "catalog_name",
+    "schema_name",
+    "table_name",
+    "column_name"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "dropgeometrytable",
+   "kind": "f",
+   "args": [
+    "varchar"
+   ],
+   "arg_names": [
+    "table_name"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "dropgeometrytable",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar"
+   ],
+   "arg_names": [
+    "schema_name",
+    "table_name"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "dropgeometrytable",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar"
+   ],
+   "arg_names": [
+    "catalog_name",
+    "schema_name",
+    "table_name"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "equals",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "find_srid",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "geog_brin_inclusion_add_value",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geog_brin_inclusion_merge",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geog_brin_inclusion_mergeable",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4",
+    "bool"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_analyze",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_cmp",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_distance_knn",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_eq",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_ge",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_compress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_consistent",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geography",
+    "int4"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_decompress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_distance",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geography",
+    "int4"
+   ],
+   "ret": "float8",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_penalty",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_picksplit",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_same",
+   "kind": "f",
+   "args": [
+    "box2d",
+    "box2d",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gist_union",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geography_gt",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_in",
+   "kind": "f",
+   "args": [
+    "cstring",
+    "oid",
+    "int4"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_le",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_lt",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_out",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_overlaps",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_recv",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "int4"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_send",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_spgist_choose_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_spgist_compress_nd",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_spgist_config_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_spgist_inner_consistent_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_spgist_leaf_consistent_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_spgist_picksplit_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_typmod_in",
+   "kind": "f",
+   "args": [
+    "_cstring"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geography_typmod_out",
+   "kind": "f",
+   "args": [
+    "int4"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geom2d_brin_inclusion_add_value",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geom2d_brin_inclusion_merge",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geom3d_brin_inclusion_add_value",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geom3d_brin_inclusion_merge",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geom3d_brin_inclusion_mergeable",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geom4d_brin_inclusion_add_value",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geom4d_brin_inclusion_merge",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geom4d_brin_inclusion_mergeable",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "box2d"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "bool"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "path"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "point"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "polygon"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_above",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_analyze",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_below",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_cmp",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_contained_3d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_contains",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_contains_3d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_contains_nd",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_distance_box",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_distance_centroid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_distance_centroid_nd",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_distance_cpa",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_eq",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_ge",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_compress_2d",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_compress_nd",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_consistent_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry",
+    "int4"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_consistent_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry",
+    "int4"
+   ],
+   "ret": "bool",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_decompress_2d",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_decompress_nd",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_distance_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry",
+    "int4"
+   ],
+   "ret": "float8",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_distance_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry",
+    "int4"
+   ],
+   "ret": "float8",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_penalty_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_penalty_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_picksplit_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_picksplit_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_same_2d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "internal"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_same_nd",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_sortsupport_2d",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_union_2d",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gist_union_nd",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_gt",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_hash",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_le",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_left",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_lt",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_neq",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_out",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_overabove",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_overbelow",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_overlaps",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_overlaps_3d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_overlaps_nd",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_overleft",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_overright",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_recv",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_right",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_same",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_same_3d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_same_nd",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_send",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_sortsupport",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_choose_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_choose_3d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_choose_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_compress_2d",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_compress_3d",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_compress_nd",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_config_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_config_3d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_config_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_inner_consistent_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_inner_consistent_3d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_inner_consistent_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_leaf_consistent_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_leaf_consistent_3d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_leaf_consistent_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_picksplit_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_picksplit_3d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_spgist_picksplit_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_typmod_in",
+   "kind": "f",
+   "args": [
+    "_cstring"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_typmod_out",
+   "kind": "f",
+   "args": [
+    "int4"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_within",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometry_within_nd",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometrytype",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geometrytype",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geomfromewkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "geomfromewkt",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "get_proj4_from_srid",
+   "kind": "f",
+   "args": [
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gidx_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "gidx",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gidx_out",
+   "kind": "f",
+   "args": [
+    "gidx"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gserialized_gist_joinsel_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "internal",
+    "int2"
+   ],
+   "ret": "float8",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "gserialized_gist_joinsel_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "internal",
+    "int2"
+   ],
+   "ret": "float8",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "gserialized_gist_sel_2d",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "internal",
+    "int4"
+   ],
+   "ret": "float8",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "gserialized_gist_sel_nd",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "internal",
+    "int4"
+   ],
+   "ret": "float8",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "is_contained_2d",
+   "kind": "f",
+   "args": [
+    "box2df",
+    "box2df"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "is_contained_2d",
+   "kind": "f",
+   "args": [
+    "box2df",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "is_contained_2d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "box2df"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "json",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "json",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "jsonb",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "jsonb",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_2d",
+   "kind": "f",
+   "args": [
+    "box2df",
+    "box2df"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_2d",
+   "kind": "f",
+   "args": [
+    "box2df",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_2d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "box2df"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_geog",
+   "kind": "f",
+   "args": [
+    "geography",
+    "gidx"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_geog",
+   "kind": "f",
+   "args": [
+    "gidx",
+    "geography"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_geog",
+   "kind": "f",
+   "args": [
+    "gidx",
+    "gidx"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_nd",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "gidx"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_nd",
+   "kind": "f",
+   "args": [
+    "gidx",
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "overlaps_nd",
+   "kind": "f",
+   "args": [
+    "gidx",
+    "gidx"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "path",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "path",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asflatgeobuf_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asflatgeobuf_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asflatgeobuf_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement",
+    "bool"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asflatgeobuf_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement",
+    "bool",
+    "text"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asgeobuf_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asgeobuf_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asgeobuf_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement",
+    "text"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_combinefn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_deserialfn",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_serialfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement",
+    "text"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement",
+    "text",
+    "int4"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement",
+    "text",
+    "int4",
+    "text"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_asmvt_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "anyelement",
+    "text",
+    "int4",
+    "text",
+    "text"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_accum_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_accum_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry",
+    "float8"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_accum_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry",
+    "float8",
+    "int4"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_clusterintersecting_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "_geometry",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_clusterwithin_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "_geometry",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_collect_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "geometry",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_coverageunion_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "geometry",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_makeline_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "geometry",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_polygonize_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "geometry",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_union_parallel_combinefn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_union_parallel_deserialfn",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_union_parallel_finalfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_union_parallel_serialfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_union_parallel_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "pgis_geometry_union_parallel_transfn",
+   "kind": "f",
+   "args": [
+    "internal",
+    "geometry",
+    "float8"
+   ],
+   "ret": "internal",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "point",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "point",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "polygon",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "polygon",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "populate_geometry_columns",
+   "kind": "f",
+   "args": [
+    "bool"
+   ],
+   "arg_names": [
+    "use_typmod"
+   ],
+   "ret": "text",
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "populate_geometry_columns",
+   "kind": "f",
+   "args": [
+    "oid",
+    "bool"
+   ],
+   "arg_names": [
+    "tbl_oid",
+    "use_typmod"
+   ],
+   "ret": "int4",
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "postgis_addbbox",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_cache_bbox",
+   "kind": "f",
+   "args": [],
+   "ret": "trigger",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_constraint_dims",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "geomschema",
+    "geomtable",
+    "geomcolumn"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_constraint_srid",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "geomschema",
+    "geomtable",
+    "geomcolumn"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_constraint_type",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "geomschema",
+    "geomtable",
+    "geomcolumn"
+   ],
+   "ret": "varchar",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_dropbbox",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_extensions_upgrade",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "arg_names": [
+    "target_version"
+   ],
+   "ret": "text",
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "postgis_full_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_geos_compiled_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_geos_noop",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_geos_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_getbbox",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_hasbbox",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_index_supportfn",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_lib_build_date",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_lib_revision",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_lib_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_libjson_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_liblwgeom_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_libprotobuf_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_libxml_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_noop",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_proj_compiled_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_proj_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_scripts_build_date",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_scripts_installed",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_scripts_released",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_srs",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "auth_name",
+    "auth_srid",
+    "auth_name",
+    "auth_srid",
+    "srname",
+    "srtext",
+    "proj4text",
+    "point_sw",
+    "point_ne"
+   ],
+   "ret": "record",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "auth_name",
+     "type": "text"
+    },
+    {
+     "name": "auth_srid",
+     "type": "text"
+    },
+    {
+     "name": "srname",
+     "type": "text"
+    },
+    {
+     "name": "srtext",
+     "type": "text"
+    },
+    {
+     "name": "proj4text",
+     "type": "text"
+    },
+    {
+     "name": "point_sw",
+     "type": "geometry"
+    },
+    {
+     "name": "point_ne",
+     "type": "geometry"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "postgis_srs_all",
+   "kind": "f",
+   "args": [],
+   "arg_names": [
+    "auth_name",
+    "auth_srid",
+    "srname",
+    "srtext",
+    "proj4text",
+    "point_sw",
+    "point_ne"
+   ],
+   "ret": "record",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "auth_name",
+     "type": "text"
+    },
+    {
+     "name": "auth_srid",
+     "type": "text"
+    },
+    {
+     "name": "srname",
+     "type": "text"
+    },
+    {
+     "name": "srtext",
+     "type": "text"
+    },
+    {
+     "name": "proj4text",
+     "type": "text"
+    },
+    {
+     "name": "point_sw",
+     "type": "geometry"
+    },
+    {
+     "name": "point_ne",
+     "type": "geometry"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "postgis_srs_codes",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "arg_names": [
+    "auth_name"
+   ],
+   "ret": "text",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_srs_search",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "bounds",
+    "authname",
+    "auth_name",
+    "auth_srid",
+    "srname",
+    "srtext",
+    "proj4text",
+    "point_sw",
+    "point_ne"
+   ],
+   "ret": "record",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "auth_name",
+     "type": "text"
+    },
+    {
+     "name": "auth_srid",
+     "type": "text"
+    },
+    {
+     "name": "srname",
+     "type": "text"
+    },
+    {
+     "name": "srtext",
+     "type": "text"
+    },
+    {
+     "name": "proj4text",
+     "type": "text"
+    },
+    {
+     "name": "point_sw",
+     "type": "geometry"
+    },
+    {
+     "name": "point_ne",
+     "type": "geometry"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "postgis_svn_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_transform_geometry",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text",
+    "text",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "",
+    "",
+    ""
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_transform_pipeline_geometry",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text",
+    "bool",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "pipeline",
+    "forward",
+    "to_srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_type_name",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "int4",
+    "bool"
+   ],
+   "arg_names": [
+    "geomname",
+    "coord_dimension",
+    "use_new_name"
+   ],
+   "ret": "varchar",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "postgis_typmod_dims",
+   "kind": "f",
+   "args": [
+    "int4"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_typmod_srid",
+   "kind": "f",
+   "args": [
+    "int4"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_typmod_type",
+   "kind": "f",
+   "args": [
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "postgis_wagyu_version",
+   "kind": "f",
+   "args": [],
+   "ret": "text",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "spheroid_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "spheroid",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "spheroid_out",
+   "kind": "f",
+   "args": [
+    "spheroid"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dclosestpoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3ddfullywithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3ddistance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3ddwithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dextent",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "box3d",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dinterpolatepoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "line",
+    "point"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dintersects",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dlength",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dlineinterpolatepoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dlongestline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dmakebox",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "box3d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dmaxdistance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dperimeter",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_3dshortestline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_addmeasure",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_addpoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_addpoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_affine",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_affine",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_angle",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "line1",
+    "line2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_angle",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "pt1",
+    "pt2",
+    "pt3",
+    "pt4"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_area",
+   "kind": "f",
+   "args": [
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "geog",
+    "use_spheroid"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_area",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_area",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_area2d",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asbinary",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asbinary",
+   "kind": "f",
+   "args": [
+    "geography",
+    "text"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asbinary",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asbinary",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asencodedpolyline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "nprecision"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_asewkb",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asewkb",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asewkt",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asewkt",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asewkt",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asewkt",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asewkt",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asflatgeobuf",
+   "kind": "a",
+   "args": [
+    "anyelement"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asflatgeobuf",
+   "kind": "a",
+   "args": [
+    "anyelement",
+    "bool"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asflatgeobuf",
+   "kind": "a",
+   "args": [
+    "anyelement",
+    "bool",
+    "text"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asgeobuf",
+   "kind": "a",
+   "args": [
+    "anyelement"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asgeobuf",
+   "kind": "a",
+   "args": [
+    "anyelement",
+    "text"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asgeojson",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geog",
+    "maxdecimaldigits",
+    "options"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_asgeojson",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "maxdecimaldigits",
+    "options"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_asgeojson",
+   "kind": "f",
+   "args": [
+    "record",
+    "text",
+    "int4",
+    "bool",
+    "text"
+   ],
+   "arg_names": [
+    "r",
+    "geom_column",
+    "maxdecimaldigits",
+    "pretty_bool",
+    "id_column"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "s",
+   "defaults": 4,
+   "schema": "public"
+  },
+  {
+   "name": "st_asgeojson",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asgml",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4",
+    "int4",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "geog",
+    "maxdecimaldigits",
+    "options",
+    "nprefix",
+    "id"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 4,
+   "schema": "public"
+  },
+  {
+   "name": "st_asgml",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "maxdecimaldigits",
+    "options"
+   ],
+   "ret": "text",
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_asgml",
+   "kind": "f",
+   "args": [
+    "int4",
+    "geography",
+    "int4",
+    "int4",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "version",
+    "geog",
+    "maxdecimaldigits",
+    "options",
+    "nprefix",
+    "id"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 4,
+   "schema": "public"
+  },
+  {
+   "name": "st_asgml",
+   "kind": "f",
+   "args": [
+    "int4",
+    "geometry",
+    "int4",
+    "int4",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "version",
+    "geom",
+    "maxdecimaldigits",
+    "options",
+    "nprefix",
+    "id"
+   ],
+   "ret": "text",
+   "volatility": "i",
+   "defaults": 4,
+   "schema": "public"
+  },
+  {
+   "name": "st_asgml",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ashexewkb",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ashexewkb",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_askml",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4",
+    "text"
+   ],
+   "arg_names": [
+    "geog",
+    "maxdecimaldigits",
+    "nprefix"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_askml",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "maxdecimaldigits",
+    "nprefix"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_askml",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_aslatlontext",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "tmpl"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_asmarc21",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "format"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_asmvt",
+   "kind": "a",
+   "args": [
+    "anyelement"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asmvt",
+   "kind": "a",
+   "args": [
+    "anyelement",
+    "text"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asmvt",
+   "kind": "a",
+   "args": [
+    "anyelement",
+    "text",
+    "int4"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asmvt",
+   "kind": "a",
+   "args": [
+    "anyelement",
+    "text",
+    "int4",
+    "text"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asmvt",
+   "kind": "a",
+   "args": [
+    "anyelement",
+    "text",
+    "int4",
+    "text",
+    "text"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_asmvtgeom",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "box2d",
+    "int4",
+    "int4",
+    "bool"
+   ],
+   "arg_names": [
+    "geom",
+    "bounds",
+    "extent",
+    "buffer",
+    "clip_geom"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 3,
+   "schema": "public"
+  },
+  {
+   "name": "st_assvg",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geog",
+    "rel",
+    "maxdecimaldigits"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_assvg",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "rel",
+    "maxdecimaldigits"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_assvg",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_astext",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_astext",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_astext",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_astext",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_astext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_astwkb",
+   "kind": "f",
+   "args": [
+    "_geometry",
+    "_int8",
+    "int4",
+    "int4",
+    "int4",
+    "bool",
+    "bool"
+   ],
+   "arg_names": [
+    "geom",
+    "ids",
+    "prec",
+    "prec_z",
+    "prec_m",
+    "with_sizes",
+    "with_boxes"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "defaults": 5,
+   "schema": "public"
+  },
+  {
+   "name": "st_astwkb",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4",
+    "int4",
+    "bool",
+    "bool"
+   ],
+   "arg_names": [
+    "geom",
+    "prec",
+    "prec_z",
+    "prec_m",
+    "with_sizes",
+    "with_boxes"
+   ],
+   "ret": "bytea",
+   "volatility": "i",
+   "defaults": 5,
+   "schema": "public"
+  },
+  {
+   "name": "st_asx3d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "maxdecimaldigits",
+    "options"
+   ],
+   "ret": "text",
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_azimuth",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_azimuth",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_bdmpolyfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_bdpolyfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_boundary",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_boundingdiagonal",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "bool"
+   ],
+   "arg_names": [
+    "geom",
+    "fits"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_box2dfromgeohash",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "box2d",
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8",
+    "int4"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8",
+    "text"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "radius",
+    "quadsegs"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "radius",
+    "options"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "text",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "text",
+    "float8",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_buffer",
+   "kind": "f",
+   "args": [
+    "text",
+    "float8",
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_buildarea",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_catmullromsmoothing",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_centroid",
+   "kind": "f",
+   "args": [
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "",
+    "use_spheroid"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_centroid",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_centroid",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_chaikinsmoothing",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "bool"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_cleangeometry",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clipbybox2d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "box2d"
+   ],
+   "arg_names": [
+    "geom",
+    "box"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_closestpoint",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "use_spheroid"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_closestpoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_closestpoint",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_closestpointofapproach",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterdbscan",
+   "kind": "w",
+   "args": [
+    "geometry",
+    "float8",
+    "int4"
+   ],
+   "arg_names": [
+    "",
+    "eps",
+    "minpoints"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterintersecting",
+   "kind": "f",
+   "args": [
+    "_geometry"
+   ],
+   "ret": "_geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterintersecting",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "_geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterintersectingwin",
+   "kind": "w",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterkmeans",
+   "kind": "w",
+   "args": [
+    "geometry",
+    "int4",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "k",
+    "max_radius"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "v",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterrelatewin",
+   "kind": "w",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "relate_matrix"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterwithin",
+   "kind": "f",
+   "args": [
+    "_geometry",
+    "float8"
+   ],
+   "ret": "_geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterwithin",
+   "kind": "a",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "_geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_clusterwithinwin",
+   "kind": "w",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "",
+    "distance"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_collect",
+   "kind": "f",
+   "args": [
+    "_geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_collect",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_collect",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_collectionextract",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_collectionextract",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_collectionhomogenize",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_combinebbox",
+   "kind": "f",
+   "args": [
+    "box2d",
+    "geometry"
+   ],
+   "ret": "box2d",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_combinebbox",
+   "kind": "f",
+   "args": [
+    "box3d",
+    "box3d"
+   ],
+   "ret": "box3d",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_combinebbox",
+   "kind": "f",
+   "args": [
+    "box3d",
+    "geometry"
+   ],
+   "ret": "box3d",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_concavehull",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "param_geom",
+    "param_pctconvex",
+    "param_allow_holes"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_contains",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_containsproperly",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_controlpoints",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "nurbscurve"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_convexhull",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_coorddim",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geometry"
+   ],
+   "ret": "int2",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_coverageclean",
+   "kind": "w",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "gapmaximumwidth",
+    "snappingdistance",
+    "overlapmergestrategy"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 3,
+   "schema": "public"
+  },
+  {
+   "name": "st_coverageedges",
+   "kind": "f",
+   "args": [
+    "_geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geoms",
+    "edgetype"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_coverageedges",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "edgetype"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_coverageinvalidedges",
+   "kind": "w",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "tolerance"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_coveragesimplify",
+   "kind": "w",
+   "args": [
+    "geometry",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "geom",
+    "tolerance",
+    "simplifyboundary"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_coverageunion",
+   "kind": "f",
+   "args": [
+    "_geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_coverageunion",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_coveredby",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_coveredby",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_coveredby",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_covers",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_covers",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_covers",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_cpawithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_crosses",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_curven",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geometry",
+    "i"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_curvetoline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "tol",
+    "toltype",
+    "flags"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 3,
+   "schema": "public"
+  },
+  {
+   "name": "st_degree",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "nurbscurve"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_delaunaytriangles",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "int4"
+   ],
+   "arg_names": [
+    "g1",
+    "tolerance",
+    "flags"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_dfullywithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_difference",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_dimension",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_disjoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_distance",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2",
+    "use_spheroid"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_distance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_distance",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_distancecpa",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_distancesphere",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_distancesphere",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    "radius"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_distancespheroid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_distancespheroid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "spheroid"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_dump",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry_dump",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_dumppoints",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry_dump",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_dumprings",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry_dump",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_dumpsegments",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry_dump",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_dwithin",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2",
+    "tolerance",
+    "use_spheroid"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_dwithin",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_dwithin",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "float8"
+   ],
+   "ret": "bool",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_endm",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_endpoint",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_envelope",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_equals",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_estimatedextent",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "st_estimatedextent",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "text"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "st_estimatedextent",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "text",
+    "bool"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "st_evaluate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "nurbscurve",
+    "parameter"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_expand",
+   "kind": "f",
+   "args": [
+    "box2d",
+    "float8"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_expand",
+   "kind": "f",
+   "args": [
+    "box2d",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "box",
+    "dx",
+    "dy"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_expand",
+   "kind": "f",
+   "args": [
+    "box3d",
+    "float8"
+   ],
+   "ret": "box3d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_expand",
+   "kind": "f",
+   "args": [
+    "box3d",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "box",
+    "dx",
+    "dy",
+    "dz"
+   ],
+   "ret": "box3d",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_expand",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_expand",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "dx",
+    "dy",
+    "dz",
+    "dm"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_extent",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "box2d",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_exteriorring",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_filterbym",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "bool"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_findextent",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "st_findextent",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "text"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "st_flipcoordinates",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_force2d",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_force3d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "zvalue"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_force3dm",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "mvalue"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_force3dz",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "zvalue"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_force4d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "zvalue",
+    "mvalue"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_forcecollection",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_forcecurve",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_forcepolygonccw",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_forcepolygoncw",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_forcerhr",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_forcesfs",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_forcesfs",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "",
+    "version"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_frechetdistance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_fromflatgeobuf",
+   "kind": "f",
+   "args": [
+    "anyelement",
+    "bytea"
+   ],
+   "ret": "anyelement",
+   "ret_set": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_fromflatgeobuftotable",
+   "kind": "f",
+   "args": [
+    "text",
+    "text",
+    "bytea"
+   ],
+   "ret": "void",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_generatepoints",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "area",
+    "npoints"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "st_generatepoints",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "area",
+    "npoints",
+    "seed"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geogfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geogfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geographyfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geohash",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4"
+   ],
+   "arg_names": [
+    "geog",
+    "maxchars"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_geohash",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "maxchars"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_geomcollfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomcollfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomcollfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomcollfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geometricmedian",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "int4",
+    "bool"
+   ],
+   "arg_names": [
+    "g",
+    "tolerance",
+    "max_iter",
+    "fail_if_not_converged"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 3,
+   "schema": "public"
+  },
+  {
+   "name": "st_geometryfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geometryfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geometryn",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geometrytype",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromewkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromewkt",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromgeohash",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromgeojson",
+   "kind": "f",
+   "args": [
+    "json"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromgeojson",
+   "kind": "f",
+   "args": [
+    "jsonb"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromgeojson",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromgml",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromgml",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromkml",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfrommarc21",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "arg_names": [
+    "marc21xml"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromtwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_geomfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_gmltosql",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_gmltosql",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_hasarc",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_hasm",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_hasz",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_hausdorffdistance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_hausdorffdistance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_hexagon",
+   "kind": "f",
+   "args": [
+    "float8",
+    "int4",
+    "int4",
+    "geometry"
+   ],
+   "arg_names": [
+    "size",
+    "cell_i",
+    "cell_j",
+    "origin"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_hexagongrid",
+   "kind": "f",
+   "args": [
+    "float8",
+    "geometry"
+   ],
+   "arg_names": [
+    "size",
+    "bounds",
+    "geom",
+    "i",
+    "j"
+   ],
+   "ret": "record",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "geom",
+     "type": "geometry"
+    },
+    {
+     "name": "i",
+     "type": "int4"
+    },
+    {
+     "name": "j",
+     "type": "int4"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "st_interiorringn",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_interpolatepoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "line",
+    "point"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_intersection",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_intersection",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_intersection",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_intersects",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography"
+   ],
+   "arg_names": [
+    "geog1",
+    "geog2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_intersects",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_intersects",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_inversetransformpipeline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "pipeline",
+    "to_srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_isclosed",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_iscollection",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_isempty",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_isnurbscurve",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ispolygonccw",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ispolygoncw",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_isring",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_issimple",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_issimpledetail",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "findalllocations",
+    "boundarynoderule",
+    "simple",
+    "location"
+   ],
+   "ret": "record",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "simple",
+     "type": "bool"
+    },
+    {
+     "name": "location",
+     "type": "geometry"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "st_isvalid",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_isvalid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_isvaliddetail",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "flags"
+   ],
+   "ret": "valid_detail",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_isvalidreason",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_isvalidreason",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_isvalidtrajectory",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_knots",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "nurbscurve"
+   ],
+   "ret": "_float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_largestemptycircle",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom",
+    "tolerance",
+    "boundary",
+    "center",
+    "nearest",
+    "radius"
+   ],
+   "ret": "record",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "center",
+     "type": "geometry"
+    },
+    {
+     "name": "nearest",
+     "type": "geometry"
+    },
+    {
+     "name": "radius",
+     "type": "float8"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "st_length",
+   "kind": "f",
+   "args": [
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "geog",
+    "use_spheroid"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_length",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_length",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_length2d",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_length2dspheroid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "spheroid"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_lengthspheroid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "spheroid"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_letters",
+   "kind": "f",
+   "args": [
+    "text",
+    "json"
+   ],
+   "arg_names": [
+    "letters",
+    "font"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_linecrossingdirection",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "line1",
+    "line2"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_lineextend",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "distance_forward",
+    "distance_backward"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_linefromencodedpolyline",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "arg_names": [
+    "txtin",
+    "nprecision"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_linefrommultipoint",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linefromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linefromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linefromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linefromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_lineinterpolatepoint",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "use_spheroid"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_lineinterpolatepoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_lineinterpolatepoint",
+   "kind": "f",
+   "args": [
+    "text",
+    "float8"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_lineinterpolatepoints",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8",
+    "bool",
+    "bool"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "use_spheroid",
+    "repeat"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_lineinterpolatepoints",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "repeat"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_lineinterpolatepoints",
+   "kind": "f",
+   "args": [
+    "text",
+    "float8"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linelocatepoint",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "use_spheroid"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_linelocatepoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linelocatepoint",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float8",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linemerge",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linemerge",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "bool"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linestringfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linestringfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linesubstring",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8",
+    "float8"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linesubstring",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linesubstring",
+   "kind": "f",
+   "args": [
+    "text",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_linetocurve",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_locatealong",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geometry",
+    "measure",
+    "leftrightoffset"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_locatebetween",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geometry",
+    "frommeasure",
+    "tomeasure",
+    "leftrightoffset"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_locatebetweenelevations",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geometry",
+    "fromelevation",
+    "toelevation"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_longestline",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geom"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_longestline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_m",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makebox2d",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "box2d",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makeenvelope",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_makeline",
+   "kind": "f",
+   "args": [
+    "_geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makeline",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makeline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makenurbscurve",
+   "kind": "f",
+   "args": [
+    "int4",
+    "geometry",
+    "_float8",
+    "_float8"
+   ],
+   "arg_names": [
+    "degree",
+    "control_points",
+    "weights",
+    "knots"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_makepoint",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makepoint",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makepoint",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makepointm",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makepolygon",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makepolygon",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "_geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makevalid",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_makevalid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "params"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_maxdistance",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geom"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_maxdistance",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_maximuminscribedcircle",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "",
+    "center",
+    "nearest",
+    "radius"
+   ],
+   "ret": "record",
+   "strict": true,
+   "volatility": "i",
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "center",
+     "type": "geometry"
+    },
+    {
+     "name": "nearest",
+     "type": "geometry"
+    },
+    {
+     "name": "radius",
+     "type": "float8"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "st_memsize",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_memunion",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_minimumboundingcircle",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "inputgeom",
+    "segs_per_quarter"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_minimumboundingradius",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "",
+    "center",
+    "radius"
+   ],
+   "ret": "record",
+   "strict": true,
+   "volatility": "i",
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "center",
+     "type": "geometry"
+    },
+    {
+     "name": "radius",
+     "type": "float8"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "st_minimumclearance",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_minimumclearanceline",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_minimumspanningtree",
+   "kind": "w",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mlinefromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mlinefromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mlinefromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mlinefromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mmax",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mmin",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpointfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpointfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpointfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpointfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpolyfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpolyfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpolyfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_mpolyfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_msize",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multi",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multilinefromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multilinestringfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multilinestringfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multipointfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multipointfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multipointfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multipolyfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multipolyfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multipolygonfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_multipolygonfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ndims",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int2",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_node",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "g"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_normalize",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geom"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_npoints",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_nrings",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_numcontrolpoints",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "nurbscurve"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_numcurves",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_numgeometries",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_numinteriorring",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_numinteriorrings",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_numpatches",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_numpoints",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_nurbscurveisrational",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "nurbscurve"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_nurbstolinestring",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "nurbscurve",
+    "num_segments"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_offsetcurve",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "text"
+   ],
+   "arg_names": [
+    "line",
+    "distance",
+    "params"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_orderingequals",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_orientedenvelope",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_overlaps",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_patchn",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_perimeter",
+   "kind": "f",
+   "args": [
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "geog",
+    "use_spheroid"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_perimeter",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_perimeter2d",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_point",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_point",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "int4"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointfromgeohash",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_pointfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointinsidecircle",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointm",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "float8",
+    "int4"
+   ],
+   "arg_names": [
+    "xcoordinate",
+    "ycoordinate",
+    "mcoordinate",
+    "srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_pointn",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointonsurface",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_points",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_pointz",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "float8",
+    "int4"
+   ],
+   "arg_names": [
+    "xcoordinate",
+    "ycoordinate",
+    "zcoordinate",
+    "srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_pointzm",
+   "kind": "f",
+   "args": [
+    "float8",
+    "float8",
+    "float8",
+    "float8",
+    "int4"
+   ],
+   "arg_names": [
+    "xcoordinate",
+    "ycoordinate",
+    "zcoordinate",
+    "mcoordinate",
+    "srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_polyfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polyfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polyfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polyfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polygon",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polygonfromtext",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polygonfromtext",
+   "kind": "f",
+   "args": [
+    "text",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polygonfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polygonfromwkb",
+   "kind": "f",
+   "args": [
+    "bytea",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polygonize",
+   "kind": "f",
+   "args": [
+    "_geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_polygonize",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_project",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geog",
+    "distance",
+    "azimuth"
+   ],
+   "ret": "geography",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_project",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "float8"
+   ],
+   "arg_names": [
+    "geog_from",
+    "geog_to",
+    "distance"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_project",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "distance",
+    "azimuth"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_project",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    "distance"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_quantizecoordinates",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "int4",
+    "int4",
+    "int4"
+   ],
+   "arg_names": [
+    "g",
+    "prec_x",
+    "prec_y",
+    "prec_z",
+    "prec_m"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 3,
+   "schema": "public"
+  },
+  {
+   "name": "st_reduceprecision",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_relate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_relate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_relate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_relatematch",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_removeirrelevantpointsforview",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "box2d",
+    "bool"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_removepoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_removerepeatedpoints",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "tolerance"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_removesmallparts",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_reverse",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_rotate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_rotate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_rotate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_rotatex",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_rotatey",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_rotatez",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_scale",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_scale",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_scale",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_scale",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "origin"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_scroll",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_segmentize",
+   "kind": "f",
+   "args": [
+    "geography",
+    "float8"
+   ],
+   "arg_names": [
+    "geog",
+    "max_segment_length"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_segmentize",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_seteffectivearea",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_setendm",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_setpoint",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_setsrid",
+   "kind": "f",
+   "args": [
+    "geography",
+    "int4"
+   ],
+   "arg_names": [
+    "geog",
+    "srid"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_setsrid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_setstartm",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_sharedpaths",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_shiftlongitude",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_shortestline",
+   "kind": "f",
+   "args": [
+    "geography",
+    "geography",
+    "bool"
+   ],
+   "arg_names": [
+    "",
+    "",
+    "use_spheroid"
+   ],
+   "ret": "geography",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_shortestline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_shortestline",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_simplify",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_simplify",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "bool"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_simplifypolygonhull",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "bool"
+   ],
+   "arg_names": [
+    "geom",
+    "vertex_fraction",
+    "is_outer"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_simplifypreservetopology",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_simplifyvw",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_snap",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    ""
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_snaptogrid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_snaptogrid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_snaptogrid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_snaptogrid",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    "",
+    "",
+    "",
+    ""
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_split",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_square",
+   "kind": "f",
+   "args": [
+    "float8",
+    "int4",
+    "int4",
+    "geometry"
+   ],
+   "arg_names": [
+    "size",
+    "cell_i",
+    "cell_j",
+    "origin"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_squaregrid",
+   "kind": "f",
+   "args": [
+    "float8",
+    "geometry"
+   ],
+   "arg_names": [
+    "size",
+    "bounds",
+    "geom",
+    "i",
+    "j"
+   ],
+   "ret": "record",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "geom",
+     "type": "geometry"
+    },
+    {
+     "name": "i",
+     "type": "int4"
+    },
+    {
+     "name": "j",
+     "type": "int4"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "st_srid",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "arg_names": [
+    "geog"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_srid",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "geom"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_startm",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_startpoint",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_subdivide",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "maxvertices",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_summary",
+   "kind": "f",
+   "args": [
+    "geography"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_summary",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_swapordinates",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "cstring"
+   ],
+   "arg_names": [
+    "geom",
+    "ords"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_symdifference",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_symmetricdifference",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "st_tileenvelope",
+   "kind": "f",
+   "args": [
+    "int4",
+    "int4",
+    "int4",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "zoom",
+    "x",
+    "y",
+    "bounds",
+    "margin"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_touches",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_transform",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "int4"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_transform",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "to_proj"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_transform",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "from_proj",
+    "to_srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_transform",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text",
+    "text"
+   ],
+   "arg_names": [
+    "geom",
+    "from_proj",
+    "to_proj"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_transformpipeline",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "text",
+    "int4"
+   ],
+   "arg_names": [
+    "geom",
+    "pipeline",
+    "to_srid"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_translate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_translate",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_transscale",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8",
+    "float8",
+    "float8"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_triangulatepolygon",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "g1"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_unaryunion",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "defaults": 1,
+   "schema": "public"
+  },
+  {
+   "name": "st_union",
+   "kind": "f",
+   "args": [
+    "_geometry"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_union",
+   "kind": "a",
+   "args": [
+    "geometry"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_union",
+   "kind": "a",
+   "args": [
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_union",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_union",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry",
+    "float8"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2",
+    "gridsize"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_voronoilines",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "geometry"
+   ],
+   "arg_names": [
+    "g1",
+    "tolerance",
+    "extend_to"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_voronoipolygons",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "geometry"
+   ],
+   "arg_names": [
+    "g1",
+    "tolerance",
+    "extend_to"
+   ],
+   "ret": "geometry",
+   "volatility": "i",
+   "defaults": 2,
+   "schema": "public"
+  },
+  {
+   "name": "st_weights",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "arg_names": [
+    "nurbscurve"
+   ],
+   "ret": "_float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_within",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "geometry"
+   ],
+   "arg_names": [
+    "geom1",
+    "geom2"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_wkbtosql",
+   "kind": "f",
+   "args": [
+    "bytea"
+   ],
+   "arg_names": [
+    "wkb"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_wkttosql",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_wrapx",
+   "kind": "f",
+   "args": [
+    "geometry",
+    "float8",
+    "float8"
+   ],
+   "arg_names": [
+    "geom",
+    "wrap",
+    "move"
+   ],
+   "ret": "geometry",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_x",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_xmax",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_xmin",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_xsize",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_y",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ymax",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ymin",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_ysize",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_z",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_zmax",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_zmflag",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "int2",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_zmin",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "st_zsize",
+   "kind": "f",
+   "args": [
+    "box3d"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "text",
+   "kind": "f",
+   "args": [
+    "geometry"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "updategeometrysrid",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "updategeometrysrid",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar",
+    "int4"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "updategeometrysrid",
+   "kind": "f",
+   "args": [
+    "varchar",
+    "varchar",
+    "varchar",
+    "varchar",
+    "int4"
+   ],
+   "arg_names": [
+    "catalogn_name",
+    "schema_name",
+    "table_name",
+    "column_name",
+    "new_srid_in"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  }
+ ],
+ "ops": [
+  {
+   "name": "\u0026\u0026",
+   "left": "box2df",
+   "right": "box2df",
+   "ret": "bool",
+   "proc": "public.overlaps_2d",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026",
+   "left": "box2df",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "public.overlaps_2d",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "box2df",
+   "right": "box2df",
+   "ret": "bool",
+   "proc": "public.is_contained_2d",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "box2df",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "public.is_contained_2d",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "box2df",
+   "right": "box2df",
+   "ret": "bool",
+   "proc": "public.contains_2d",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "box2df",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "public.contains_2d",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026",
+   "left": "geography",
+   "right": "geography",
+   "ret": "bool",
+   "proc": "geography_overlaps",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026",
+   "left": "geography",
+   "right": "gidx",
+   "ret": "bool",
+   "proc": "public.overlaps_geog",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c",
+   "left": "geography",
+   "right": "geography",
+   "ret": "bool",
+   "proc": "geography_lt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e",
+   "left": "geography",
+   "right": "geography",
+   "ret": "float8",
+   "proc": "geography_distance_knn",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=",
+   "left": "geography",
+   "right": "geography",
+   "ret": "bool",
+   "proc": "geography_le",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "geography",
+   "right": "geography",
+   "ret": "bool",
+   "proc": "geography_eq",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e",
+   "left": "geography",
+   "right": "geography",
+   "ret": "bool",
+   "proc": "geography_gt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e=",
+   "left": "geography",
+   "right": "geography",
+   "ret": "bool",
+   "proc": "geography_ge",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026",
+   "left": "geometry",
+   "right": "box2df",
+   "ret": "bool",
+   "proc": "public.overlaps_2d",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_overlaps",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026\u0026",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_overlaps_nd",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026\u0026",
+   "left": "geometry",
+   "right": "gidx",
+   "ret": "bool",
+   "proc": "public.overlaps_nd",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026/\u0026",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_overlaps_3d",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u003c",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_overleft",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u003c|",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_overbelow",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_overright",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_lt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c#\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "float8",
+   "proc": "geometry_distance_box",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "float8",
+   "proc": "geometry_distance_centroid",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003c",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_left",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003c-\u003e\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "float8",
+   "proc": "geometry_distance_centroid_nd",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003c@",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_contained_3d",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003c|",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_below",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_le",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_neq",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_eq",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_gt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e=",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_ge",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_right",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "geometry",
+   "right": "box2df",
+   "ret": "bool",
+   "proc": "public.is_contained_2d",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_within",
+   "schema": "public"
+  },
+  {
+   "name": "@\u003e\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_contains_3d",
+   "schema": "public"
+  },
+  {
+   "name": "@@",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_within_nd",
+   "schema": "public"
+  },
+  {
+   "name": "|\u0026\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_overabove",
+   "schema": "public"
+  },
+  {
+   "name": "|=|",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "float8",
+   "proc": "geometry_distance_cpa",
+   "schema": "public"
+  },
+  {
+   "name": "|\u003e\u003e",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_above",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "geometry",
+   "right": "box2df",
+   "ret": "bool",
+   "proc": "public.contains_2d",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_contains",
+   "schema": "public"
+  },
+  {
+   "name": "~=",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_same",
+   "schema": "public"
+  },
+  {
+   "name": "~==",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_same_3d",
+   "schema": "public"
+  },
+  {
+   "name": "~~",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_contains_nd",
+   "schema": "public"
+  },
+  {
+   "name": "~~=",
+   "left": "geometry",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "geometry_same_nd",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026",
+   "left": "gidx",
+   "right": "geography",
+   "ret": "bool",
+   "proc": "public.overlaps_geog",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026",
+   "left": "gidx",
+   "right": "gidx",
+   "ret": "bool",
+   "proc": "public.overlaps_geog",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026\u0026",
+   "left": "gidx",
+   "right": "geometry",
+   "ret": "bool",
+   "proc": "public.overlaps_nd",
+   "schema": "public"
+  },
+  {
+   "name": "\u0026\u0026\u0026",
+   "left": "gidx",
+   "right": "gidx",
+   "ret": "bool",
+   "proc": "public.overlaps_nd",
+   "schema": "public"
+  }
+ ],
+ "casts": [
+  {
+   "from": "box2d",
+   "to": "box3d",
+   "context": "i"
+  },
+  {
+   "from": "box2d",
+   "to": "geometry",
+   "context": "i"
+  },
+  {
+   "from": "box3d",
+   "to": "box",
+   "context": "i"
+  },
+  {
+   "from": "box3d",
+   "to": "box2d",
+   "context": "i"
+  },
+  {
+   "from": "box3d",
+   "to": "geometry",
+   "context": "i"
+  },
+  {
+   "from": "bytea",
+   "to": "geography",
+   "context": "i"
+  },
+  {
+   "from": "bytea",
+   "to": "geometry",
+   "context": "i"
+  },
+  {
+   "from": "geography",
+   "to": "bytea",
+   "context": "i"
+  },
+  {
+   "from": "geography",
+   "to": "geography",
+   "context": "i"
+  },
+  {
+   "from": "geography",
+   "to": "geometry",
+   "context": "e"
+  },
+  {
+   "from": "geometry",
+   "to": "box",
+   "context": "a"
+  },
+  {
+   "from": "geometry",
+   "to": "box2d",
+   "context": "i"
+  },
+  {
+   "from": "geometry",
+   "to": "box3d",
+   "context": "i"
+  },
+  {
+   "from": "geometry",
+   "to": "bytea",
+   "context": "i"
+  },
+  {
+   "from": "geometry",
+   "to": "geography",
+   "context": "i"
+  },
+  {
+   "from": "geometry",
+   "to": "geometry",
+   "context": "i"
+  },
+  {
+   "from": "geometry",
+   "to": "json",
+   "context": "e"
+  },
+  {
+   "from": "geometry",
+   "to": "jsonb",
+   "context": "e"
+  },
+  {
+   "from": "geometry",
+   "to": "path",
+   "context": "e"
+  },
+  {
+   "from": "geometry",
+   "to": "point",
+   "context": "e"
+  },
+  {
+   "from": "geometry",
+   "to": "polygon",
+   "context": "e"
+  },
+  {
+   "from": "geometry",
+   "to": "text",
+   "context": "i"
+  },
+  {
+   "from": "path",
+   "to": "geometry",
+   "context": "e"
+  },
+  {
+   "from": "point",
+   "to": "geometry",
+   "context": "e"
+  },
+  {
+   "from": "polygon",
+   "to": "geometry",
+   "context": "e"
+  },
+  {
+   "from": "text",
+   "to": "geometry",
+   "context": "i"
+  }
+ ]
+}

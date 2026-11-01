@@ -1,0 +1,49 @@
+name: toolchain-tip
+# Go's development toolchain, on demand: a broken tip must not turn a pull
+# request red. Launch it by hand (Actions -> toolchain-tip -> Run workflow),
+# typically before a release or when a new Go beta is announced.
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pg: ["18", "19"]
+        include:
+          - pg: "18"
+            image: postgres:18
+          - pg: "19"
+            image: postgres:19rc1
+    services:
+      postgres:
+        image: ${{ matrix.image }}
+        env: { POSTGRES_PASSWORD: qlx }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      PGPASSWORD: qlx
+      QLX_PG_HOST: localhost
+      QLX_PG_DB: qlx
+      QLX_PG_USER: postgres
+      QLX_PG_VERSION: ${{ matrix.pg }}
+      QLX_TEST_DSN: postgres://postgres:qlx@localhost:5432/qlx_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "tip" }
+      - name: install psql
+        run: command -v psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+      - name: prepare databases
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE qlx'
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -d qlx -f fixture/schema.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE qlx_test'
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -d qlx_test -f fixture/schema.sql
+      - run: go vet ./...
+      - run: go test ./... -count=1
+      - run: cd pgxexec && go test ./... -count=1
+      - run: cd otelqlx && go test ./... -count=1
+      - run: cd analyzer && go test ./... -count=1

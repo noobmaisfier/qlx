@@ -1,0 +1,1379 @@
+{
+ "extension": "ltree",
+ "schema": "public",
+ "versions": [
+  16,
+  17,
+  18,
+  19
+ ],
+ "funcs": [
+  {
+   "name": "_lt_q_regex",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "_lquery"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_lt_q_rregex",
+   "kind": "f",
+   "args": [
+    "_lquery",
+    "_ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltq_extract_regex",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "lquery"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltq_regex",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "lquery"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltq_rregex",
+   "kind": "f",
+   "args": [
+    "lquery",
+    "_ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_compress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_consistent",
+   "kind": "f",
+   "args": [
+    "internal",
+    "_ltree",
+    "int2",
+    "oid",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_extract_isparent",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_extract_risparent",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_gist_options",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "void",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_isparent",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_penalty",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_picksplit",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_r_isparent",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "_ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_r_risparent",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "_ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_risparent",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_same",
+   "kind": "f",
+   "args": [
+    "ltree_gist",
+    "ltree_gist",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltree_union",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "ltree_gist",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltxtq_exec",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "ltxtquery"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltxtq_extract_exec",
+   "kind": "f",
+   "args": [
+    "_ltree",
+    "ltxtquery"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "_ltxtq_rexec",
+   "kind": "f",
+   "args": [
+    "ltxtquery",
+    "_ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hash_ltree",
+   "kind": "f",
+   "args": [
+    "ltree"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "since": 17,
+   "schema": "public"
+  },
+  {
+   "name": "hash_ltree_extended",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "int8"
+   ],
+   "ret": "int8",
+   "strict": true,
+   "volatility": "i",
+   "since": 17,
+   "schema": "public"
+  },
+  {
+   "name": "index",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "index",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree",
+    "int4"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "_ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lca",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lquery_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "lquery",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lquery_out",
+   "kind": "f",
+   "args": [
+    "lquery"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lquery_recv",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "lquery",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lquery_send",
+   "kind": "f",
+   "args": [
+    "lquery"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lt_q_regex",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "_lquery"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "lt_q_rregex",
+   "kind": "f",
+   "args": [
+    "_lquery",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltq_regex",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "lquery"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltq_rregex",
+   "kind": "f",
+   "args": [
+    "lquery",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree2text",
+   "kind": "f",
+   "args": [
+    "ltree"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_addltree",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_addtext",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "text"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_cmp",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_compress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_consistent",
+   "kind": "f",
+   "args": [
+    "internal",
+    "ltree",
+    "int2",
+    "oid",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_decompress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_eq",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_ge",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_gist_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "ltree_gist",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_gist_options",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "void",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_gist_out",
+   "kind": "f",
+   "args": [
+    "ltree_gist"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_gt",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_isparent",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_le",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_lt",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_ne",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_out",
+   "kind": "f",
+   "args": [
+    "ltree"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_penalty",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_picksplit",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_recv",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_risparent",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_same",
+   "kind": "f",
+   "args": [
+    "ltree_gist",
+    "ltree_gist",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_send",
+   "kind": "f",
+   "args": [
+    "ltree"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_textadd",
+   "kind": "f",
+   "args": [
+    "text",
+    "ltree"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltree_union",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "ltree_gist",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltreeparentsel",
+   "kind": "f",
+   "args": [
+    "internal",
+    "oid",
+    "internal",
+    "int4"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltxtq_exec",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "ltxtquery"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltxtq_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "ltxtquery",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltxtq_out",
+   "kind": "f",
+   "args": [
+    "ltxtquery"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltxtq_recv",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "ltxtquery",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltxtq_rexec",
+   "kind": "f",
+   "args": [
+    "ltxtquery",
+    "ltree"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ltxtq_send",
+   "kind": "f",
+   "args": [
+    "ltxtquery"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "nlevel",
+   "kind": "f",
+   "args": [
+    "ltree"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "subltree",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "int4",
+    "int4"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "subpath",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "int4"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "subpath",
+   "kind": "f",
+   "args": [
+    "ltree",
+    "int4",
+    "int4"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "text2ltree",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "ltree",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  }
+ ],
+ "ops": [
+  {
+   "name": "?",
+   "left": "_lquery",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_lt_q_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "?",
+   "left": "_lquery",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "lt_q_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "^?",
+   "left": "_lquery",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_lt_q_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "^?",
+   "left": "_lquery",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "lt_q_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c@",
+   "left": "_ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "_ltree_risparent",
+   "schema": "public"
+  },
+  {
+   "name": "?",
+   "left": "_ltree",
+   "right": "_lquery",
+   "ret": "bool",
+   "proc": "_lt_q_regex",
+   "schema": "public"
+  },
+  {
+   "name": "?\u003c@",
+   "left": "_ltree",
+   "right": "ltree",
+   "ret": "ltree",
+   "proc": "_ltree_extract_risparent",
+   "schema": "public"
+  },
+  {
+   "name": "?@",
+   "left": "_ltree",
+   "right": "ltxtquery",
+   "ret": "ltree",
+   "proc": "_ltxtq_extract_exec",
+   "schema": "public"
+  },
+  {
+   "name": "?@\u003e",
+   "left": "_ltree",
+   "right": "ltree",
+   "ret": "ltree",
+   "proc": "_ltree_extract_isparent",
+   "schema": "public"
+  },
+  {
+   "name": "?~",
+   "left": "_ltree",
+   "right": "lquery",
+   "ret": "ltree",
+   "proc": "_ltq_extract_regex",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "_ltree",
+   "right": "ltxtquery",
+   "ret": "bool",
+   "proc": "_ltxtq_exec",
+   "schema": "public"
+  },
+  {
+   "name": "@\u003e",
+   "left": "_ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "_ltree_isparent",
+   "schema": "public"
+  },
+  {
+   "name": "^\u003c@",
+   "left": "_ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "_ltree_risparent",
+   "schema": "public"
+  },
+  {
+   "name": "^?",
+   "left": "_ltree",
+   "right": "_lquery",
+   "ret": "bool",
+   "proc": "_lt_q_regex",
+   "schema": "public"
+  },
+  {
+   "name": "^@",
+   "left": "_ltree",
+   "right": "ltxtquery",
+   "ret": "bool",
+   "proc": "_ltxtq_exec",
+   "schema": "public"
+  },
+  {
+   "name": "^@\u003e",
+   "left": "_ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "_ltree_isparent",
+   "schema": "public"
+  },
+  {
+   "name": "^~",
+   "left": "_ltree",
+   "right": "lquery",
+   "ret": "bool",
+   "proc": "_ltq_regex",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "_ltree",
+   "right": "lquery",
+   "ret": "bool",
+   "proc": "_ltq_regex",
+   "schema": "public"
+  },
+  {
+   "name": "^~",
+   "left": "lquery",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltq_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "^~",
+   "left": "lquery",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltq_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "lquery",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltq_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "lquery",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltq_rregex",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_lt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c=",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_le",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003e",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_ne",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c@",
+   "left": "ltree",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltree_r_isparent",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c@",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_risparent",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_eq",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_gt",
+   "schema": "public"
+  },
+  {
+   "name": "\u003e=",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_ge",
+   "schema": "public"
+  },
+  {
+   "name": "?",
+   "left": "ltree",
+   "right": "_lquery",
+   "ret": "bool",
+   "proc": "lt_q_regex",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "ltree",
+   "right": "ltxtquery",
+   "ret": "bool",
+   "proc": "ltxtq_exec",
+   "schema": "public"
+  },
+  {
+   "name": "@\u003e",
+   "left": "ltree",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltree_r_risparent",
+   "schema": "public"
+  },
+  {
+   "name": "@\u003e",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_isparent",
+   "schema": "public"
+  },
+  {
+   "name": "^\u003c@",
+   "left": "ltree",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltree_r_isparent",
+   "schema": "public"
+  },
+  {
+   "name": "^\u003c@",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_risparent",
+   "schema": "public"
+  },
+  {
+   "name": "^?",
+   "left": "ltree",
+   "right": "_lquery",
+   "ret": "bool",
+   "proc": "lt_q_regex",
+   "schema": "public"
+  },
+  {
+   "name": "^@",
+   "left": "ltree",
+   "right": "ltxtquery",
+   "ret": "bool",
+   "proc": "ltxtq_exec",
+   "schema": "public"
+  },
+  {
+   "name": "^@\u003e",
+   "left": "ltree",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltree_r_risparent",
+   "schema": "public"
+  },
+  {
+   "name": "^@\u003e",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltree_isparent",
+   "schema": "public"
+  },
+  {
+   "name": "^~",
+   "left": "ltree",
+   "right": "lquery",
+   "ret": "bool",
+   "proc": "ltq_regex",
+   "schema": "public"
+  },
+  {
+   "name": "||",
+   "left": "ltree",
+   "right": "ltree",
+   "ret": "ltree",
+   "proc": "ltree_addltree",
+   "schema": "public"
+  },
+  {
+   "name": "||",
+   "left": "ltree",
+   "right": "text",
+   "ret": "ltree",
+   "proc": "ltree_addtext",
+   "schema": "public"
+  },
+  {
+   "name": "~",
+   "left": "ltree",
+   "right": "lquery",
+   "ret": "bool",
+   "proc": "ltq_regex",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "ltxtquery",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltxtq_rexec",
+   "schema": "public"
+  },
+  {
+   "name": "@",
+   "left": "ltxtquery",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltxtq_rexec",
+   "schema": "public"
+  },
+  {
+   "name": "^@",
+   "left": "ltxtquery",
+   "right": "_ltree",
+   "ret": "bool",
+   "proc": "_ltxtq_rexec",
+   "schema": "public"
+  },
+  {
+   "name": "^@",
+   "left": "ltxtquery",
+   "right": "ltree",
+   "ret": "bool",
+   "proc": "ltxtq_rexec",
+   "schema": "public"
+  },
+  {
+   "name": "||",
+   "left": "text",
+   "right": "ltree",
+   "ret": "ltree",
+   "proc": "ltree_textadd",
+   "schema": "public"
+  }
+ ],
+ "casts": null
+}

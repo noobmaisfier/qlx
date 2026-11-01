@@ -1,0 +1,480 @@
+{
+ "extension": "pg_trgm",
+ "schema": "public",
+ "versions": [
+  16,
+  17,
+  18,
+  19
+ ],
+ "funcs": [
+  {
+   "name": "gin_extract_query_trgm",
+   "kind": "f",
+   "args": [
+    "text",
+    "internal",
+    "int2",
+    "internal",
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gin_extract_value_trgm",
+   "kind": "f",
+   "args": [
+    "text",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gin_trgm_consistent",
+   "kind": "f",
+   "args": [
+    "internal",
+    "int2",
+    "text",
+    "int4",
+    "internal",
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gin_trgm_triconsistent",
+   "kind": "f",
+   "args": [
+    "internal",
+    "int2",
+    "text",
+    "int4",
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "char",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_compress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_consistent",
+   "kind": "f",
+   "args": [
+    "internal",
+    "text",
+    "int2",
+    "oid",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_decompress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_distance",
+   "kind": "f",
+   "args": [
+    "internal",
+    "text",
+    "int2",
+    "oid",
+    "internal"
+   ],
+   "ret": "float8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "gtrgm",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_options",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "void",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_out",
+   "kind": "f",
+   "args": [
+    "gtrgm"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_penalty",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_picksplit",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_same",
+   "kind": "f",
+   "args": [
+    "gtrgm",
+    "gtrgm",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gtrgm_union",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "gtrgm",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "set_limit",
+   "kind": "f",
+   "args": [
+    "float4"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "v",
+   "schema": "public"
+  },
+  {
+   "name": "show_limit",
+   "kind": "f",
+   "args": [],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "show_trgm",
+   "kind": "f",
+   "args": [
+    "text"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "similarity",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "similarity_dist",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "similarity_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "strict_word_similarity",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "strict_word_similarity_commutator_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "strict_word_similarity_dist_commutator_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "strict_word_similarity_dist_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "strict_word_similarity_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "word_similarity",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "word_similarity_commutator_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  },
+  {
+   "name": "word_similarity_dist_commutator_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "word_similarity_dist_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "float4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "word_similarity_op",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "s",
+   "schema": "public"
+  }
+ ],
+ "ops": [
+  {
+   "name": "%",
+   "left": "text",
+   "right": "text",
+   "ret": "bool",
+   "proc": "similarity_op",
+   "schema": "public"
+  },
+  {
+   "name": "%\u003e",
+   "left": "text",
+   "right": "text",
+   "ret": "bool",
+   "proc": "word_similarity_commutator_op",
+   "schema": "public"
+  },
+  {
+   "name": "%\u003e\u003e",
+   "left": "text",
+   "right": "text",
+   "ret": "bool",
+   "proc": "strict_word_similarity_commutator_op",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c%",
+   "left": "text",
+   "right": "text",
+   "ret": "bool",
+   "proc": "word_similarity_op",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e",
+   "left": "text",
+   "right": "text",
+   "ret": "float4",
+   "proc": "similarity_dist",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e\u003e",
+   "left": "text",
+   "right": "text",
+   "ret": "float4",
+   "proc": "word_similarity_dist_commutator_op",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c-\u003e\u003e\u003e",
+   "left": "text",
+   "right": "text",
+   "ret": "float4",
+   "proc": "strict_word_similarity_dist_commutator_op",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003c%",
+   "left": "text",
+   "right": "text",
+   "ret": "bool",
+   "proc": "strict_word_similarity_op",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003c-\u003e",
+   "left": "text",
+   "right": "text",
+   "ret": "float4",
+   "proc": "word_similarity_dist_op",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003c\u003c-\u003e",
+   "left": "text",
+   "right": "text",
+   "ret": "float4",
+   "proc": "strict_word_similarity_dist_op",
+   "schema": "public"
+  }
+ ],
+ "casts": null
+}

@@ -1,0 +1,909 @@
+{
+ "extension": "hstore",
+ "schema": "public",
+ "versions": [
+  16,
+  17,
+  18,
+  19
+ ],
+ "funcs": [
+  {
+   "name": "akeys",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "avals",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "defined",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "delete",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "_text"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "delete",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "delete",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "text"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "each",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "arg_names": [
+    "hs",
+    "key",
+    "value"
+   ],
+   "ret": "record",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "out_modes": true,
+   "outs": [
+    {
+     "name": "key",
+     "type": "text"
+    },
+    {
+     "name": "value",
+     "type": "text"
+    }
+   ],
+   "schema": "public"
+  },
+  {
+   "name": "exist",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "exists_all",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "_text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "exists_any",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "_text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "fetchval",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "text"
+   ],
+   "ret": "text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_compress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_consistent",
+   "kind": "f",
+   "args": [
+    "internal",
+    "hstore",
+    "int2",
+    "oid",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_decompress",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "ghstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_options",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "void",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_out",
+   "kind": "f",
+   "args": [
+    "ghstore"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_penalty",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_picksplit",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_same",
+   "kind": "f",
+   "args": [
+    "ghstore",
+    "ghstore",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "ghstore_union",
+   "kind": "f",
+   "args": [
+    "internal",
+    "internal"
+   ],
+   "ret": "ghstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gin_consistent_hstore",
+   "kind": "f",
+   "args": [
+    "internal",
+    "int2",
+    "hstore",
+    "int4",
+    "internal",
+    "internal"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gin_extract_hstore",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "gin_extract_hstore_query",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "internal",
+    "int2",
+    "internal",
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hs_concat",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hs_contained",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hs_contains",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore",
+   "kind": "f",
+   "args": [
+    "_text"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore",
+   "kind": "f",
+   "args": [
+    "_text",
+    "_text"
+   ],
+   "ret": "hstore",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore",
+   "kind": "f",
+   "args": [
+    "record"
+   ],
+   "ret": "hstore",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "hstore",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_cmp",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_eq",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_ge",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_gt",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_hash",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_hash_extended",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "int8"
+   ],
+   "ret": "int8",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_in",
+   "kind": "f",
+   "args": [
+    "cstring"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_le",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_lt",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_ne",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "hstore"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_out",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "cstring",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_recv",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_send",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "bytea",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_subscript_handler",
+   "kind": "f",
+   "args": [
+    "internal"
+   ],
+   "ret": "internal",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_to_array",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_to_json",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "json",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_to_json_loose",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "json",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_to_jsonb",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "jsonb",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_to_jsonb_loose",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "jsonb",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_to_matrix",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "hstore_version_diag",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "int4",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "isdefined",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "isexists",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "text"
+   ],
+   "ret": "bool",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "populate_record",
+   "kind": "f",
+   "args": [
+    "anyelement",
+    "hstore"
+   ],
+   "ret": "anyelement",
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "skeys",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "text",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "slice",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "_text"
+   ],
+   "ret": "hstore",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "slice_array",
+   "kind": "f",
+   "args": [
+    "hstore",
+    "_text"
+   ],
+   "ret": "_text",
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "svals",
+   "kind": "f",
+   "args": [
+    "hstore"
+   ],
+   "ret": "text",
+   "ret_set": true,
+   "strict": true,
+   "volatility": "i",
+   "schema": "public"
+  },
+  {
+   "name": "tconvert",
+   "kind": "f",
+   "args": [
+    "text",
+    "text"
+   ],
+   "ret": "hstore",
+   "volatility": "i",
+   "schema": "public"
+  }
+ ],
+ "ops": [
+  {
+   "name": "%#",
+   "right": "hstore",
+   "ret": "_text",
+   "proc": "hstore_to_matrix",
+   "schema": "public"
+  },
+  {
+   "name": "%%",
+   "right": "hstore",
+   "ret": "_text",
+   "proc": "hstore_to_array",
+   "schema": "public"
+  },
+  {
+   "name": "#=",
+   "left": "anyelement",
+   "right": "hstore",
+   "ret": "anyelement",
+   "proc": "populate_record",
+   "schema": "public"
+  },
+  {
+   "name": "#\u003c#",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hstore_lt",
+   "schema": "public"
+  },
+  {
+   "name": "#\u003c=#",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hstore_le",
+   "schema": "public"
+  },
+  {
+   "name": "#\u003e#",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hstore_gt",
+   "schema": "public"
+  },
+  {
+   "name": "#\u003e=#",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hstore_ge",
+   "schema": "public"
+  },
+  {
+   "name": "-",
+   "left": "hstore",
+   "right": "_text",
+   "ret": "hstore",
+   "proc": "public.delete",
+   "schema": "public"
+  },
+  {
+   "name": "-",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "hstore",
+   "proc": "public.delete",
+   "schema": "public"
+  },
+  {
+   "name": "-",
+   "left": "hstore",
+   "right": "text",
+   "ret": "hstore",
+   "proc": "public.delete",
+   "schema": "public"
+  },
+  {
+   "name": "-\u003e",
+   "left": "hstore",
+   "right": "_text",
+   "ret": "_text",
+   "proc": "slice_array",
+   "schema": "public"
+  },
+  {
+   "name": "-\u003e",
+   "left": "hstore",
+   "right": "text",
+   "ret": "text",
+   "proc": "fetchval",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c\u003e",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hstore_ne",
+   "schema": "public"
+  },
+  {
+   "name": "\u003c@",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hs_contained",
+   "schema": "public"
+  },
+  {
+   "name": "=",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hstore_eq",
+   "schema": "public"
+  },
+  {
+   "name": "?",
+   "left": "hstore",
+   "right": "text",
+   "ret": "bool",
+   "proc": "exist",
+   "schema": "public"
+  },
+  {
+   "name": "?\u0026",
+   "left": "hstore",
+   "right": "_text",
+   "ret": "bool",
+   "proc": "exists_all",
+   "schema": "public"
+  },
+  {
+   "name": "?|",
+   "left": "hstore",
+   "right": "_text",
+   "ret": "bool",
+   "proc": "exists_any",
+   "schema": "public"
+  },
+  {
+   "name": "@\u003e",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "bool",
+   "proc": "hs_contains",
+   "schema": "public"
+  },
+  {
+   "name": "||",
+   "left": "hstore",
+   "right": "hstore",
+   "ret": "hstore",
+   "proc": "hs_concat",
+   "schema": "public"
+  }
+ ],
+ "casts": [
+  {
+   "from": "_text",
+   "to": "hstore",
+   "context": "e"
+  },
+  {
+   "from": "hstore",
+   "to": "json",
+   "context": "e"
+  },
+  {
+   "from": "hstore",
+   "to": "jsonb",
+   "context": "e"
+  }
+ ]
+}

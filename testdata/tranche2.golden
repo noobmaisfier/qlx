@@ -1,0 +1,72 @@
+-- cte referenced from main query
+WITH "big" AS (SELECT "orders"."user_id" AS "user_id", count("orders"."id") AS "n" FROM "public"."orders" GROUP BY "orders"."user_id") SELECT "users"."email", "big"."n" AS "n" FROM "public"."users" JOIN "big" ON "big"."user_id" = "users"."id" WHERE "big"."n" > $1
+[]interface {}{3}
+
+-- materialized cte
+WITH "big" AS MATERIALIZED (SELECT "orders"."user_id" AS "user_id", count("orders"."id") AS "n" FROM "public"."orders" GROUP BY "orders"."user_id") SELECT "big"."n" FROM "big"
+[]interface {}{}
+
+-- union all with order and limit
+SELECT "users"."id" FROM "public"."users" UNION ALL SELECT "orders"."id" FROM "public"."orders" LIMIT $1
+[]interface {}{5}
+
+-- except
+SELECT "users"."id" FROM "public"."users" EXCEPT SELECT "orders"."user_id" FROM "public"."orders"
+[]interface {}{}
+
+-- window functions
+SELECT row_number() OVER (PARTITION BY "orders"."user_id" ORDER BY "orders"."id") AS "rn", sum("orders"."total") OVER (PARTITION BY "orders"."user_id" ORDER BY "orders"."id" ROWS BETWEEN $1 PRECEDING AND $2 FOLLOWING) AS "run", lag("orders"."total") OVER (PARTITION BY "orders"."user_id" ORDER BY "orders"."id") AS "prev" FROM "public"."orders"
+[]interface {}{2, 0}
+
+-- aggregate filter and distinct
+SELECT count(DISTINCT "orders"."user_id") FILTER (WHERE "orders"."total" > $1) AS "c" FROM "public"."orders"
+[]interface {}{10}
+
+-- grouping sets
+SELECT "orders"."user_id", "orders"."status", count(*) AS "c" FROM "public"."orders" GROUP BY ROLLUP ("orders"."user_id", "orders"."status")
+[]interface {}{}
+
+-- fetch first with ties
+SELECT "orders"."id" FROM "public"."orders" ORDER BY "orders"."total" DESC FETCH FIRST $1 ROWS WITH TIES
+[]interface {}{3}
+
+-- for update skip locked
+SELECT "orders"."id" FROM "public"."orders" FOR UPDATE OF "orders" SKIP LOCKED
+[]interface {}{}
+
+-- insert returning with on conflict update
+INSERT INTO "public"."users" ("email") VALUES ($1) ON CONFLICT ("email") DO UPDATE SET "nickname" = $2 RETURNING "users"."id"
+[]interface {}{"a@b.c", "x"}
+
+-- update from
+UPDATE "public"."orders" SET "status" = $1 FROM "public"."users" WHERE "orders"."user_id" = "users"."id" AND "users"."tier" = $2
+[]interface {}{"paid", "pro"}
+
+-- delete using
+DELETE FROM "public"."orders" USING "public"."users" WHERE "orders"."user_id" = "users"."id" AND "users"."balance" < $1
+[]interface {}{0}
+
+-- merge
+MERGE INTO "public"."accounts" USING "public"."users" ON "accounts"."id" = "users"."id" WHEN MATCHED THEN UPDATE SET "balance" = "users"."balance" WHEN NOT MATCHED THEN INSERT ("id", "balance") VALUES ("users"."id", $1)
+[]interface {}{0}
+
+-- case expression
+SELECT CASE WHEN "users"."balance" > $1 THEN $2::text ELSE $3::text END AS "k" FROM "public"."users"
+[]interface {}{100, "rich", "poor"}
+
+-- cast
+SELECT CAST("users"."id" AS text) AS "s" FROM "public"."users"
+[]interface {}{}
+
+-- values table
+SELECT "v"."x" FROM (VALUES ($1::int8), ($2::int8)) AS "v" ("x")
+[]interface {}{1, 2}
+
+-- lateral
+SELECT "users"."id" FROM "public"."users" CROSS JOIN LATERAL (SELECT "orders"."id" FROM "public"."orders" WHERE "orders"."user_id" = "users"."id" LIMIT $1) AS "o"
+[]interface {}{1}
+
+-- tablesample
+SELECT "users"."id" FROM "public"."users" TABLESAMPLE BERNOULLI ($1) REPEATABLE ($2)
+[]interface {}{10, 7}
+

@@ -1,0 +1,147 @@
+name: ci
+# Runs before merge (pull_request) and once on main (push). There is no
+# schedule: the long fuzz run and the Go tip toolchain are manual workflows
+# (.github/workflows/fuzz.yml, .github/workflows/toolchain-tip.yml). The
+# repository is public, so standard runners cost nothing; the goal here is
+# feedback before merge and a stable main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to a pull request cancels its superseded run. Pushes to main are
+# all kept: they document what landed.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pg: ["16", "17", "18", "19"]
+        pgx: ["min", "latest"]
+        include:
+          - pg: "16"
+            image: postgres:16
+          - pg: "17"
+            image: postgres:17
+          - pg: "18"
+            image: postgres:18
+          - pg: "19"
+            image: postgres:19rc1
+    services:
+      postgres:
+        image: ${{ matrix.image }}
+        env: { POSTGRES_PASSWORD: qlx }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      PGPASSWORD: qlx
+      QLX_PG_HOST: localhost
+      QLX_PG_DB: qlx
+      QLX_PG_USER: postgres
+      QLX_PG_VERSION: ${{ matrix.pg }}
+      QLX_TEST_DSN: postgres://postgres:qlx@localhost:5432/qlx_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27.x" }
+      - name: install psql
+        run: command -v psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+      - name: prepare databases
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE qlx'
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -d qlx -f fixture/schema.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE qlx_test'
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -d qlx_test -f fixture/schema.sql
+      - name: pin pgx
+        run: |
+          if [ "${{ matrix.pgx }}" = min ]; then cd pgxexec && go get github.com/jackc/pgx/v5@v5.7.0; fi
+      - run: go vet ./...
+      - run: go test ./... -count=1
+      - run: cd pgxexec && go test ./... -count=1
+      - run: cd otelqlx && go test ./... -count=1
+      - run: cd analyzer && go test ./... -count=1
+      - name: gofmt
+        run: test -z "$(gofmt -l .)"
+
+  ledgers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27.x" }
+      - name: grammar ledger (18 and 19)
+        run: |
+          go run ./cmd/pgcat grammar \
+            -y https://raw.githubusercontent.com/postgres/postgres/REL_18_STABLE/src/backend/parser/gram.y,https://raw.githubusercontent.com/postgres/postgres/master/src/backend/parser/gram.y \
+            -map ledgers/grammar_map.json
+      - name: command ledger
+        run: go test -run TestCommandLedger .
+      - name: generated code is current
+        run: go test ./cmd/pgcat -run TestGeneratedPackagesAreUpToDate
+
+  extensions:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { pack: pgvector, pkg: vector, image: "pgvector/pgvector:pg18" }
+          - { pack: pg_trgm, pkg: pgtrgm, image: "postgres:18" }
+          - { pack: hstore, pkg: hstore, image: "postgres:18" }
+          - { pack: ltree, pkg: ltree, image: "postgres:18" }
+          - { pack: citext, pkg: citext, image: "postgres:18" }
+          # postgis has its own 16-19 workflow (.github/workflows/postgis.yml):
+          # its ledger comes from PostGIS 3.7.0 installed from PGDG, and no
+          # postgis/<major>-3.7 image exists for the 16-18 images.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27.x" }
+      - name: install psql
+        run: command -v psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+      - name: start ${{ matrix.pack }} on PG 18
+        run: |
+          docker run -d --name pg -e POSTGRES_PASSWORD=q -p 5432:5432 ${{ matrix.image }}
+          for i in $(seq 1 30); do docker exec pg pg_isready -U postgres && break; sleep 1; done
+      - name: extract and diff the pack ledger
+        run: |
+          DATABASE_URL=postgres://postgres:q@localhost:5432/postgres go run ./cmd/pgcat extract -ext ${{ matrix.pack }} -o /tmp/${{ matrix.pack }}.json
+          if [ -f ledgers/${{ matrix.pack }}.json ]; then
+            # Every committed extension ledger is merged over 16-19, so any
+            # drift on 18 fails the job through pgcat diff's exit status.
+            go run ./cmd/pgcat diff ledgers/${{ matrix.pack }}.json /tmp/${{ matrix.pack }}.json
+          fi
+      - name: prepare every generated wrapper
+        if: matrix.pkg != ''
+        env:
+          PGPASSWORD: q
+          PGPORT: "5432"
+          QLX_PG_HOST: localhost
+          QLX_PG_DB: postgres
+          QLX_PG_USER: postgres
+          QLX_PG_VERSION: "18"
+        run: go test -count=1 ./pgcat/ext/${{ matrix.pkg }}
+      - name: pgvector round trip through pgx
+        if: matrix.pack == 'pgvector'
+        run: |
+          cd pgxexec
+          QLX_TEST_DSN="postgres://postgres:q@localhost:5432/postgres?sslmode=disable" go test -count=1 -run TestPGVectorExtension .
+      - name: stop the server
+        if: always()
+        run: docker rm -f pg
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27.x" }
+      - run: cd bench && go test -run TestBudgets -v
+      - run: cd bench && go test -bench . -benchmem -count 5 | tee bench.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: bench, path: bench/bench.txt }

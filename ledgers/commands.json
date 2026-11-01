@@ -1,0 +1,312 @@
+[
+ {
+  "command": "SELECT",
+  "symbol": "Select",
+  "since": 0
+ },
+ {
+  "command": "INSERT",
+  "symbol": "InsertInto",
+  "since": 0
+ },
+ {
+  "command": "UPDATE",
+  "symbol": "Update",
+  "since": 0
+ },
+ {
+  "command": "DELETE",
+  "symbol": "DeleteFrom",
+  "since": 0
+ },
+ {
+  "command": "MERGE",
+  "symbol": "Merge",
+  "since": 0
+ },
+ {
+  "command": "RETURNING OLD/NEW",
+  "symbol": "colOps.Old",
+  "since": 18
+ },
+ {
+  "command": "INSERT ... ON CONFLICT DO SELECT",
+  "symbol": "ConflictBuilder.DoSelect",
+  "since": 19
+ },
+ {
+  "command": "WITH [RECURSIVE]",
+  "symbol": "Recursive",
+  "since": 0
+ },
+ {
+  "command": "SEARCH/CYCLE",
+  "symbol": "CTE.Cycle",
+  "since": 0
+ },
+ {
+  "command": "VALUES",
+  "symbol": "Values2",
+  "since": 0
+ },
+ {
+  "command": "EXPLAIN",
+  "symbol": "Explain",
+  "since": 0
+ },
+ {
+  "command": "PREPARE",
+  "symbol": "Prepare",
+  "since": 0
+ },
+ {
+  "command": "EXECUTE",
+  "symbol": "Execute",
+  "since": 0
+ },
+ {
+  "command": "DEALLOCATE",
+  "symbol": "Deallocate",
+  "since": 0
+ },
+ {
+  "command": "DEALLOCATE ALL",
+  "symbol": "DeallocateAll",
+  "since": 0
+ },
+ {
+  "command": "BEGIN",
+  "symbol": "Begin",
+  "since": 0
+ },
+ {
+  "command": "COMMIT",
+  "symbol": "Commit",
+  "since": 0
+ },
+ {
+  "command": "ROLLBACK",
+  "symbol": "Rollback",
+  "since": 0
+ },
+ {
+  "command": "SAVEPOINT",
+  "symbol": "Savepoint",
+  "since": 0
+ },
+ {
+  "command": "RELEASE SAVEPOINT",
+  "symbol": "ReleaseSavepoint",
+  "since": 0
+ },
+ {
+  "command": "ROLLBACK TO SAVEPOINT",
+  "symbol": "RollbackToSavepoint",
+  "since": 0
+ },
+ {
+  "command": "PREPARE TRANSACTION",
+  "symbol": "PrepareTransaction",
+  "since": 0
+ },
+ {
+  "command": "COMMIT PREPARED",
+  "symbol": "CommitPrepared",
+  "since": 0
+ },
+ {
+  "command": "ROLLBACK PREPARED",
+  "symbol": "RollbackPrepared",
+  "since": 0
+ },
+ {
+  "command": "SET TRANSACTION",
+  "symbol": "SetTransaction",
+  "since": 0
+ },
+ {
+  "command": "SET CONSTRAINTS",
+  "symbol": "SetConstraints",
+  "since": 0
+ },
+ {
+  "command": "DECLARE CURSOR",
+  "symbol": "DeclareCursor",
+  "since": 0
+ },
+ {
+  "command": "FETCH",
+  "symbol": "FetchFrom",
+  "since": 0
+ },
+ {
+  "command": "MOVE",
+  "symbol": "MoveIn",
+  "since": 0
+ },
+ {
+  "command": "CLOSE",
+  "symbol": "CloseCursor",
+  "since": 0
+ },
+ {
+  "command": "LISTEN",
+  "symbol": "Listen",
+  "since": 0
+ },
+ {
+  "command": "UNLISTEN",
+  "symbol": "Unlisten",
+  "since": 0
+ },
+ {
+  "command": "NOTIFY",
+  "symbol": "Notify",
+  "since": 0
+ },
+ {
+  "command": "SET / set_config",
+  "symbol": "SetConfig",
+  "since": 0
+ },
+ {
+  "command": "SHOW",
+  "symbol": "Show",
+  "since": 0
+ },
+ {
+  "command": "RESET",
+  "symbol": "Reset",
+  "since": 0
+ },
+ {
+  "command": "RESET ALL",
+  "symbol": "ResetAll",
+  "since": 0
+ },
+ {
+  "command": "SET ROLE",
+  "symbol": "SetRole",
+  "since": 0
+ },
+ {
+  "command": "SET SESSION AUTHORIZATION",
+  "symbol": "SetSessionAuthorization",
+  "since": 0
+ },
+ {
+  "command": "DISCARD ALL",
+  "symbol": "DiscardAll",
+  "since": 0
+ },
+ {
+  "command": "DISCARD PLANS",
+  "symbol": "DiscardPlans",
+  "since": 0
+ },
+ {
+  "command": "DISCARD SEQUENCES",
+  "symbol": "DiscardSequences",
+  "since": 0
+ },
+ {
+  "command": "DISCARD TEMP",
+  "symbol": "DiscardTemp",
+  "since": 0
+ },
+ {
+  "command": "CALL",
+  "symbol": "Call",
+  "since": 0
+ },
+ {
+  "command": "COPY FROM STDIN",
+  "symbol": "CopyIn",
+  "since": 0
+ },
+ {
+  "command": "COPY TO STDOUT (table)",
+  "symbol": "CopyTableOut",
+  "since": 0
+ },
+ {
+  "command": "COPY TO STDOUT (query)",
+  "symbol": "CopyQueryOut",
+  "since": 0
+ },
+ {
+  "command": "COPY ... ON_ERROR / REJECT_LIMIT",
+  "symbol": "WithRejectLimit",
+  "since": 18
+ },
+ {
+  "command": "COPY ... HEADER n / FORCE_ARRAY",
+  "symbol": "WithForceArray",
+  "since": 19
+ },
+ {
+  "command": "VACUUM",
+  "symbol": "Vacuum",
+  "since": 0
+ },
+ {
+  "command": "ANALYZE",
+  "symbol": "AnalyzeTables",
+  "since": 0
+ },
+ {
+  "command": "REPACK",
+  "symbol": "Repack",
+  "since": 19
+ },
+ {
+  "command": "CHECKPOINT",
+  "symbol": "Checkpoint",
+  "since": 0
+ },
+ {
+  "command": "TRUNCATE",
+  "symbol": "Truncate",
+  "since": 0
+ },
+ {
+  "command": "LOCK",
+  "symbol": "LockTable",
+  "since": 0
+ },
+ {
+  "command": "GRANT",
+  "symbol": "Grant",
+  "since": 0
+ },
+ {
+  "command": "REVOKE",
+  "symbol": "Revoke",
+  "since": 0
+ },
+ {
+  "command": "CREATE ROLE",
+  "symbol": "NewRole",
+  "since": 0
+ },
+ {
+  "command": "REFRESH MATERIALIZED VIEW",
+  "symbol": "RefreshMaterializedView",
+  "since": 0
+ },
+ {
+  "command": "REINDEX",
+  "symbol": "Reindex",
+  "since": 0
+ },
+ {
+  "command": "CLUSTER",
+  "symbol": "Cluster",
+  "since": 0
+ },
+ {
+  "command": "WAIT FOR LSN",
+  "symbol": "WaitForLSN",
+  "since": 19
+ }
+]

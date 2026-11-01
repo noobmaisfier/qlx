@@ -1,0 +1,84 @@
+-- explain analyze json
+EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT "users"."id" FROM "public"."users" WHERE "users"."id" = $1
+[]interface {}{1}
+
+-- explain update
+EXPLAIN (VERBOSE) UPDATE "public"."orders" SET "status" = $1
+[]interface {}{"x"}
+
+-- begin serializable read only
+BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY
+[]interface {}{}
+
+-- savepoint
+SAVEPOINT "sp1"
+[]interface {}{}
+
+-- rollback to savepoint
+ROLLBACK TO SAVEPOINT "sp1"
+[]interface {}{}
+
+-- prepare typed
+PREPARE "by_id" (int8) AS SELECT "users"."email" FROM "public"."users" WHERE "users"."id" = $1
+[]interface {}{}
+
+-- execute
+EXECUTE "by_id" ($1::int8)
+[]interface {}{3}
+
+-- declare cursor
+DECLARE "c1" CURSOR FOR SELECT "users"."id" FROM "public"."users" WHERE "users"."id" = $1
+[]interface {}{1}
+
+-- fetch forward
+FETCH FORWARD 10 FROM "c1"
+[]interface {}{}
+
+-- listen
+LISTEN "jobs"
+[]interface {}{}
+
+-- notify
+SELECT pg_notify($1, $2)
+[]interface {}{"jobs", "payload with 'quote'"}
+
+-- set config local
+SELECT set_config($1, $2, $3)
+[]interface {}{"statement_timeout", "5s", true}
+
+-- copy in csv
+COPY "public"."users" ("email", "balance") FROM STDIN (FORMAT csv, HEADER true, NULL '')
+[]interface {}{}
+
+-- copy out query
+COPY (SELECT "users"."id" FROM "public"."users") TO STDOUT (FORMAT csv, DELIMITER '|')
+[]interface {}{}
+
+-- copy out table
+COPY "public"."users" ("id") TO STDOUT
+[]interface {}{}
+
+-- vacuum analyze
+VACUUM (ANALYZE, VERBOSE) "public"."users" ("id")
+[]interface {}{}
+
+-- analyze
+ANALYZE "public"."orders"
+[]interface {}{}
+
+-- truncate restart cascade
+TRUNCATE "public"."orders", "public"."users" RESTART IDENTITY CASCADE
+[]interface {}{}
+
+-- lock table
+LOCK TABLE "public"."users" IN SHARE MODE NOWAIT
+[]interface {}{}
+
+-- grant select
+GRANT SELECT, INSERT ON "public"."users" TO "app" WITH GRANT OPTION
+[]interface {}{}
+
+-- revoke
+REVOKE ALL PRIVILEGES ON "public"."users" FROM "app" CASCADE
+[]interface {}{}
+

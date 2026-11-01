@@ -1,0 +1,84 @@
+name: postgis-ledger
+# PostGIS has a committed ledger and generated package. This workflow keeps
+# them honest: each major extracts the PostGIS 3.7.0 API from the PGDG package
+# installed in an official PostgreSQL image, the extractions are merged into
+# one candidate ledger (an artifact), and the candidate must be identical to
+# ledgers/postgis.json (`pgcat diff` exits 1 otherwise). It never writes into
+# the repository.
+#
+# The package version is not pinned: a PostGIS update surfaces as a diff and
+# asks for a deliberate re-extraction, exactly like a new PostgreSQL major.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/postgis.yml"
+      - "internal/packs/**"
+      - "internal/pgcat/extract.go"
+      - "ledgers/postgis.json"
+      - "pgcat/ext/postgis/**"
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { major: "16", image: "postgres:16-bookworm" }
+          - { major: "17", image: "postgres:17-bookworm" }
+          - { major: "18", image: "postgres:18-bookworm" }
+          - { major: "19", image: "postgres:19rc1" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27.x" }
+      - name: psql client
+        run: command -v psql >/dev/null || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+      - name: start ${{ matrix.image }}
+        run: |
+          docker run -d --name pg -e POSTGRES_PASSWORD=q -p 5432:5432 ${{ matrix.image }}
+          for i in $(seq 1 30); do PGPASSWORD=q pg_isready -h localhost -U postgres && break; sleep 2; done
+      - name: install PostGIS from PGDG
+        run: |
+          docker exec -u root pg sh -c 'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-${{ matrix.major }}-postgis-3'
+          PGPASSWORD=q psql -h localhost -U postgres -c 'CREATE EXTENSION IF NOT EXISTS postgis'
+          PGPASSWORD=q psql -h localhost -U postgres -Atc 'select postgis_lib_version()'
+      - name: extract
+        run: |
+          DATABASE_URL="postgres://postgres:q@localhost:5432/postgres?sslmode=disable" \
+            go run ./cmd/pgcat extract -ext postgis -o postgis-${{ matrix.major }}.json
+      - name: prepare every generated wrapper
+        env:
+          QLX_PG_HOST: localhost
+          QLX_PG_USER: postgres
+          QLX_PG_DB: postgres
+          QLX_PG_VERSION: ${{ matrix.major }}
+          PGPASSWORD: q
+        run: go test -count=1 ./pgcat/ext/postgis
+      - uses: actions/upload-artifact@v4
+        with:
+          name: postgis-${{ matrix.major }}
+          path: postgis-${{ matrix.major }}.json
+
+  merge:
+    needs: extract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27.x" }
+      - uses: actions/download-artifact@v4
+        with:
+          path: extracted
+          pattern: postgis-*
+          merge-multiple: true
+      - name: pack status is consistent
+        run: go test ./internal/packs -count=1
+      - name: merge the majors
+        run: go run ./cmd/pgcat merge -o postgis.json extracted/postgis-*.json
+      - name: compare with the committed ledger
+        run: go run ./cmd/pgcat diff ledgers/postgis.json postgis.json
+      - uses: actions/upload-artifact@v4
+        with: { name: postgis-candidate-ledger, path: postgis.json }

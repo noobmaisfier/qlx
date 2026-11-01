@@ -1,0 +1,64 @@
+# Functions D
+
+| Go | PostgreSQL | Returns | Versions | Notes |
+|---|---|---|---|---|
+| `xml.DatabaseToXml` | `database_to_xml(bool,bool,text)` | `xml` | all | stable |
+| `xml.DatabaseToXmlAndXmlschema` | `database_to_xml_and_xmlschema(bool,bool,text)` | `xml` | all | stable |
+| `xml.DatabaseToXmlschema` | `database_to_xmlschema(bool,bool,text)` | `xml` | all | stable |
+| `datetime.DateAddTimestamptzInterval` | `date_add(timestamptz,interval)` | `timestamptz` | all | stable |
+| `datetime.DateAddTimestamptzIntervalText` | `date_add(timestamptz,interval,text)` | `timestamptz` | all | immutable |
+| `datetime.DateBinIntervalTimestampTimestamp` | `date_bin(interval,timestamp,timestamp)` | `timestamp` | all | immutable |
+| `datetime.DateBinIntervalTimestamptzTimestamptz` | `date_bin(interval,timestamptz,timestamptz)` | `timestamptz` | all | immutable |
+| `datetime.DateCmp` | `date_cmp(date,date)` | `int4` | all | immutable |
+| `datetime.DateCmpTimestamp` | `date_cmp_timestamp(date,timestamp)` | `int4` | all | immutable |
+| `datetime.DateCmpTimestamptz` | `date_cmp_timestamptz(date,timestamptz)` | `int4` | all | stable |
+| `datetime.DateLarger` | `date_larger(date,date)` | `date` | all | immutable |
+| `datetime.DatePartTextDate` | `date_part(text,date)` | `float8` | all | immutable |
+| `datetime.DatePartTextInterval` | `date_part(text,interval)` | `float8` | all | immutable |
+| `datetime.DatePartTextTime` | `date_part(text,time)` | `float8` | all | immutable |
+| `datetime.DatePartTextTimestamp` | `date_part(text,timestamp)` | `float8` | all | immutable |
+| `datetime.DatePartTextTimestamptz` | `date_part(text,timestamptz)` | `float8` | all | stable |
+| `datetime.DatePartTextTimetz` | `date_part(text,timetz)` | `float8` | all | immutable |
+| `datetime.DateSend` | `date_send(date)` | `bytea` | all | immutable |
+| `datetime.DateSmaller` | `date_smaller(date,date)` | `date` | all | immutable |
+| `datetime.DateSubtractTimestamptzInterval` | `date_subtract(timestamptz,interval)` | `timestamptz` | all | stable |
+| `datetime.DateSubtractTimestamptzIntervalText` | `date_subtract(timestamptz,interval,text)` | `timestamptz` | all | immutable |
+| `datetime.DateTruncTextInterval` | `date_trunc(text,interval)` | `interval` | all | immutable |
+| `datetime.DateTruncTextTimestamp` | `date_trunc(text,timestamp)` | `timestamp` | all | immutable |
+| `datetime.DateTruncTextTimestamptz` | `date_trunc(text,timestamptz)` | `timestamptz` | all | stable |
+| `datetime.DateTruncTextTimestamptzText` | `date_trunc(text,timestamptz,text)` | `timestamptz` | all | immutable |
+| `ranges.DaterangeDateDate` | `daterange(date,date)` | `daterange` | all | immutable, may return NULL |
+| `ranges.DaterangeDateDateText` | `daterange(date,date,text)` | `daterange` | all | immutable, may return NULL |
+| `ranges.DaterangeCanonical` | `daterange_canonical(daterange)` | `daterange` | all | immutable |
+| `datetime.DaterangeSubdiff` | `daterange_subdiff(date,date)` | `float8` | all | immutable |
+| `num.Dcbrt` | `dcbrt(float8)` | `float8` | all | immutable |
+| `text.Decode` | `decode(text,text)` | `bytea` | all | immutable |
+| `num.Degrees` | `degrees(float8)` | `float8` | all | immutable |
+| `num.Dexp` | `dexp(float8)` | `float8` | all | immutable |
+| `geo.Diagonal` | `diagonal(box)` | `lseg` | all | immutable |
+| `geo.Diameter` | `diameter(circle)` | `float8` | all | immutable |
+| `geo.DistBp` | `dist_bp(box,point)` | `float8` | all | immutable |
+| `geo.DistBs` | `dist_bs(box,lseg)` | `float8` | all | immutable |
+| `geo.DistCpoint` | `dist_cpoint(circle,point)` | `float8` | all | immutable |
+| `geo.DistCpoly` | `dist_cpoly(circle,polygon)` | `float8` | all | immutable |
+| `geo.DistLp` | `dist_lp(line,point)` | `float8` | all | immutable |
+| `geo.DistLs` | `dist_ls(line,lseg)` | `float8` | all | immutable |
+| `geo.DistPathp` | `dist_pathp(path,point)` | `float8` | all | immutable |
+| `geo.DistPb` | `dist_pb(point,box)` | `float8` | all | immutable |
+| `geo.DistPc` | `dist_pc(point,circle)` | `float8` | all | immutable |
+| `geo.DistPl` | `dist_pl(point,line)` | `float8` | all | immutable |
+| `geo.DistPolyc` | `dist_polyc(polygon,circle)` | `float8` | all | immutable |
+| `geo.DistPolyp` | `dist_polyp(polygon,point)` | `float8` | all | immutable |
+| `geo.DistPpath` | `dist_ppath(point,path)` | `float8` | all | immutable |
+| `geo.DistPpoly` | `dist_ppoly(point,polygon)` | `float8` | all | immutable |
+| `geo.DistPs` | `dist_ps(point,lseg)` | `float8` | all | immutable |
+| `geo.DistSb` | `dist_sb(lseg,box)` | `float8` | all | immutable |
+| `geo.DistSl` | `dist_sl(lseg,line)` | `float8` | all | immutable |
+| `geo.DistSp` | `dist_sp(lseg,point)` | `float8` | all | immutable |
+| `num.Div` | `div(numeric,numeric)` | `numeric` | all | immutable |
+| `num.Dlog1` | `dlog1(float8)` | `float8` | all | immutable |
+| `num.Dlog10` | `dlog10(float8)` | `float8` | all | immutable |
+| `num.Dpow` | `dpow(float8,float8)` | `float8` | all | immutable |
+| `num.Dround` | `dround(float8)` | `float8` | all | immutable |
+| `num.Dsqrt` | `dsqrt(float8)` | `float8` | all | immutable |
+| `num.Dtrunc` | `dtrunc(float8)` | `float8` | all | immutable |

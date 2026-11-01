@@ -1,0 +1,21 @@
+-- json_exists with passed variable
+SELECT "users"."id" FROM "public"."users" WHERE JSON_EXISTS(CAST($1 AS jsonb), E'$."items"[*] ? ((@."price" > $min))' PASSING CAST($2 AS int8) AS "min" FALSE ON ERROR)
+
+-- json_value returning int
+SELECT JSON_VALUE(CAST($1 AS jsonb), E'$."a"."b"' RETURNING int4 DEFAULT 0 ON EMPTY NULL ON ERROR) AS "v"
+
+-- json_query with wrapper
+SELECT JSON_QUERY(CAST($1 AS jsonb), E'$."items"[*]."sku"' RETURNING jsonb WITH WRAPPER) AS "skus"
+
+-- json_query without wrapper omit quotes
+SELECT JSON_QUERY(CAST($1 AS jsonb), E'$."items"[*]."sku"' RETURNING jsonb WITHOUT WRAPPER OMIT QUOTES ON SCALAR STRING) AS "skus"
+
+-- json_value default is a literal
+SELECT JSON_VALUE(CAST($1 AS jsonb), E'$."a"' RETURNING text DEFAULT E'it''s a \\ test' ON EMPTY DEFAULT E'x' ON ERROR) AS "v"
+
+-- json_table
+SELECT "jt"."name", "jt"."price" FROM JSON_TABLE(CAST($1 AS jsonb), E'$."items"[*]' COLUMNS ("n" FOR ORDINALITY, "name" text PATH E'$."name"', "price" int8 PATH E'$."price"')) AS "jt"
+
+-- filters combine
+SELECT JSON_VALUE(CAST($1 AS jsonb), E'$."items"[*] ? (((@."price" >= 10) && !((@."tag" == "old"))))."sku"' RETURNING text) AS "s"
+

@@ -1,0 +1,33 @@
+-- json_object members
+SELECT JSON_OBJECT(($1::text) VALUE "users"."id", ($2::text) VALUE "users"."email" ABSENT ON NULL RETURNING jsonb) AS "o" FROM "public"."users"
+
+-- json_array of values
+SELECT JSON_ARRAY("users"."id", "users"."email" NULL ON NULL RETURNING jsonb) AS "a" FROM "public"."users"
+
+-- json_array from subquery
+SELECT JSON_ARRAY(SELECT "orders"."id" FROM "public"."orders" RETURNING jsonb) AS "a"
+
+-- json_arrayagg ordered with filter
+SELECT JSON_ARRAYAGG("orders"."id" ORDER BY "orders"."id" DESC RETURNING jsonb) FILTER (WHERE "orders"."total" > $1) AS "ids" FROM "public"."orders"
+
+-- json_objectagg
+SELECT JSON_OBJECTAGG(($1::text) VALUE "orders"."total" WITH UNIQUE KEYS RETURNING jsonb) AS "m" FROM "public"."orders"
+
+-- is json object
+SELECT "users"."id" FROM "public"."users" WHERE ("users"."email" IS JSON OBJECT)
+
+-- json_scalar
+SELECT JSON_SCALAR("users"."balance") AS "s" FROM "public"."users"
+
+-- json parse
+SELECT JSON("users"."email" WITH UNIQUE KEYS) AS "j" FROM "public"."users"
+
+-- json_serialize
+SELECT JSON_SERIALIZE(JSON("users"."email")) AS "t" FROM "public"."users"
+
+-- json_serialize bytea
+SELECT JSON_SERIALIZE(JSON("users"."email") RETURNING bytea) AS "t" FROM "public"."users"
+
+-- current_time
+SELECT CURRENT_TIME AS "a", CURRENT_TIME(3) AS "b", LOCALTIME AS "c", LOCALTIME(2) AS "d" FROM "public"."users"
+
