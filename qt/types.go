@@ -64,13 +64,18 @@ func (j *JSONB[T]) UnmarshalJSON(b []byte) error { return json.Unmarshal(b, &j.V
 
 // Value implements driver.Valuer: the document as JSON text.
 func (j JSONB[T]) Value() (driver.Value, error) {
+	// Text, not []byte: in the simple protocol pgx would send bytes as bytea.
 	if raw, ok := any(j.V).(json.RawMessage); ok {
 		if raw == nil {
-			return []byte("null"), nil
+			return "null", nil
 		}
-		return []byte(raw), nil
+		return string(raw), nil
 	}
-	return json.Marshal(j.V)
+	b, err := json.Marshal(j.V)
+	if err != nil {
+		return nil, err
+	}
+	return string(b), nil
 }
 
 // Scan implements sql.Scanner for text and bytes; SQL NULL is the zero value
@@ -189,6 +194,13 @@ func scanText(dst *string, src any, what string) error {
 	}
 	return nil
 }
+
+// Scan implements sql.Scanner. Without it pgx decodes xml by unmarshalling it
+// into the string, which keeps only the character data and drops the markup.
+func (v *XML) Scan(src any) error { return scanText((*string)(v), src, "qt.XML") }
+
+// Value implements driver.Valuer: the document text.
+func (v XML) Value() (driver.Value, error) { return string(v), nil }
 
 // Scan implements sql.Scanner.
 func (v *TSVector) Scan(src any) error { return scanText((*string)(v), src, "qt.TSVector") }

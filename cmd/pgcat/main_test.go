@@ -206,3 +206,51 @@ func TestVersionsLike(t *testing.T) {
 		t.Errorf("one major: exit %d, %q", code, errb.String())
 	}
 }
+
+// A committed ledger is merged over 16-19, an extraction comes from one
+// server. Entries that do not exist on that server's major are not drift.
+func TestDiffMergedAgainstSingleMajor(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name string, l *pgcat.Ledger) string {
+		data, err := json.Marshal(l)
+		if err != nil {
+			t.Fatal(err)
+		}
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	fn := func(name string, since, until int) pgcat.Fn {
+		return pgcat.Fn{Name: name, Args: []string{"text"}, Ret: "text", Volatility: "i", Since: since, Until: until}
+	}
+	merged := write("merged.json", &pgcat.Ledger{Versions: []int{16, 17, 18, 19}, Funcs: []pgcat.Fn{
+		fn("always", 0, 0), fn("from17", 17, 0), fn("only19", 19, 0), fn("gone18", 0, 18), fn("gone19", 0, 19),
+	}})
+	on := func(major int, names ...string) string {
+		l := &pgcat.Ledger{Versions: []int{major}}
+		for _, n := range names {
+			l.Funcs = append(l.Funcs, fn(n, 0, 0))
+		}
+		return write(fmt.Sprintf("pg%d.json", major), l)
+	}
+	var out, errb bytes.Buffer
+	if code := run([]string{"diff", merged, on(18, "always", "from17", "gone19")}, &out, &errb); code != 0 {
+		t.Errorf("major 18 as the merged ledger describes it: exit %d\n%s", code, out.String())
+	}
+	out.Reset()
+	if code := run([]string{"diff", merged, on(19, "always", "from17", "only19")}, &out, &errb); code != 0 {
+		t.Errorf("major 19 as the merged ledger describes it: exit %d\n%s", code, out.String())
+	}
+	out.Reset()
+	// real drift: major 18 lost a function it should have
+	if code := run([]string{"diff", merged, on(18, "always", "gone19")}, &out, &errb); code != 1 || !strings.Contains(out.String(), "from17") {
+		t.Errorf("a missing function must still be reported: exit %d\n%s", code, out.String())
+	}
+	out.Reset()
+	// real drift: major 18 gained one the ledger does not know
+	if code := run([]string{"diff", merged, on(18, "always", "from17", "gone19", "brand_new")}, &out, &errb); code != 1 || !strings.Contains(out.String(), "brand_new") {
+		t.Errorf("a new function must still be reported: exit %d\n%s", code, out.String())
+	}
+}

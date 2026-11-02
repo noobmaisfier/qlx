@@ -25,6 +25,13 @@ var goKeywords = map[string]bool{
 var shadowed = map[string]bool{
 	"qt": true, "qlx": true, "time": true, "json": true, "netip": true, "net": true,
 	"fmt": true, "uuid": true, "errors": true,
+	// predeclared identifiers: a parameter of that name would capture the
+	// type of the next parameter.
+	"int": true, "int8": true, "int16": true, "int32": true, "int64": true,
+	"uint": true, "uint8": true, "uint16": true, "uint32": true, "uint64": true, "uintptr": true,
+	"string": true, "bool": true, "byte": true, "rune": true, "float32": true, "float64": true,
+	"any": true, "error": true, "complex64": true, "complex128": true,
+	"nil": true, "true": true, "false": true, "len": true, "cap": true, "new": true, "make": true,
 }
 
 func words(s string) []string {
@@ -48,7 +55,9 @@ func camel(s string) string {
 	if out == "" {
 		return "X"
 	}
-	if unicode.IsDigit([]rune(out)[0]) {
+	// An exported Go name starts with an upper-case letter: digits and
+	// scripts without case ("日本語") get a prefix.
+	if !unicode.IsUpper([]rune(out)[0]) {
 		out = "X" + out
 	}
 	return out

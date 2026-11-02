@@ -111,3 +111,28 @@ func shapeNote(f Fn) string {
 
 // NoDifferences is what Diff returns for two identical ledgers.
 const NoDifferences = "No differences.\n"
+
+// At returns the ledger as one server of the given major would report it:
+// the entries whose version range covers major, with the range cleared and
+// Versions set to that major. A ledger merged over several majors can then be
+// compared with an extraction from a single server.
+func (l *Ledger) At(major int) *Ledger {
+	in := func(since, until int) bool {
+		return (since == 0 || since <= major) && (until == 0 || major < until)
+	}
+	out := &Ledger{Extension: l.Extension, Schema: l.Schema, Versions: []int{major}}
+	for _, f := range l.Funcs {
+		if in(f.Since, f.Until) {
+			f.Since, f.Until = 0, 0
+			out.Funcs = append(out.Funcs, f)
+		}
+	}
+	for _, o := range l.Ops {
+		if in(o.Since, o.Until) {
+			o.Since, o.Until = 0, 0
+			out.Ops = append(out.Ops, o)
+		}
+	}
+	out.Casts = append(out.Casts, l.Casts...)
+	return out
+}

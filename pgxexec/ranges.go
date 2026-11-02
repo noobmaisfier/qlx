@@ -23,7 +23,7 @@ import (
 // Written from pgx v5's documented RangeScanner/RangeValuer and
 // MultirangeSetter/Getter interfaces; not compiled yet (see package doc).
 func RegisterRangeTypes(m *pgtype.Map) {
-	m.TryWrapEncodePlanFuncs = append([]pgtype.TryWrapEncodePlanFunc{tryWrapRangeEncode, tryWrapMultirangeEncode}, m.TryWrapEncodePlanFuncs...)
+	m.TryWrapEncodePlanFuncs = append([]pgtype.TryWrapEncodePlanFunc{tryWrapRangeEncode, tryWrapMultirangeEncode, tryWrapIntervalEncode}, m.TryWrapEncodePlanFuncs...)
 	m.TryWrapScanPlanFuncs = append([]pgtype.TryWrapScanPlanFunc{tryWrapRangeScan, tryWrapMultirangeScan}, m.TryWrapScanPlanFuncs...)
 }
 
@@ -32,6 +32,32 @@ func RegisterRangeTypes(m *pgtype.Map) {
 func AfterConnect(_ context.Context, c *pgx.Conn) error {
 	RegisterRangeTypes(c.TypeMap())
 	return nil
+}
+
+// ---- intervals ----
+
+// intervalValuer adapts a qt.Interval for encoding (pgtype.IntervalValuer).
+// Without it pgx treats the struct as something else in the binary protocol
+// and writes only the Days field: months and microseconds would be lost
+// without an error.
+type intervalValuer struct{ v qt.Interval }
+
+func (a intervalValuer) IntervalValue() (pgtype.Interval, error) {
+	return pgtype.Interval{Months: a.v.Months, Days: a.v.Days, Microseconds: a.v.Micros, Valid: true}, nil
+}
+
+type intervalEncodePlan struct{ next pgtype.EncodePlan }
+
+func (p *intervalEncodePlan) SetNext(n pgtype.EncodePlan) { p.next = n }
+func (p *intervalEncodePlan) Encode(value any, buf []byte) ([]byte, error) {
+	return p.next.Encode(intervalValuer{value.(qt.Interval)}, buf)
+}
+
+func tryWrapIntervalEncode(value any) (pgtype.WrappedEncodePlanNextSetter, any, bool) {
+	if v, ok := value.(qt.Interval); ok {
+		return &intervalEncodePlan{}, intervalValuer{v}, true
+	}
+	return nil, nil, false
 }
 
 // ---- ranges ----

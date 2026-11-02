@@ -255,6 +255,14 @@ func diff(files []string, report bool, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	// A ledger merged over several majors is compared with a single-server
+	// extraction on that server's terms: entries outside its version range
+	// (a function new in 19, one gone in 18) are not differences.
+	if len(b.Versions) == 1 && len(a.Versions) > 1 {
+		a = a.At(b.Versions[0])
+	} else if len(a.Versions) == 1 && len(b.Versions) > 1 {
+		b = b.At(a.Versions[0])
+	}
 	text := pgcat.Diff(a, b)
 	fmt.Fprint(out, text)
 	if text != pgcat.NoDifferences && !report {

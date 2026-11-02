@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/noobmaisfier/qlx/internal/catalog"
@@ -81,6 +82,16 @@ func newTableGen(m *mapper, nm *namer, t catalog.Table, multiSchema bool, jsonTy
 		g.cols = append(g.cols, cg)
 	}
 	return g
+}
+
+// dbTag is the struct tag db:"name". A name with a backquote cannot sit in a
+// raw string, so the tag is then written as an interpreted string.
+func dbTag(name string) string {
+	tag := "db:" + strconv.Quote(name)
+	if strings.Contains(tag, "`") {
+		return strconv.Quote(tag)
+	}
+	return "`" + tag + "`"
 }
 
 // colType is the column symbol type: the family decides the operators.
@@ -185,7 +196,7 @@ func (g *tableGen) emit(f *file) {
 	// Row.
 	f.p("// %s is one row of %s.%s, for scanning by column name.\ntype %s struct {\n", g.row, t.Schema, t.Name, g.row)
 	for _, c := range g.cols {
-		f.p("\t%s %s `db:%q`\n", c.field, c.goT, c.col.Name)
+		f.p("\t%s %s %s\n", c.field, c.goT, dbTag(c.col.Name))
 	}
 	f.p("}\n\n")
 
@@ -230,10 +241,16 @@ func (g *tableGen) emitInsert(f *file) {
 	f.p("// %s is a row to insert. Build it with New%s, which takes the columns\n// that have no default, then chain setters for the rest.\ntype %s struct{ as []qlx.Assignment }\n\n", ins, ins, ins)
 	var params []string
 	var sets []string
+	taken := map[string]bool{}
 	for _, c := range g.cols {
 		if c.required {
-			params = append(params, lowerCamel(c.col.Name)+" "+c.assignT())
-			sets = append(sets, g.sym+"."+c.field+".To("+lowerCamel(c.col.Name)+")")
+			p := lowerCamel(c.col.Name)
+			for base, i := p, 2; taken[p]; i++ { // two columns can collapse to one name
+				p = base + itoa(i)
+			}
+			taken[p] = true
+			params = append(params, p+" "+c.assignT())
+			sets = append(sets, g.sym+"."+c.field+".To("+p+")")
 		}
 	}
 	f.p("// New%s starts an insert with its required columns.\nfunc New%s(%s) %s {\n\treturn %s{as: []qlx.Assignment{%s}}\n}\n\n",
