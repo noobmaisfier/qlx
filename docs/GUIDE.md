@@ -168,6 +168,58 @@ defer client.Close()
 
 `client.Pool` est le `pgxpool.Pool` ; `client.DB()` est l'interface `Querier` utilisée par les fonctions de paquet (`pgxexec.All(ctx, tx, ...)` accepte aussi une transaction).
 
+### 3.1 Serverless et poolers en mode transaction
+
+Une fonction conserve son processus entre les invocations, mais quatre choses
+changent.
+
+**Mode des statements.** Le défaut `CacheStatements` prépare des statements
+nommés une fois par connexion. Derrière un pooler en mode transaction
+(PgBouncer, Supavisor, le pooler Neon), la connexion serveur change entre deux
+statements, et un scale-to-zero ou un redémarrage du serveur supprime les
+statements préparés. Utilisez `Mode: pgxexec.CacheDescribe` : il envoie des
+statements anonymes et met leur description en cache, le mode que le paquet
+documente comme sûr en transaction pooling. `pgxexec.Simple` est le dernier
+recours, pour les poolers qui ne supportent rien d'autre ; il envoie les
+paramètres en protocole texte, où la forme texte de certains types diffère de
+la forme binaire.
+
+**Taille du pool.** `Connect` laisse les défauts de pgxpool, dimensionnés pour
+un serveur : `pool_max_conns = max(4, NumCPU)`. Une fonction qui traite une
+requête à la fois n'a besoin que d'une connexion par instance ; mille instances
+concurrentes ouvriraient sinon des milliers de connexions. Réglez-la dans le
+DSN :
+
+```text
+postgres://...?pool_max_conns=1&pool_min_conns=0&pool_max_conn_idle_time=5m&statement_timeout=5s
+```
+
+**Un client par processus.** `Connect` exécute `SHOW server_version_num` ;
+l'appeler à chaque requête jette le pool et le cache de formes. Créez le client
+une fois, au démarrage ou paresseusement avec `sync.Once`, et ne l'appelez pas
+`Close` à la fin d'une requête. Après un gel de l'instance, une connexion du
+pool peut être morte à l'invocation suivante : pgxpool l'écarte après le
+premier échec, et `CacheDescribe` évite l'erreur « prepared statement does not
+exist » qu'un cache de statements nommés peut renvoyer après un redémarrage du
+serveur.
+
+**Schéma, migrations, ids.** Exécutez `VerifySchema` une fois au cold start sur
+les tables utilisées par la fonction, pas à chaque requête (c'est une requête
+catalogue), et lancez les migrations en dehors de la fonction, pour que des
+instances concurrentes ne se disputent pas le DDL. Quand le schéma utilise
+`ids: string`, chaque instance doit appeler `qt.SetIDKey` avec le même secret,
+lu depuis l'environnement ou un gestionnaire de secrets : une clé par instance
+rend un id émis par une instance illisible par une autre, et une rotation de
+clé invalide tous les ids déjà distribués.
+
+Le cache de formes, les caches pgx et le registre de requêtes vivent dans le
+processus et ne sont pas partagés entre instances. Le plafond du cache (16 384
+formes par défaut, 512 par shard) n'est pas préalloué : un statement court coûte
+environ 235 octets une fois stocké, et un programme qui utilise quelques
+centaines de formes ne paie que celles-là. `LISTEN`/`NOTIFY` exige une connexion
+qui reste ouverte : préférez du polling ou une file quand les instances passent
+à zéro.
+
 ---
 
 ## 4. Lire : `SELECT`

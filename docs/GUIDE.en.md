@@ -168,7 +168,55 @@ defer client.Close()
 
 `client.Pool` is the `pgxpool.Pool`; `client.DB()` is the `Querier` interface used by the package functions (`pgxexec.All(ctx, tx, ...)` also accepts a transaction).
 
+### 3.1 Serverless and transaction-mode poolers
+
+A function keeps its process between invocations, but four things behave
+differently.
+
+**Statement mode.** The default `CacheStatements` prepares named statements
+once per connection. Behind a pooler in transaction mode (PgBouncer,
+Supavisor, the Neon pooler) the server connection changes between statements,
+and a scale-to-zero or a server restart drops the prepared statements. Use
+`Mode: pgxexec.CacheDescribe`: it sends unnamed statements and caches their
+description, the mode the package documents as safe in transaction pooling.
+`pgxexec.Simple` is the last resort, for poolers that support nothing else; it
+sends parameters in the text protocol, where the text form of some types
+differs from the binary one.
+
+**Pool size.** `Connect` leaves the pgxpool defaults alone, and they are sized
+for a server: `pool_max_conns = max(4, NumCPU)`. A function that handles one
+request at a time needs one connection per instance; a thousand concurrent
+instances would otherwise open thousands. Set it in the DSN:
+
+```text
+postgres://...?pool_max_conns=1&pool_min_conns=0&pool_max_conn_idle_time=5m&statement_timeout=5s
+```
+
+**One client per process.** `Connect` runs `SHOW server_version_num`; calling it
+per request throws away the pool and the shape cache. Create the client once,
+at startup or lazily with `sync.Once`, and do not `Close` it at the end of a
+request. After the platform freezes an instance, a pooled connection can be
+dead on the next invocation: pgxpool discards it after the first failure, and
+`CacheDescribe` avoids the "prepared statement does not exist" error that a
+named statement cache can return after a server restart.
+
+**Schema, migrations, ids.** Run `VerifySchema` once at cold start on the
+tables the function uses, not per request (it is one catalog query), and run
+migrations outside the function so concurrent instances cannot race on DDL.
+When the schema uses `ids: string`, every instance must call `qt.SetIDKey` with
+the same secret from the environment or a secret manager: a per-instance key
+makes an id minted by one instance unreadable by another, and rotating the key
+invalidates every id already handed out.
+
+The shape cache, the pgx caches and the query registry live in the process and
+are not shared between instances. The cache ceiling (16,384 shapes by default,
+512 per shard) is not preallocated: a short statement costs about 235 bytes
+once stored, and a program using a few hundred shapes pays for those only.
+`LISTEN`/`NOTIFY` needs a connection that stays open, so prefer polling or a
+queue when instances scale to zero.
+
 ---
+
 
 ## 4. Reading: `SELECT`
 
