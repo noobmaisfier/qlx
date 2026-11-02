@@ -69,8 +69,10 @@ func NewShapeCache(max int) *ShapeCache {
 }
 
 // ShapeStats are the counters; a steadily growing Evictions means the program
-// builds an unbounded number of shapes (for example an IN list per call: use
-// Expr.Any with a slice instead).
+// builds an unbounded number of shapes, which values alone cannot do: the
+// structure has to vary (a select list, join set, ORDER BY or predicate set
+// chosen at run time). Lists are one shape whatever their length: In and Any
+// both render "= ANY($1)".
 type ShapeStats struct {
 	Hits, Misses, Evictions int64
 	Size                    int
