@@ -55,7 +55,7 @@ type shapeEntry struct {
 // DefaultShapes is the cache used by Resolve and by the pgxexec client. Its
 // size is per process; see NewShapeCache for a private one. The ceiling is
 // not preallocated: a program with a few hundred shapes pays for those only.
-var DefaultShapes = NewShapeCache(16384)
+var DefaultShapes = NewShapeCache(32768)
 
 // NewShapeCache makes a cache holding about max shapes: max is a ceiling, not
 // an allocation, and each of the 32 shards holds max/32 entries. A stored

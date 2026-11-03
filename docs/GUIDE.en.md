@@ -209,11 +209,11 @@ makes an id minted by one instance unreadable by another, and rotating the key
 invalidates every id already handed out.
 
 The shape cache, the pgx caches and the query registry live in the process and
-are not shared between instances. The cache ceiling (16,384 shapes by default,
-512 per shard) is not preallocated: a short statement costs about 235 bytes
-once stored, and a program using a few hundred shapes pays for those only.
-`LISTEN`/`NOTIFY` needs a connection that stays open, so prefer polling or a
-queue when instances scale to zero.
+are not shared between instances. The cache ceiling (32,768 shapes by default,
+1,024 per shard) is not preallocated: a short statement costs about 235 bytes
+once stored, so a program using a few hundred shapes pays for those only, and
+the full ceiling costs roughly 8 to 15 MB. `LISTEN`/`NOTIFY` needs a connection
+that stays open, so prefer polling or a queue when instances scale to zero.
 
 ---
 
@@ -972,7 +972,7 @@ You have nothing to do. The first time a query *shape* goes through (same struct
 client.Shapes.Stats()   // Hits, Misses, Evictions, Size
 ```
 
-To keep the number of shapes bounded: pass lists with `col.Any(slice)` (one shape for any length) and do not build columns or joins from user input. A rising `Evictions` counter is the signal.
+To keep the number of shapes bounded: pass lists with `col.Any(slice)` (one shape for any length). Varying the structure itself is allowed and correct: a user-built report or a dynamic column set renders once per distinct shape, then reuses it. When `Evictions` keeps growing, raise the ceiling for that client (`Shapes: qlx.NewShapeCache(n)`) or render the hottest shapes once with `client.Render`.
 
 ### 8.2 Static statements
 

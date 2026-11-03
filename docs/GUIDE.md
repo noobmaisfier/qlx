@@ -213,12 +213,12 @@ rend un id émis par une instance illisible par une autre, et une rotation de
 clé invalide tous les ids déjà distribués.
 
 Le cache de formes, les caches pgx et le registre de requêtes vivent dans le
-processus et ne sont pas partagés entre instances. Le plafond du cache (16 384
-formes par défaut, 512 par shard) n'est pas préalloué : un statement court coûte
-environ 235 octets une fois stocké, et un programme qui utilise quelques
-centaines de formes ne paie que celles-là. `LISTEN`/`NOTIFY` exige une connexion
-qui reste ouverte : préférez du polling ou une file quand les instances passent
-à zéro.
+processus et ne sont pas partagés entre instances. Le plafond du cache (32 768
+formes par défaut, 1 024 par shard) n'est pas préalloué : un statement court
+coûte environ 235 octets une fois stocké, donc un programme qui utilise
+quelques centaines de formes ne paie que celles-là, et le plafond complet coûte
+environ 8 à 15 Mo. `LISTEN`/`NOTIFY` exige une connexion qui reste ouverte :
+préférez du polling ou une file quand les instances passent à zéro.
 
 ---
 
@@ -976,7 +976,7 @@ Vous n'avez rien à faire. La première fois qu'une *forme* de requête passe (m
 client.Shapes.Stats()   // Hits, Misses, Evictions, Size
 ```
 
-Pour garder le nombre de formes borné : passez les listes avec `col.Any(slice)` (une forme pour toute longueur) et ne construisez pas de colonnes ou de jointures à partir d'entrées utilisateur. Un compteur `Evictions` qui grimpe est le signal.
+Pour garder le nombre de formes borné : passez les listes avec `col.Any(slice)` (une forme pour toute longueur). Varier la structure elle-même est permis et correct : un rapport construit par l'utilisateur ou un ensemble de colonnes dynamique est rendu une fois par forme, puis réutilisé. Quand `Evictions` grimpe, augmentez le plafond pour ce client (`Shapes: qlx.NewShapeCache(n)`) ou rendez une fois les formes les plus chaudes avec `client.Render`.
 
 ### 8.2 Les statements statiques
 
