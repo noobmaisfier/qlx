@@ -99,10 +99,21 @@ func runTx(ctx context.Context, db TxStarter, opts pgx.TxOptions, fn func(ctx co
 	if err != nil {
 		return err
 	}
+	// Whatever way fn leaves (error, panic, runtime.Goexit), the transaction
+	// ends and its connection goes back to the pool. The rollback does not
+	// depend on ctx: a cancelled context must not leave the transaction open.
+	finished := false
+	defer func() {
+		if !finished {
+			rctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			defer cancel()
+			_ = tx.Rollback(rctx)
+		}
+	}()
 	if err := fn(ctx, tx); err != nil {
-		_ = tx.Rollback(ctx)
 		return err
 	}
+	finished = true
 	return tx.Commit(ctx)
 }
 
