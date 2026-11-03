@@ -235,8 +235,10 @@ Follow the rules the existing checks use:
 - A finding about something **present** (a column assigned twice, `Limit` with
   `FetchFirst`) holds for any chain, however it is built.
 - A finding about something **absent** (an `UPDATE` with no `Set`) holds only
-  when the chain is handed straight to something (argument, return value,
-  composite literal). A chain stored in a variable may be completed later.
+  when the chain is handed straight to something (argument, composite literal,
+  or a return from a function whose result is `qlx.Statement`). A chain stored
+  in a variable, or returned as a builder (`SelectQuery`, `TableFunc`, ...), may
+  be completed later by the caller.
 - Anything the analyzer cannot resolve (spread arguments, helper functions,
   reassigned variables) keeps the check **silent**. Do not guess; a false
   positive is a bug.

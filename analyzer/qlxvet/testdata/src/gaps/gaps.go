@@ -113,3 +113,19 @@ func copies() {
 	use(q.WithFormat(q.CopyJSON))        // want `V009 COPY option CopyJSON requires PostgreSQL 19`
 	use(q.WithFormat(q.CopyCSV))         // fine
 }
+
+// ---- helpers that return a builder leave the rest of the chain to the caller ----
+
+func helperTableFunc() q.TableFunc { return q.Func("", "f") } // quiet: the caller names it with As
+
+func helperUpdate() q.UpdateQuery { return q.Update(Users).Set(Users.Tier.To("x")) } // quiet: the caller adds Where
+
+func helperStatement() q.Statement {
+	return q.Update(Users).Set(Users.Tier.To("x")) // want `V002 UPDATE chain has neither Where nor All`
+}
+
+func helperFuncLit() func() q.Statement {
+	return func() q.Statement {
+		return q.Select(Users.ID).From(q.Func("", "f")) // want `V021 Func needs As`
+	}
+}

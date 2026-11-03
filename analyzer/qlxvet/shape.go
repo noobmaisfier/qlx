@@ -7,9 +7,10 @@ package qlxvet
 //  1. A finding about something that is *present* (a column assigned twice,
 //     Limit together with FetchFirst) holds for any chain, however it is built.
 //  2. A finding about something that is *absent* (an UPDATE with no Set) holds
-//     only when the chain is handed straight to something (an argument, a return
-//     value, a composite literal). A chain assigned to a variable may be
-//     completed later, so it is left alone, exactly like V002.
+//     only when the chain is handed straight to something (an argument, a
+//     composite literal, a return from a function whose result is the
+//     Statement interface). A chain assigned to a variable, or returned as a
+//     builder, may be completed later, so it is left alone, exactly like V002.
 //
 // Anything the analyzer cannot resolve (spread arguments, helper functions that
 // build assignments, aliased tables) makes a check stay silent, never guess.
@@ -44,8 +45,63 @@ func handedOn(call *ast.CallExpr, stack []ast.Node) bool {
 			}
 		}
 		return false
-	case *ast.ReturnStmt, *ast.CompositeLit, *ast.KeyValueExpr:
+	case *ast.ReturnStmt:
+		return returnsStatement(call, parent, stack)
+	case *ast.CompositeLit, *ast.KeyValueExpr:
 		return true
+	}
+	return false
+}
+
+// returnsStatement reports whether a return hands the chain over for good:
+// the function's result is the Statement interface, which nothing can be added
+// to. A helper that returns the builder itself (SelectQuery, UpdateQuery,
+// TableFunc, ...) leaves the rest of the chain to its caller, so it is not
+// judged here. When the result type cannot be read from the source, the answer
+// is no: the check stays silent.
+func returnsStatement(call *ast.CallExpr, ret *ast.ReturnStmt, stack []ast.Node) bool {
+	idx := -1
+	for i, r := range ret.Results {
+		if ast.Unparen(r) == ast.Expr(call) {
+			idx = i
+		}
+	}
+	if idx < 0 {
+		return false
+	}
+	var results *ast.FieldList
+	for i := len(stack) - 1; i >= 0 && results == nil; i-- {
+		switch f := stack[i].(type) {
+		case *ast.FuncDecl:
+			results = f.Type.Results
+			i = -1
+		case *ast.FuncLit:
+			results = f.Type.Results
+			i = -1
+		}
+		if i == -1 {
+			break
+		}
+	}
+	if results == nil {
+		return false
+	}
+	n := 0
+	for _, f := range results.List {
+		w := len(f.Names)
+		if w == 0 {
+			w = 1
+		}
+		if idx < n+w {
+			switch t := f.Type.(type) {
+			case *ast.SelectorExpr:
+				return t.Sel.Name == "Statement"
+			case *ast.Ident:
+				return t.Name == "Statement"
+			}
+			return false
+		}
+		n += w
 	}
 	return false
 }

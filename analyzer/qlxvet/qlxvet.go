@@ -374,22 +374,7 @@ func (c *checker) unboundedDML(call *ast.CallExpr, stack []ast.Node) {
 	default:
 		return
 	}
-	if hasLink(links, "Where", "All") || len(stack) < 2 {
-		return
-	}
-	switch parent := stack[len(stack)-2].(type) {
-	case *ast.CallExpr:
-		isArg := false
-		for _, a := range parent.Args {
-			if a == ast.Expr(call) {
-				isArg = true
-			}
-		}
-		if !isArg {
-			return
-		}
-	case *ast.ReturnStmt, *ast.CompositeLit:
-	default:
+	if hasLink(links, "Where", "All") || !handedOn(call, stack) {
 		return
 	}
 	c.report(call, "V002", kind+" chain has neither Where nor All; it will not render (add Where, or All() to mean every row)")

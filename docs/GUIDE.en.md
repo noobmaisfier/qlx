@@ -1440,7 +1440,7 @@ A construct newer than your oldest target is a render error that names the versi
 | `qlx vet` / analyzer | see below |
 | Real `PREPARE` | everything only the server knows: `qtest.Dump` then `qlx prepare -queries queries.json` |
 
-Analyzer codes (`go vet -vettool`, gopls, golangci-lint). Rule: an error *present* in the code (column assigned twice) is always reported; a *missing* part (no `Set`) is reported only when the chain is passed on as is (argument, `return`), because a variable may be completed later. An argument the analyzer cannot resolve (`args...`, helper function) makes it silent, never approximate:
+Analyzer codes (`go vet -vettool`, gopls, golangci-lint). Rule: an error *present* in the code (column assigned twice) is always reported; a *missing* part (no `Set`) is reported only when the chain is passed on as is (argument, composite literal, or a `return` whose result is `qlx.Statement`); a chain held in a variable or returned as a builder (`SelectQuery`, `TableFunc`...) may be completed later. An argument the analyzer cannot resolve (`args...`, helper function) makes it silent, never approximate:
 
 | Code | Reports |
 | --- | --- |

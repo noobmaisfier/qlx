@@ -30,7 +30,7 @@ QLX moves as much as it can into the Go compiler, then into render time, then in
 `go vet -vettool=qlxvet ./...` (the `analyzer` module) reports V001 to V017. It works on the source, so it follows two rules:
 
 - A finding about something that is **present** (a column assigned twice, `Limit` and `FetchFirst` together, `Explain(stmt, IO)` without `Analyze`) holds for any chain and is always reported.
-- A finding about something **absent** (an UPDATE with no `Set`, an INSERT with no row) is reported only when the chain is handed straight to something: an argument, a return value or a composite literal. A builder stored in a variable may be completed later, so it is left alone, exactly like V002.
+- A finding about something **absent** (an UPDATE with no `Set`, an INSERT with no row) is reported only when the chain is handed straight to something: an argument, a composite literal, or a return from a function whose result is `qlx.Statement`. A builder stored in a variable, or returned as a builder type (a helper that returns `SelectQuery` or `TableFunc`), may be completed later by the caller, so it is left alone, exactly like V002.
 
 When the analyzer cannot resolve an argument (a spread `args...`, a helper function that builds assignments, an aliased table, a subquery used as a table), the check stays silent rather than guess. `//qlx:ignore <reason>` suppresses one finding; `-audit` lists every suppression.
 

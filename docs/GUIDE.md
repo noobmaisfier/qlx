@@ -1444,7 +1444,7 @@ Une construction plus récente que votre plus ancienne cible est une erreur de r
 | `qlx vet` / analyseur | voir ci-dessous |
 | `PREPARE` réel | tout ce que seul le serveur sait : `qtest.Dump` puis `qlx prepare -queries queries.json` |
 
-Codes de l'analyseur (`go vet -vettool`, gopls, golangci-lint). Règle : une erreur *présente* dans le code (colonne assignée deux fois) est toujours signalée ; une partie *absente* (pas de `Set`) l'est seulement quand la chaîne est transmise telle quelle (argument, `return`), car une variable peut être complétée plus loin. Un argument que l'analyseur ne sait pas résoudre (`args...`, fonction d'aide) le rend silencieux, jamais approximatif :
+Codes de l'analyseur (`go vet -vettool`, gopls, golangci-lint). Règle : une erreur *présente* dans le code (colonne assignée deux fois) est toujours signalée ; une partie *absente* (pas de `Set`) l'est seulement quand la chaîne est transmise telle quelle (argument, littéral composite, ou `return` dont le résultat est `qlx.Statement`) ; une chaîne gardée dans une variable ou renvoyée comme builder (`SelectQuery`, `TableFunc`...) peut être complétée plus loin. Un argument que l'analyseur ne sait pas résoudre (`args...`, fonction d'aide) le rend silencieux, jamais approximatif :
 
 | Code | Signale |
 | --- | --- |
