@@ -143,6 +143,10 @@ func (n *Null[T]) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// holdsNull marks Null as a type that can represent a JSON null, so an
+// Opt[Null[T]] sets itself when the key is present with a null.
+func (Null[T]) holdsNull() {}
+
 // Opt is an optional value: unset means "leave out". It is distinct from
 // Null so that "do not touch this column" and "set it to NULL" cannot be
 // confused.

@@ -274,6 +274,7 @@ module, so your `go.mod` only gains what you use.
 - [SQL to Go cheat sheet](docs/sql-to-go.md): the SQL you know, written in QLX.
 - [Migration guides](docs/migration.md): from squirrel, goqu, bun, jet and raw pgx.
 - [Limits](docs/limits.md): what each tier can and cannot catch.
+- [DTOs](docs/dtos.md): request and response structs, patches, ids, Echo.
 - [Extension packs](docs/extensions.md): adding or refreshing a pack.
 - [Decisions](docs/decisions.md): why it is the way it is.
 - [Watch list](docs/watchlist.md): PostgreSQL 19 and the re-pinning plan.
