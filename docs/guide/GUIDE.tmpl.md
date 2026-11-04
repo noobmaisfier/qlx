@@ -511,7 +511,10 @@ Ce que `R` peut être :
 n, err := client.One[int64](ctx, q.Select(q.CountAll()).From(Users))
 
 // Plusieurs colonnes sans déclarer de struct
-t, err := client.One[q.Tuple2[int64, string]](ctx, q.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.Eq(7)))
+t, err := client.One[q.Tuple2[int64, string]](ctx,
+    q.Select(Users.ID, Users.Email).
+        From(Users).
+        Where(Users.ID.Eq(7)))
 fmt.Println(t.V1, t.V2)
 ```
 
@@ -597,7 +600,10 @@ row, err := client.One[UserRow](ctx, st, id.Bind(42))     // aucun parcours d'AS
 Des handles typés évitent de répéter les liaisons : `pgxexec.NewStatic0..4[R](dialect, stmt, params...)` (`params` sont les `q.Param[T]` du statement) donne un objet avec `All`, `One`, `Maybe`, `Each`, `Exec` dont les arguments sont typés :
 
 ```go
-byID := pgxexec.NewStatic1[UserRow](client.Dialect, q.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.EqX(id)), id)
+byID := pgxexec.NewStatic1[UserRow](
+    client.Dialect,
+    q.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.EqX(id)),
+    id)
 row, err := byID.One(ctx, client.DB(), 42)   // 42 est un int64 vérifié à la compilation
 ```
 
@@ -949,7 +955,9 @@ import "example.com/qlx/pg"                 // façade plate : pg.Lower, pg.Conc
 import "example.com/qlx/pgcat/num"           // ou par domaine : text, num, array, datetime, jsonb, fts, geo, network, ranges, binary, xml, sys, misc
 
 q.Select(pg.Lower(Users.Email)).From(Users)
-q.Select(num.StddevInt8(Orders.Total).Filter(Orders.Status.Eq("paid"))).From(Orders)   // agrégat typé + FILTER
+q.Select(num.StddevInt8(Orders.Total).
+        Filter(Orders.Status.Eq("paid"))).
+    From(Orders) // agrégat typé + FILTER
 ```
 
 ### 11.1 Comment les wrappers se typent

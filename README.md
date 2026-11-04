@@ -1,12 +1,23 @@
 # QLX
 
-**A type-safe, SQL-shaped query builder for PostgreSQL 16–19 in Go, on pgx v5.**
+**Type-safe, schema-first PostgreSQL query builder for Go.**
+SQL-like DSL, smart autocomplete, near-zero learning curve.
+Compile-time + vet analyzer verification. Zero reflection. Minimal allocations.
+pgx v5 native. PostgreSQL 16-19.
 
 You write queries as Go code that reads like SQL. The compiler, an analyzer
 and a real `PREPARE` reject the mistakes SQL strings let through, and every
 statement shape is rendered once and reused.
 
 ```go
+//qlx:row
+type UserOrders struct {
+    ID       int64
+    Email    string
+    Orders   int64
+    Nickname string `qlx:"-"` // champ ignoré : pas une colonne sélectionnée
+}
+
 rows, err := client.All[UserOrders](ctx,
     qlx.Select(Users.ID, Users.Email, qlx.Count(Orders.ID).As("orders")).
         From(Users).
@@ -108,9 +119,17 @@ type UserRow struct {
     ID    int64  `db:"id"`
     Email string `db:"email"`
 }
-rows, err := client.All[UserRow](ctx, qlx.Select(Users.ID, Users.Email).From(Users).Where(Users.Tier.Eq("pro")))
-one,  err := client.One[UserRow](ctx, qlx.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.Eq(7)))
-n,    err := client.One[int64](ctx, qlx.Select(qlx.CountAll()).From(Users))
+rows, err := client.All[UserRow](ctx,
+    qlx.Select(Users.ID, Users.Email).
+        From(Users).
+        Where(Users.Tier.Eq("pro")))
+one, err := client.One[UserRow](ctx,
+    qlx.Select(Users.ID, Users.Email).
+        From(Users).
+        Where(Users.ID.Eq(7)))
+n, err := client.One[int64](ctx,
+    qlx.Select(qlx.CountAll()).
+        From(Users))
 
 // Write
 tag, err := client.Exec(ctx, qlx.InsertInto(Users).Row(Users.Email.To("ada@example.com")).

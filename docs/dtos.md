@@ -521,9 +521,13 @@ If rows are never removed, the DTO still must not expose the flag as writable. A
 
 ```go
 // delete
-q.Update(Users).Set(Users.DeletedAt.To(q.NowTZ())).Where(Users.ID.Eq(id), Users.DeletedAt.IsNull())
+q.Update(Users).
+    Set(Users.DeletedAt.To(q.NowTZ())).
+    Where(Users.ID.Eq(id), Users.DeletedAt.IsNull())
 // every read
-q.Select(userCols...).From(Users).Where(Users.DeletedAt.IsNull(), ...)
+q.Select(userCols...).
+    From(Users).
+    Where(Users.DeletedAt.IsNull(), ...)
 ```
 
 Two traps: every read must carry the `IsNull` filter (put it in one function that builds the base `Select`), and a unique index must be partial (`WHERE deleted_at IS NULL`) or a deleted email blocks a new account. `PATCH` must not be able to set `deleted_at`: it is not in `PatchUser`.

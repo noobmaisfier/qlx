@@ -40,7 +40,10 @@ Builders are immutable: always assign the result (the analyzer flags a discarded
 u, o := Users.As("u"), Orders.As("o")
 q.Select(u.Email, o.Total).From(u).
     Join(o).On(o.UserID.EqX(u.ID))            // JOIN orders o ON o.user_id = u.id
-q.Select(u.Email).From(u).Join(o).OnFK(o.FKOrdersUserIDFkey(u))  // the foreign key names the columns
+q.Select(u.Email).
+    From(u).
+    Join(o).
+    OnFK(o.FKOrdersUserIDFkey(u)) // the foreign key names the columns
 ```
 
 `OnFK` uses the generated foreign-key method, so renaming a column breaks the build instead of the query.
@@ -92,9 +95,14 @@ Leaving out a required column (`NOT NULL` without default) fails at render time 
 ## UPDATE and DELETE
 
 ```go
-q.Update(Orders).Set(Orders.Status.To("paid")).Where(Orders.ID.Eq(9))
-q.DeleteFrom(Orders).Where(Orders.UserID.Eq(7))
-q.Update(Orders).Set(Orders.Status.To("void")).All()   // every row, said out loud
+q.Update(Orders).
+    Set(Orders.Status.To("paid")).
+    Where(Orders.ID.Eq(9))
+q.DeleteFrom(Orders).
+    Where(Orders.UserID.Eq(7))
+q.Update(Orders).
+    Set(Orders.Status.To("void")).
+    All() // every row, said out loud
 ```
 
 An UPDATE or DELETE with neither `Where` nor `All()` does not render.
