@@ -1325,6 +1325,8 @@ Les identifiants (noms de table, de colonne, de contrainte) ne sont jamais des p
 
 ### 10.10 Colonnes de résultat → `R`
 
+Cette section est le résumé ; [Mapping rows to Go types](mapping.md) (en anglais) détaille chaque cas (jointures, données imbriquées, tuples) et la vérification de chaque mapping.
+
 `client.One[R]` lit chaque ligne dans `R` selon trois modes, choisis dans cet ordre :
 
 | Mode | Quand | Règle de correspondance |
@@ -1336,7 +1338,7 @@ Les identifiants (noms de table, de colonne, de contrainte) ne sont jamais des p
 Les règles de la lecture par nom, qui surprennent le plus :
 
 - Le nom Go n'est **pas** converti en `snake_case` : un champ `UserID` s'appelle `userid`, pas `user_id`. Pour une colonne `user_id`, écrivez `UserID int64 `db:"user_id"``. Les structs générées portent déjà les tags.
-- Une colonne sans champ est une erreur : `T has no field for column x (tag a field with db:"x")`. Un champ sans colonne l'est aussi : `field T.F has no column in the result (tag it db:"-" to skip it)`. Il n'y a ni colonne ignorée ni champ laissé à zéro en silence.
+- Une colonne sans champ est une erreur : `T has no field for column x (tag a field with db:"x")`. Un champ sans colonne l'est aussi : `field T.F has no column in the result (tag it db:"-" to skip it)`. Il n'y a ni colonne ignorée ni champ laissé à zéro en silence. Deux colonnes de résultat de même nom (`users.id` et `orders.id` dans une jointure) sont aussi une erreur : donne un alias à l'une avec `.As("order_id")`.
 - Les champs non exportés sont ignorés ; `db:"-"` ignore un champ exporté ; une struct anonyme embarquée sans tag voit ses champs mis à plat.
 - Une colonne calculée sans alias a le nom que PostgreSQL lui donne (`count`, `sum`, `coalesce`, `?column?`) : donnez-lui toujours un alias avec `.As("total")` quand elle va dans une struct.
 - Le plan par nom est calculé une fois par (type, liste de colonnes) puis gardé en cache.

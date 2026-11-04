@@ -99,6 +99,23 @@ Things to do:
 - Parse path parameters with `qt.ParseID[users.IDSpace](c.Param("id"))`. A mistyped or forged string is `qt.ErrBadID`: answer 404, not 500.
 - An id of one table cannot be used where another table's is expected; the compiler says so. A DTO field typed `UserID` therefore cannot be filled with an order id by mistake.
 
+### A plain `string` in the DTO instead
+
+You can keep `qt.ID` out of the DTO and write `ID string `json:"id"``. That is a reasonable design when the DTO package should not import the generated package, or when an OpenAPI generator has trouble with a struct that implements `TextMarshaler`. Do it in one place, the mapper:
+
+```go
+func toUserResp(r db.User) UserResp { return UserResp{ID: r.ID.String(), Email: r.Email} }
+```
+
+What changes:
+
+- **Never read the id column into the string field.** pgx converts an integer to its decimal text, so `ID string` filled straight from a row holds `"196"`, the raw number, not the hashid (**tested**, `TestMappingCases/integer id read into a string field`). Read the typed id and convert with `String()`.
+- `String()` panics when `qt.SetIDKey` was never called (a programming error); `json.Marshal` of a `qt.ID` returns `qt.ErrIDKey` instead. Set the key at startup either way.
+- The compiler no longer stops you from putting an order id in a `UserResp`; the type was doing that.
+- A request body field typed `string` is not validated at `Bind`. Call `qt.ParseID[users.IDSpace](body.ID)` yourself and answer 400 or 404 on `qt.ErrBadID`; a `qt.ID` field fails in `Bind` already.
+
+If you already write a mapper per resource (which this guide recommends for public APIs), `string` at the edge costs one line. Without a mapper, keep `qt.ID`.
+
 What it is not: the text is a keyed permutation, not encryption. It hides the numbering (no "how many users", no walking `id+1`). **It is not authorization**: check that the caller may access the row.
 
 ---

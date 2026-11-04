@@ -170,6 +170,122 @@ rendered by the test suite, so none can be wrong.
 - **Dynamic queries without strings:** optional filters built from `qt.Opt`,
   conditions assembled in loops, `Any(slice)` for lists.
 
+## Mapping rows to structs
+
+Two ways to map a query result into a Go struct. Both are checked by `qlxvet`
+at compile time (V018) and by `pgxexec.VerifyRow` in tests.
+
+### At a glance
+
+| You have | Use | Maps by | Requires |
+|---|---|---|---|
+| a whole table row | the generated struct (`db.User`) | position | nothing |
+| a few columns, several call sites | `//qlx:row` struct + `qlx rows` | position | one command |
+| existing struct, free field names | `db` tags | name | nothing |
+| one column | a scalar (`int64`, `qt.Null[T]`…) | — | nothing |
+| 2–3 columns, used once | `q.Tuple2`, `q.Tuple3` | position | nothing |
+| joins, aggregates, computed data | a struct with `db` tags | name | nothing |
+
+### By name: `db` tags
+
+```go
+type UserRow struct {
+    ID    int64           `db:"id"`
+    Email string          `db:"email"`
+    Nick  qt.Null[string] `db:"nickname"`
+}
+rows, err := pgxexec.All[UserRow](ctx, db, stmt)
+```
+
+Order does not matter. Every column needs a field, every field needs a column.
+
+Go names are lowercased only — no snake_case conversion. `UserID` matches
+`userid`, not `user_id`. Tag it: `UserID int64` with tag `db:"user_id"`.
+
+Reflection happens once per (type, columns) pair, then the plan is cached.
+
+### By position: `//qlx:row`
+
+```go
+//qlx:row
+type UserSummary struct {
+    ID    int64
+    Email string
+    Posts int64
+}
+```
+
+```bash
+qlx rows ./...
+```
+
+Generates `ScanTargets()` — zero reflection, fastest path. The fields must be in
+the same order as the `Select` columns. `qlxvet` catches a swap by comparing
+names (V018).
+
+### Joins: alias every duplicate name
+
+```go
+q.Select(Users.Email, Orders.ID.As("order_id"), Orders.Total).
+    From(Users).
+    Join(Orders).
+    On(Orders.UserID.EqX(Users.ID))
+```
+
+```go
+type OrderLine struct {
+    Email   string `db:"email"`
+    OrderID int64  `db:"order_id"` // ← the alias, not "id"
+    Total   int64  `db:"total"`
+}
+```
+
+Forgetting the alias is caught at compile time:
+
+```text
+V018: two result columns are called id (give one an alias with .As("..."))
+```
+
+### Outer joins: wrap the optional side
+
+```go
+q.Select(Users.Email, q.Nullable(Orders.Total).As("total")).
+    From(Users).
+    LeftJoin(Orders).
+    On(Orders.UserID.EqX(Users.ID))
+```
+
+```go
+type UserTotal struct {
+    Email string         `db:"email"`
+    Total qt.Null[int64] `db:"total"` // ← not int64
+}
+```
+
+Reading an outer-joined column into a plain `int64` fails at runtime on the
+first row with no match. `q.Nullable` + `qt.Null[T]` is the only safe form.
+`qlxvet` reports it when the query is written in the source; a test with a real
+row catches it otherwise.
+
+### Nullability
+
+Any nullable column (a table column, an aggregate over zero rows, an outer
+join) must be read into `qt.Null[T]`, a pointer, a slice, or `sql.Scanner`.
+`q.Max(...)` and `q.Sum(...)` are already typed `AggExpr[qt.Null[T]]`;
+`q.CountAll()` is not.
+
+### Verification, from earliest to latest
+
+| Check | Catches | Misses |
+|---|---|---|
+| compiler | operand types, `T` vs `qt.Null[T]` | the type `R` (not tied to the query) |
+| `qlxvet` V018 | count, names, types, nullability, order, outer-join side | queries built in loops or across packages |
+| `pgxexec.VerifyRow[R]` (test) | names, types, pgx read plan, nullable table columns | actual NULLs from joins, same-type swaps |
+| a test with real rows | NULLs, values | rows you did not seed |
+
+Full rules, every error message, and every limitation:
+[limits.md](docs/limits.md).
+
 ## The analyzer
 
 The analyzer is a `go/analysis` pass, so it runs under `go vet`, gopls and
@@ -296,6 +412,7 @@ module, so your `go.mod` only gains what you use.
 - [Migration guides](docs/migration.md): from squirrel, goqu, bun, jet and raw pgx.
 - [Limits](docs/limits.md): what each tier can and cannot catch.
 - [DTOs](docs/dtos.md): request and response structs, patches, ids, Echo.
+- [Mapping rows to Go types](docs/mapping.md): result structs, tuples, joins, nested data, and how each mapping is checked.
 - [Extension packs](docs/extensions.md): adding or refreshing a pack.
 - [Decisions](docs/decisions.md): why it is the way it is.
 - [Watch list](docs/watchlist.md): PostgreSQL 19 and the re-pinning plan.

@@ -150,6 +150,9 @@ func buildPlan(rt reflect.Type, cols []string) (*scanPlan, error) {
 		if !ok {
 			return nil, errors.New("pgxexec: " + rt.String() + " has no field for column " + c + " (tag a field with `db:\"" + c + "\"`)")
 		}
+		if used[f.name] {
+			return nil, errors.New("pgxexec: " + rt.String() + ": two result columns are called " + c + ", and both would be read into one field (give one an alias with .As(\"...\"))")
+		}
 		used[f.name] = true
 		p.offs[i] = f.off
 		p.typs[i] = typeWord(reflect.PointerTo(f.typ))

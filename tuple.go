@@ -1,8 +1,14 @@
 package qlx
 
-// Tuples are result rows for queries that select a few typed expressions. The
-// type arguments are the Go types of the selected items, in order, so a row is
-// checked against the query by the compiler and scanned without reflection:
+// Tuples are result rows for queries that select a few expressions, without
+// declaring a struct. The type arguments are the Go types of the selected
+// items, in order, and the row is scanned by position without reflection.
+//
+// The compiler does not tie a tuple to its query: a Select does not carry the
+// types of its items. The checks are the analyzer (V018: count, Go types,
+// NULL-ability) and pgxexec.VerifyRow in a test. Fields are V1..V8, so prefer a
+// //qlx:row struct once there are more than three or four columns. See
+// docs/mapping.md.
 //
 //	rows, err := pgxexec.AllScan[qlx.Tuple2[int64, string]](ctx, db, stmt)
 

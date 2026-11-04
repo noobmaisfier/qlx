@@ -1321,6 +1321,8 @@ Identifiers (table, column and constraint names) are never parameters: they come
 
 ### 10.10 Result columns → `R`
 
+This section is the summary; [Mapping rows to Go types](mapping.md) has every case (joins, nested data, tuples) and how each mapping is checked.
+
 `client.One[R]` reads each row into `R` using one of three modes, chosen in this order:
 
 | Mode | When | Matching rule |
@@ -1332,7 +1334,7 @@ Identifiers (table, column and constraint names) are never parameters: they come
 The rules of reading by name that surprise people the most:
 
 - The Go name is **not** converted to `snake_case`: a field `UserID` is called `userid`, not `user_id`. For a `user_id` column, write `UserID int64 `db:"user_id"``. Generated structs already carry the tags.
-- A column without a field is an error: `T has no field for column x (tag a field with db:"x")`. So is a field without a column: `field T.F has no column in the result (tag it db:"-" to skip it)`. There is no silently ignored column and no field silently left at zero.
+- A column without a field is an error: `T has no field for column x (tag a field with db:"x")`. So is a field without a column: `field T.F has no column in the result (tag it db:"-" to skip it)`. There is no silently ignored column and no field silently left at zero. Two result columns with the same name (`users.id` and `orders.id` in a join) are an error as well: alias one with `.As("order_id")`.
 - Unexported fields are ignored; `db:"-"` ignores an exported field; an embedded anonymous struct without a tag has its fields flattened.
 - A computed column without an alias has the name PostgreSQL gives it (`count`, `sum`, `coalesce`, `?column?`): always give it an alias with `.As("total")` when it goes into a struct.
 - The by-name plan is computed once per (type, column list) and then cached.
