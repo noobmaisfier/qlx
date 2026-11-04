@@ -85,6 +85,8 @@ type checker struct {
 	varInits   map[types.Object]ast.Expr // package-level variable initializers (V018)
 	assigns    map[types.Object]ast.Expr // single-assignment variable initializers (V025)
 	reassigned map[types.Object]bool
+	aliases    map[aliasKey]types.Object // one object per (table variable, alias literal)
+	funcDecls  map[types.Object]*ast.FuncDecl
 }
 
 func run(pass *analysis.Pass) (any, error) {
@@ -385,10 +387,11 @@ func (c *checker) unboundedDML(call *ast.CallExpr, stack []ast.Node) {
 type scope struct {
 	tables  map[types.Object]bool
 	unknown bool // some FROM item is not a plain table variable
+	aliased bool // some FROM item is an alias written as T.As("name")
 }
 
 func (s *scope) clone() *scope {
-	n := &scope{tables: map[types.Object]bool{}, unknown: s != nil && s.unknown}
+	n := &scope{tables: map[types.Object]bool{}, unknown: s != nil && s.unknown, aliased: s != nil && s.aliased}
 	if s != nil {
 		for k := range s.tables {
 			n.tables[k] = true
@@ -397,13 +400,30 @@ func (s *scope) clone() *scope {
 	return n
 }
 
+// tableVar names the table an expression stands for: a table variable, or an
+// alias of one. `Users.As("u")` and a variable assigned once from it are the
+// same table, so they resolve to one object; two different spellings of the
+// same alias do not produce a false "not in scope". An alias whose name is not
+// a constant, or a variable assigned more than once, is not resolved further
+// than the variable itself.
 func (c *checker) tableVar(e ast.Expr) types.Object {
+	return c.tableVarDepth(e, 0)
+}
+
+type aliasKey struct {
+	base  types.Object
+	alias string
+}
+
+func (c *checker) tableVarDepth(e ast.Expr, depth int) types.Object {
 	var obj types.Object
 	switch x := ast.Unparen(e).(type) {
 	case *ast.Ident: // dot import or same package
 		obj = c.pass.TypesInfo.Uses[x]
 	case *ast.SelectorExpr: // db.Users, the usual qualified import
 		obj = c.pass.TypesInfo.Uses[x.Sel]
+	case *ast.CallExpr:
+		return c.aliasOf(x, depth)
 	default:
 		return nil
 	}
@@ -411,10 +431,56 @@ func (c *checker) tableVar(e ast.Expr) types.Object {
 	if !ok {
 		return nil
 	}
-	if n, ok := v.Type().(*types.Named); ok && embedsTableRef(n) {
-		return v
+	n, ok := v.Type().(*types.Named)
+	if !ok || !embedsTableRef(n) {
+		return nil
 	}
-	return nil
+	// u := Users.As("u"): the variable is that alias.
+	if depth < 3 && !v.IsField() {
+		if init := c.singleInit(v); init != nil {
+			if call, ok := ast.Unparen(init).(*ast.CallExpr); ok {
+				if a := c.aliasOf(call, depth+1); a != nil {
+					return a
+				}
+			}
+		} else if init := c.pkgVarInit(v); init != nil {
+			if call, ok := ast.Unparen(init).(*ast.CallExpr); ok {
+				if a := c.aliasOf(call, depth+1); a != nil {
+					return a
+				}
+			}
+		}
+	}
+	return v
+}
+
+// aliasOf resolves `T.As("name")` with a constant name on a table variable.
+func (c *checker) aliasOf(call *ast.CallExpr, depth int) types.Object {
+	sel, ok := ast.Unparen(call.Fun).(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "As" || len(call.Args) != 1 || depth > 3 {
+		return nil
+	}
+	tv := c.pass.TypesInfo.Types[call.Args[0]]
+	if tv.Value == nil || tv.Value.Kind() != constant.String {
+		return nil
+	}
+	base := c.tableVarDepth(sel.X, depth+1)
+	if base == nil {
+		return nil
+	}
+	if c.isAliasObj(base) {
+		return nil // an alias of an alias is not a table qlx lets you write
+	}
+	key := aliasKey{base, constant.StringVal(tv.Value)}
+	if c.aliases == nil {
+		c.aliases = map[aliasKey]types.Object{}
+	}
+	if o, ok := c.aliases[key]; ok {
+		return o
+	}
+	o := types.NewVar(token.NoPos, c.pass.Pkg, base.Name()+".As("+strconv.Quote(key.alias)+")", base.Type())
+	c.aliases[key] = o
+	return o
 }
 
 var scopeAdders = map[string]bool{"From": true, "Join": true, "LeftJoin": true, "RightJoin": true, "FullJoin": true, "CrossJoin": true, "Using": true}
@@ -488,6 +554,9 @@ func (c *checker) scopeCheck(root *ast.CallExpr, links []link, fn *types.Func, o
 		for _, a := range l.call.Args {
 			if v := c.tableVar(a); v != nil {
 				sc.tables[v] = true
+				if c.isAliasObj(v) {
+					sc.aliased = true
+				}
 			} else if a != nil {
 				// subquery, CTE, function table or aliased expression
 				sc.unknown = true
@@ -509,7 +578,13 @@ func (c *checker) scopeCheck(root *ast.CallExpr, links []link, fn *types.Func, o
 					if sc.unknown {
 						return true
 					}
+					if !c.isFieldSel(n) {
+						return true // a method value such as Users.As, not a column
+					}
 					if v := c.tableVar(n.X); v != nil && !sc.tables[v] && !c.declaredInside(v, root) {
+						if sc.aliased && !c.isKnownTable(v) {
+							return true // an alias is in scope and v may be spelled the same: not sure
+						}
 						c.report(n, "V006", "column "+types.ExprString(n)+" belongs to table variable "+v.Name()+", which is not in this query's FROM/JOIN scope")
 					}
 				}
@@ -593,7 +668,34 @@ func funcName(c *checker, call *ast.CallExpr) string {
 }
 
 func (c *checker) isColumn(s *ast.SelectorExpr) bool {
-	return c.tableVar(s.X) != nil
+	return c.isFieldSel(s) && c.tableVar(s.X) != nil
+}
+
+// isFieldSel reports whether a selector names a struct field (a column), not a
+// method (Users.As).
+func (c *checker) isFieldSel(s *ast.SelectorExpr) bool {
+	_, ok := c.pass.TypesInfo.Uses[s.Sel].(*types.Var)
+	return ok
+}
+
+func (c *checker) isAliasObj(o types.Object) bool {
+	for _, a := range c.aliases {
+		if a == o {
+			return true
+		}
+	}
+	return false
+}
+
+// isKnownTable: a table symbol the analyzer can compare by identity, which is
+// a package-level variable (the generated Users, db.Orders) or an alias
+// resolved from T.As("name"). A parameter, a struct field or a variable
+// assigned more than once may be the same table under another name.
+func (c *checker) isKnownTable(o types.Object) bool {
+	if c.isAliasObj(o) {
+		return true
+	}
+	return o.Parent() != nil && o.Parent().Parent() == types.Universe
 }
 
 // V008: INSERT rows must set every column the schema says is required.

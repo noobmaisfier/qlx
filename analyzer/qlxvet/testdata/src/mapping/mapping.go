@@ -171,3 +171,28 @@ func richTypes() {
 	pgxexec.One[qt.Date](nil, nil, q.Select(tstzCol))          // fine: a timestamp reads into a date
 	pgxexec.One[qt.Interval](nil, nil, q.Select(tstzCol))      // want `V018 column tstzCol: time column`
 }
+
+// Helpers of the same package that are one `return <Select chain>` are
+// followed: the call selects what the helper selects, whatever the call site
+// adds after it.
+func twoColumns() q.SelectQuery { return q.Select(Users.ID, Users.Email).From(Users) }
+
+func withBranch(on bool) q.SelectQuery {
+	if on {
+		return q.Select(Users.ID).From(Users)
+	}
+	return q.Select(Users.ID, Users.Email).From(Users)
+}
+
+func oneColumn() q.SelectQuery {
+	return q.Select(Users.Nickname).From(Users)
+}
+
+func helpers() {
+	pgxexec.One[UserRow](nil, nil, twoColumns())                                       // fine
+	pgxexec.One[UserRow](nil, nil, twoColumns().Where(Users.ID.Eq(1)).Limit(1))        // fine: the call site adds no column
+	pgxexec.One[TwoInts](nil, nil, twoColumns())                                       // want `V018 column 2 \(Users.Email\) into TwoInts.ID: string column` `V018 column id \(position 1\) matches field TwoInts.ID`
+	pgxexec.One[UserRow](nil, nil, oneColumn())                                        // want `V018 UserRow scans 2 columns \(its ScanTargets\) but the query selects 1`
+	pgxexec.One[q.Tuple2[int64, string]](nil, nil, twoColumns().Where(Users.ID.Eq(2))) // fine
+	pgxexec.One[UserRow](nil, nil, withBranch(true))                                   // two returns: not followed, silent
+}

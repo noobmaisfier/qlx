@@ -195,7 +195,7 @@ renderer on a server that lacks it.
 | --- | ---: | ---: |
 | PostgreSQL catalog | 1,862 of 3,488 | 793 of 805 |
 | pgvector 0.8.7 | 67 of 118 | 40 of 40 |
-| PostGIS 3.7 | 560 of 809 | 37 of 52 |
+| PostGIS 3.7 | 624 of 809 | 52 of 52 |
 | pg_trgm | 16 of 31 | 10 of 10 |
 | hstore | 31 of 60 | 20 of 20 |
 | ltree | 42 of 80 | 49 of 49 |
@@ -203,10 +203,11 @@ renderer on a server that lacks it.
 
 What is not wrapped is server plumbing (`internal` and `cstring` arguments,
 operator implementations, casts, which `Cast` covers), a few types with no Go
-mapping yet (`pg_ddl_command`, `fdw_handler`, `index_am_handler`) and window functions of
-extensions. The PostGIS text-form types (`box2d`, `box3d`, `gidx`, `spheroid`, ...) are mapped
-as named strings; the committed PostGIS ledger predates that mapping until it is regenerated
-(see docs/HANDOFF.md, "Regenerating the PostGIS ledger"). Set-returning, variadic, default-argument and `OUT`-parameter
+mapping yet (`pg_ddl_command`, `fdw_handler`, `index_am_handler`). Extension window functions
+(PostGIS `ST_ClusterDBSCAN` and the others) are generated as `qlx.WinFn`, completed with `Over`.
+The PostGIS text-form types (`box2d`, `box3d`, `gidx`, `spheroid`, ...) are mapped
+as named strings. `pgcat/ext/postgis` is regenerated from the committed ledger, with no server
+(docs/HANDOFF.md, "Regenerating the PostGIS wrappers"). Set-returning, variadic, default-argument and `OUT`-parameter
 functions are generated with their own shapes, never guessed.
 
 Extension packs are enabled in `qlx.yaml` (`extensions: [pgvector, postgis,

@@ -954,6 +954,11 @@ func StClosestpointofapproachN(a1 qlx.Operand[qt.Null[qt.Geometry]], a2 qlx.Oper
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_closestpointofapproach", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGeometry))
 }
 
+// StClusterdbscan calls public.st_clusterdbscan(geometry, float8, int4).
+func StClusterdbscan(a1 qlx.Operand[qt.Geometry], eps qlx.Operand[float64], minpoints qlx.Operand[int32]) qlx.WinFn[qt.Null[int32]] {
+	return qlx.WinCall[qt.Null[int32]](0, 0, "public", "st_clusterdbscan", qlx.ArgT(a1, pgGeometry), qlx.ArgT(eps, pgFloat8), qlx.ArgT(minpoints, pgInt4))
+}
+
 // StClusterintersectingGeometry calls public.st_clusterintersecting(geometry).
 func StClusterintersectingGeometry(a1 qlx.Operand[qt.Geometry]) qlx.AggExpr[[]qt.Geometry] {
 	return qlx.AggCall[[]qt.Geometry](0, 0, "public", "st_clusterintersecting", qlx.ArgT(a1, pgGeometry))
@@ -964,6 +969,21 @@ func StClusterintersectingGeometryArray(a1 qlx.Operand[[]qt.Geometry]) qlx.Expr[
 	return qlx.FuncCall[[]qt.Geometry]("public", "st_clusterintersecting", qlx.ArgT(a1, pgGeometryArr))
 }
 
+// StClusterintersectingwin calls public.st_clusterintersectingwin(geometry).
+func StClusterintersectingwin(a1 qlx.Operand[qt.Geometry]) qlx.WinFn[qt.Null[int32]] {
+	return qlx.WinCall[qt.Null[int32]](0, 0, "public", "st_clusterintersectingwin", qlx.ArgT(a1, pgGeometry))
+}
+
+// StClusterkmeans calls public.st_clusterkmeans(geometry, int4, float8). VOLATILE.
+func StClusterkmeans(geom qlx.Operand[qt.Geometry], k qlx.Operand[int32], max_radius qlx.Operand[float64]) qlx.WinFn[qt.Null[int32]] {
+	return qlx.WinCall[qt.Null[int32]](0, 0, "public", "st_clusterkmeans", qlx.ArgT(geom, pgGeometry), qlx.ArgT(k, pgInt4), qlx.ArgT(max_radius, pgFloat8))
+}
+
+// StClusterrelatewin calls public.st_clusterrelatewin(geometry, text).
+func StClusterrelatewin(geom qlx.Operand[qt.Geometry], relate_matrix qlx.Operand[string]) qlx.WinFn[qt.Null[int32]] {
+	return qlx.WinCall[qt.Null[int32]](0, 0, "public", "st_clusterrelatewin", qlx.ArgT(geom, pgGeometry), qlx.ArgT(relate_matrix, pgText))
+}
+
 // StClusterwithinGeometryArrayFloat8 calls public.st_clusterwithin(_geometry, float8).
 func StClusterwithinGeometryArrayFloat8(a1 qlx.Operand[[]qt.Geometry], a2 qlx.Operand[float64]) qlx.Expr[[]qt.Geometry] {
 	return qlx.FuncCall[[]qt.Geometry]("public", "st_clusterwithin", qlx.ArgT(a1, pgGeometryArr), qlx.ArgT(a2, pgFloat8))
@@ -972,6 +992,11 @@ func StClusterwithinGeometryArrayFloat8(a1 qlx.Operand[[]qt.Geometry], a2 qlx.Op
 // StClusterwithinGeometryFloat8 calls public.st_clusterwithin(geometry, float8).
 func StClusterwithinGeometryFloat8(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[float64]) qlx.AggExpr[[]qt.Geometry] {
 	return qlx.AggCall[[]qt.Geometry](0, 0, "public", "st_clusterwithin", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgFloat8))
+}
+
+// StClusterwithinwin calls public.st_clusterwithinwin(geometry, float8).
+func StClusterwithinwin(a1 qlx.Operand[qt.Geometry], distance qlx.Operand[float64]) qlx.WinFn[qt.Null[int32]] {
+	return qlx.WinCall[qt.Null[int32]](0, 0, "public", "st_clusterwithinwin", qlx.ArgT(a1, pgGeometry), qlx.ArgT(distance, pgFloat8))
 }
 
 // StCollectGeometry calls public.st_collect(geometry).
@@ -1114,6 +1139,11 @@ func StCoorddimN(geometry qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[in
 	return qlx.FuncCall[qt.Null[int16]]("public", "st_coorddim", qlx.ArgT(geometry, pgGeometry))
 }
 
+// StCoverageclean calls public.st_coverageclean(geometry, float8, float8, text).
+func StCoverageclean(geom qlx.Operand[qt.Geometry], gapmaximumwidth qlx.Operand[float64], snappingdistance qlx.Operand[float64], overlapmergestrategy qlx.Operand[string]) qlx.WinFn[qt.Null[qt.Geometry]] {
+	return qlx.WinCall[qt.Null[qt.Geometry]](0, 0, "public", "st_coverageclean", qlx.ArgT(geom, pgGeometry), qlx.ArgT(gapmaximumwidth, pgFloat8), qlx.ArgT(snappingdistance, pgFloat8), qlx.ArgT(overlapmergestrategy, pgText))
+}
+
 // StCoverageedgesGeometryArrayInt4 calls public.st_coverageedges(_geometry, int4).
 func StCoverageedgesGeometryArrayInt4(geoms qlx.Operand[[]qt.Geometry], edgetype qlx.Operand[int32]) qlx.Expr[qt.Geometry] {
 	return qlx.FuncCall[qt.Geometry]("public", "st_coverageedges", qlx.ArgT(geoms, pgGeometryArr), qlx.ArgT(edgetype, pgInt4))
@@ -1127,6 +1157,16 @@ func StCoverageedgesGeometryInt4(geom qlx.Operand[qt.Geometry], edgetype qlx.Ope
 // StCoverageedgesGeometryInt4N calls public.st_coverageedges(geometry, int4). Arguments may be NULL; the result is NULL if any is.
 func StCoverageedgesGeometryInt4N(geom qlx.Operand[qt.Null[qt.Geometry]], edgetype qlx.Operand[qt.Null[int32]]) qlx.Expr[qt.Null[qt.Geometry]] {
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_coverageedges", qlx.ArgT(geom, pgGeometry), qlx.ArgT(edgetype, pgInt4))
+}
+
+// StCoverageinvalidedges calls public.st_coverageinvalidedges(geometry, float8).
+func StCoverageinvalidedges(geom qlx.Operand[qt.Geometry], tolerance qlx.Operand[float64]) qlx.WinFn[qt.Null[qt.Geometry]] {
+	return qlx.WinCall[qt.Null[qt.Geometry]](0, 0, "public", "st_coverageinvalidedges", qlx.ArgT(geom, pgGeometry), qlx.ArgT(tolerance, pgFloat8))
+}
+
+// StCoveragesimplify calls public.st_coveragesimplify(geometry, float8, bool).
+func StCoveragesimplify(geom qlx.Operand[qt.Geometry], tolerance qlx.Operand[float64], simplifyboundary qlx.Operand[bool]) qlx.WinFn[qt.Null[qt.Geometry]] {
+	return qlx.WinCall[qt.Null[qt.Geometry]](0, 0, "public", "st_coveragesimplify", qlx.ArgT(geom, pgGeometry), qlx.ArgT(tolerance, pgFloat8), qlx.ArgT(simplifyboundary, pgBool))
 }
 
 // StCoverageunionGeometry calls public.st_coverageunion(geometry).
@@ -3163,6 +3203,11 @@ func StMinimumclearanceline(a1 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Geometry] {
 // StMinimumclearancelineN calls public.st_minimumclearanceline(geometry). Arguments may be NULL; the result is NULL if any is.
 func StMinimumclearancelineN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.Geometry]] {
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_minimumclearanceline", qlx.ArgT(a1, pgGeometry))
+}
+
+// StMinimumspanningtree calls public.st_minimumspanningtree(geometry).
+func StMinimumspanningtree(a1 qlx.Operand[qt.Geometry]) qlx.WinFn[qt.Null[int32]] {
+	return qlx.WinCall[qt.Null[int32]](0, 0, "public", "st_minimumspanningtree", qlx.ArgT(a1, pgGeometry))
 }
 
 // StMlinefromtextText calls public.st_mlinefromtext(text).

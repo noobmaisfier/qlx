@@ -424,7 +424,7 @@ func Generate(l *Ledger, pkg string) (*Result, error) {
 		case f.Kind == "a" && orderedSetAgg[f.Name]:
 			skip("ordered-set aggregate (hand-written in the core package)")
 			continue
-		case f.Kind == "w":
+		case f.Kind == "w" && extPkg == "":
 			skip("window function (hand-written in the core package)")
 			continue
 		case f.Ret == "trigger" || f.Ret == "internal" || f.Ret == "event_trigger":
@@ -545,7 +545,10 @@ func Generate(l *Ledger, pkg string) (*Result, error) {
 		if f.Kind == "a" {
 			w.retNul = rt.nullOK && !neverNullAgg[f.Name] // an aggregate over no rows is NULL
 		}
-		allNullable := f.Kind != "a" && len(w.params) > 0 && f.Strict && rt.nullOK && len(pc.params) == 0 && w.variadic == ""
+		if f.Kind == "w" {
+			w.retNul = rt.nullOK // an extension window function may give NULL (ST_ClusterDBSCAN marks noise with NULL)
+		}
+		allNullable := f.Kind != "a" && f.Kind != "w" && len(w.params) > 0 && f.Strict && rt.nullOK && len(pc.params) == 0 && w.variadic == ""
 		for _, p := range w.params {
 			if !p.nullOK {
 				allNullable = false
@@ -950,6 +953,11 @@ func emitOneTo(b *bytes.Buffer, w *wrapper, nullable bool, imports map[string]bo
 		fmt.Fprintf(b, "\treturn qlx.AggCall[%s](%d, %d, \"pg_catalog\", %q%s)\n}\n\n", ret, since, until, w.fn.Name, callArgs)
 		return
 	}
+	if w.fn != nil && w.fn.Kind == "w" {
+		fmt.Fprintf(b, "func %s%s(%s) qlx.WinFn[%s] {\n", name, tp, strings.Join(params, ", "), ret)
+		fmt.Fprintf(b, "\treturn qlx.WinCall[%s](%d, %d, \"pg_catalog\", %q%s)\n}\n\n", ret, since, until, w.fn.Name, callArgs)
+		return
+	}
 	fmt.Fprintf(b, "func %s%s(%s) qlx.Expr[%s] {\n", name, tp, strings.Join(params, ", "), ret)
 	switch {
 	case w.fn != nil && until > 0:
@@ -1202,7 +1210,11 @@ func prepareTest(pkg string, ws []*wrapper, extension string) ([]byte, error) {
 			fmt.Fprintf(&body, "\t{%q, %d, %d, func() qlx.Statement {\n\t\treturn qlx.Select(qlx.CountAll()).From(%s%s(%s).As(\"t\", %s))\n\t}},\n", name, since, until, name, inst, strings.Join(args, ", "), srfCols)
 			return
 		}
-		fmt.Fprintf(&body, "\t{%q, %d, %d, func() qlx.Statement { return qlx.Select(%s%s(%s)) }},\n", name, since, until, name, inst, strings.Join(args, ", "))
+		over := ""
+		if w.fn != nil && w.fn.Kind == "w" {
+			over = ".Over(qlx.Window())" // a window function needs its window to be a select item
+		}
+		fmt.Fprintf(&body, "\t{%q, %d, %d, func() qlx.Statement { return qlx.Select(%s%s(%s)%s) }},\n", name, since, until, name, inst, strings.Join(args, ", "), over)
 	}
 	for _, w := range ws {
 		if contains(w.tparam, "N") {

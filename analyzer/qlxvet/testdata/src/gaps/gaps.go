@@ -102,7 +102,13 @@ func targets() {
 	use(q.InsertInto(Users).Row(Users.Email.To("a")).OnConflict(Users.Email).DoUpdate(Orders.Total.To(1))) // want `V026 DoUpdate assigns Orders.Total`
 	use(q.Update(Users).Set(Orders.Total.To(1)).Where(Users.ID.Eq(1)))                                     // want `V026 Set assigns Orders.Total` `V006`
 	use(q.InsertInto(Users).Row(Orders.Status.To("x")))                                                    // want `V026 Row assigns Orders.Status`
-	use(q.Update(Users).Set(Users.Balance.To(1)).Where(Users.ID.Eq(1)))                                    // fine
+	u := Users.As("u")
+	use(q.Update(u).Set(u.Email.To("x")).Where(u.ID.Eq(1)))                     // fine: the alias is the target
+	use(q.Update(Users.As("u")).Set(u.Email.To("x")).Where(u.ID.Eq(1)))         // fine: the same alias spelled inline
+	use(q.Update(Users.As("v")).Set(u.Email.To("x")).Where(Users.ID.Eq(1)))     // want `V026 Set assigns u.Email` `V006 column u.Email` `V006 column Users.ID`
+	use(q.Update(Users.As("v")).Set(Users.Email.To("x")).Where(Users.ID.Eq(1))) // want `V026 Set assigns Users.Email` `V006 column Users.Email` `V006 column Users.ID`
+	use(q.Update(u).Set(Orders.Total.To(1)).Where(u.ID.Eq(1)))                  // want `V026 Set assigns Orders.Total` `V006 column Orders.Total`
+	use(q.Update(Users).Set(Users.Balance.To(1)).Where(Users.ID.Eq(1)))         // fine
 }
 
 // ---- COPY option versions (targets default 18,19; see app2 for lower targets) ----

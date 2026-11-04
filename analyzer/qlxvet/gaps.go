@@ -499,6 +499,16 @@ func (c *checker) varObj(e ast.Expr) types.Object {
 	return nil
 }
 
+// comparable: two table symbols can be told apart by identity. When the write
+// target is an alias, a symbol that is not a package-level table or another
+// alias (a parameter, a field) may be that same alias under another name.
+func (c *checker) comparable(target, other types.Object) bool {
+	if c.isAliasObj(target) {
+		return c.isKnownTable(other)
+	}
+	return true
+}
+
 // foreignTargets: a conflict column or an assignment that names a column of
 // a table other than the one written to.
 func (c *checker) foreignTargets(root *ast.CallExpr, links []link) {
@@ -527,7 +537,7 @@ func (c *checker) foreignTargets(root *ast.CallExpr, links []link) {
 			}
 			switch sel.Sel.Name {
 			case "To", "ToX", "ToDefault":
-				if t := colTable(sel.X); t != nil && t != tbl {
+				if t := colTable(sel.X); t != nil && t != tbl && c.comparable(tbl, t) {
 					c.report(a, "V026", what+" assigns "+types.ExprString(sel.X)+", a column of "+t.Name()+" while the statement writes to "+tbl.Name())
 				}
 			}
@@ -543,7 +553,7 @@ func (c *checker) foreignTargets(root *ast.CallExpr, links []link) {
 			}
 		case "OnConflict":
 			for _, a := range l.call.Args {
-				if t := colTable(a); t != nil && t != tbl {
+				if t := colTable(a); t != nil && t != tbl && c.comparable(tbl, t) {
 					c.report(a, "V026", "conflict column "+types.ExprString(a)+" belongs to "+t.Name()+", not to "+tbl.Name())
 				}
 			}

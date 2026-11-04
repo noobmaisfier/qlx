@@ -212,6 +212,14 @@ func (c *checker) selectRoot(e ast.Expr, depth int) (*ast.CallExpr, []link, bool
 			return root, links, true
 		case isFunc(fn, "Tagged") && len(root.Args) == 2, isFunc(fn, "Register") && len(root.Args) == 2:
 			return c.selectRoot(root.Args[1], depth+1)
+		case fn == nil:
+			// A helper of this package that is one `return <Select chain>`:
+			// activeUsers().Where(...) selects what the helper selects.
+			if lf := c.localFunc(root); lf != nil {
+				if ret := c.helperReturn(lf); ret != nil {
+					return c.selectRoot(ret, depth+1)
+				}
+			}
 		}
 	case *ast.Ident, *ast.SelectorExpr:
 		if id := identOf(x); id != nil {
@@ -221,6 +229,58 @@ func (c *checker) selectRoot(e ast.Expr, depth int) (*ast.CallExpr, []link, bool
 		}
 	}
 	return nil, nil, false
+}
+
+// localFunc resolves the function or method a call names when it is declared
+// in the package being analysed.
+func (c *checker) localFunc(call *ast.CallExpr) *types.Func {
+	var id *ast.Ident
+	switch f := ast.Unparen(call.Fun).(type) {
+	case *ast.Ident:
+		id = f
+	case *ast.SelectorExpr:
+		id = f.Sel
+	}
+	if id == nil {
+		return nil
+	}
+	fn, _ := c.pass.TypesInfo.Uses[id].(*types.Func)
+	if fn == nil || fn.Pkg() != c.pass.Pkg {
+		return nil
+	}
+	return fn
+}
+
+// helperReturn returns the expression a function of this package returns when
+// its whole body is `return expr`. Anything else (several statements, several
+// returns, a named result) is not followed: the answer is then "unknown", and
+// unknown stays silent. A helper in another package is not followed either:
+// the types of its body belong to that package's analysis.
+func (c *checker) helperReturn(fn *types.Func) ast.Expr {
+	if c.funcDecls == nil {
+		c.funcDecls = map[types.Object]*ast.FuncDecl{}
+		for _, f := range c.pass.Files {
+			for _, d := range f.Decls {
+				if fd, ok := d.(*ast.FuncDecl); ok && fd.Body != nil {
+					if o := c.pass.TypesInfo.Defs[fd.Name]; o != nil {
+						c.funcDecls[o] = fd
+					}
+				}
+			}
+		}
+	}
+	fd := c.funcDecls[fn.Origin()]
+	if fd == nil || len(fd.Body.List) != 1 || fd.Type.Results == nil || fd.Type.Results.NumFields() != 1 {
+		return nil
+	}
+	if names := fd.Type.Results.List[0].Names; len(names) > 0 {
+		return nil
+	}
+	ret, ok := fd.Body.List[0].(*ast.ReturnStmt)
+	if !ok || len(ret.Results) != 1 {
+		return nil
+	}
+	return ret.Results[0]
 }
 
 // pkgVarInit returns the initializer of a package-level variable declared with

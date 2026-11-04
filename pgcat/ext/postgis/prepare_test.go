@@ -946,15 +946,30 @@ var wrapperCases = []wrapperCase{
 	{"StClosestpointofapproachN", 0, 0, func() qlx.Statement {
 		return qlx.Select(StClosestpointofapproachN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
 	}},
+	{"StClusterdbscan", 0, 0, func() qlx.Statement {
+		return qlx.Select(StClusterdbscan(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64](), qlx.NewParam[int32]()).Over(qlx.Window()))
+	}},
 	{"StClusterintersectingGeometry", 0, 0, func() qlx.Statement { return qlx.Select(StClusterintersectingGeometry(qlx.NewParam[qt.Geometry]())) }},
 	{"StClusterintersectingGeometryArray", 0, 0, func() qlx.Statement {
 		return qlx.Select(StClusterintersectingGeometryArray(qlx.NewParam[[]qt.Geometry]()))
+	}},
+	{"StClusterintersectingwin", 0, 0, func() qlx.Statement {
+		return qlx.Select(StClusterintersectingwin(qlx.NewParam[qt.Geometry]()).Over(qlx.Window()))
+	}},
+	{"StClusterkmeans", 0, 0, func() qlx.Statement {
+		return qlx.Select(StClusterkmeans(qlx.NewParam[qt.Geometry](), qlx.NewParam[int32](), qlx.NewParam[float64]()).Over(qlx.Window()))
+	}},
+	{"StClusterrelatewin", 0, 0, func() qlx.Statement {
+		return qlx.Select(StClusterrelatewin(qlx.NewParam[qt.Geometry](), qlx.NewParam[string]()).Over(qlx.Window()))
 	}},
 	{"StClusterwithinGeometryArrayFloat8", 0, 0, func() qlx.Statement {
 		return qlx.Select(StClusterwithinGeometryArrayFloat8(qlx.NewParam[[]qt.Geometry](), qlx.NewParam[float64]()))
 	}},
 	{"StClusterwithinGeometryFloat8", 0, 0, func() qlx.Statement {
 		return qlx.Select(StClusterwithinGeometryFloat8(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64]()))
+	}},
+	{"StClusterwithinwin", 0, 0, func() qlx.Statement {
+		return qlx.Select(StClusterwithinwin(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64]()).Over(qlx.Window()))
 	}},
 	{"StCollectGeometry", 0, 0, func() qlx.Statement { return qlx.Select(StCollectGeometry(qlx.NewParam[qt.Geometry]())) }},
 	{"StCollectGeometryArray", 0, 0, func() qlx.Statement { return qlx.Select(StCollectGeometryArray(qlx.NewParam[[]qt.Geometry]())) }},
@@ -1018,6 +1033,9 @@ var wrapperCases = []wrapperCase{
 	{"StConvexhullN", 0, 0, func() qlx.Statement { return qlx.Select(StConvexhullN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
 	{"StCoorddim", 0, 0, func() qlx.Statement { return qlx.Select(StCoorddim(qlx.NewParam[qt.Geometry]())) }},
 	{"StCoorddimN", 0, 0, func() qlx.Statement { return qlx.Select(StCoorddimN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StCoverageclean", 0, 0, func() qlx.Statement {
+		return qlx.Select(StCoverageclean(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64](), qlx.NewParam[float64](), qlx.NewParam[string]()).Over(qlx.Window()))
+	}},
 	{"StCoverageedgesGeometryArrayInt4", 0, 0, func() qlx.Statement {
 		return qlx.Select(StCoverageedgesGeometryArrayInt4(qlx.NewParam[[]qt.Geometry](), qlx.NewParam[int32]()))
 	}},
@@ -1026,6 +1044,12 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"StCoverageedgesGeometryInt4N", 0, 0, func() qlx.Statement {
 		return qlx.Select(StCoverageedgesGeometryInt4N(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[int32]]()))
+	}},
+	{"StCoverageinvalidedges", 0, 0, func() qlx.Statement {
+		return qlx.Select(StCoverageinvalidedges(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64]()).Over(qlx.Window()))
+	}},
+	{"StCoveragesimplify", 0, 0, func() qlx.Statement {
+		return qlx.Select(StCoveragesimplify(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64](), qlx.NewParam[bool]()).Over(qlx.Window()))
 	}},
 	{"StCoverageunionGeometry", 0, 0, func() qlx.Statement { return qlx.Select(StCoverageunionGeometry(qlx.NewParam[qt.Geometry]())) }},
 	{"StCoverageunionGeometryArray", 0, 0, func() qlx.Statement { return qlx.Select(StCoverageunionGeometryArray(qlx.NewParam[[]qt.Geometry]())) }},
@@ -1946,6 +1970,9 @@ var wrapperCases = []wrapperCase{
 	{"StMinimumclearanceN", 0, 0, func() qlx.Statement { return qlx.Select(StMinimumclearanceN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
 	{"StMinimumclearanceline", 0, 0, func() qlx.Statement { return qlx.Select(StMinimumclearanceline(qlx.NewParam[qt.Geometry]())) }},
 	{"StMinimumclearancelineN", 0, 0, func() qlx.Statement { return qlx.Select(StMinimumclearancelineN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StMinimumspanningtree", 0, 0, func() qlx.Statement {
+		return qlx.Select(StMinimumspanningtree(qlx.NewParam[qt.Geometry]()).Over(qlx.Window()))
+	}},
 	{"StMlinefromtextText", 0, 0, func() qlx.Statement { return qlx.Select(StMlinefromtextText(qlx.NewParam[string]())) }},
 	{"StMlinefromtextTextN", 0, 0, func() qlx.Statement { return qlx.Select(StMlinefromtextTextN(qlx.NewParam[qt.Null[string]]())) }},
 	{"StMlinefromtextTextInt4", 0, 0, func() qlx.Statement {

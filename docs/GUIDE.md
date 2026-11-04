@@ -1421,7 +1421,7 @@ jsonb.JsonbPathExists(doc, q.Val(qt.JSONPath("$.a")), vars, q.Val(true))
 
 Pas générés : fonctions de type `internal`/`cstring`/`trigger` (réservées au serveur), fonctions d'entrée/sortie de types, implémentations d'opérateurs (utilisez l'opérateur), types statistiques rares (`pg_ddl_command`, résumés BRIN). Une fonction absente se signale ; elle ne se contourne pas par du SQL brut (§15).
 
-Extensions : `pgcat/ext/vector` (pgvector 0.8.7), `pgcat/ext/hstore`, `ltree`, `citext`, `pgtrgm` et `postgis` (PostGIS 3.7.0) — tous les ledgers livrés sont fusionnés 16–19 (activez-les dans `extensions:` pour avoir aussi les types de colonnes). Un littéral doit être casté vers le type de l'extension avant d'atteindre une fonction surchargée : `q.Cast(q.Val(qt.Vector{1, 2}), q.NewPgType[qt.Vector]("public", "vector"))`. PostGIS enveloppe 560 fonctions et 37 opérateurs ; les types `geometry` et `geography` sont mappés, les valeurs circulent en hexadécimal WKB étendu.
+Extensions : `pgcat/ext/vector` (pgvector 0.8.7), `pgcat/ext/hstore`, `ltree`, `citext`, `pgtrgm` et `postgis` (PostGIS 3.7.0) — tous les ledgers livrés sont fusionnés 16–19 (activez-les dans `extensions:` pour avoir aussi les types de colonnes). Un littéral doit être casté vers le type de l'extension avant d'atteindre une fonction surchargée : `q.Cast(q.Val(qt.Vector{1, 2}), q.NewPgType[qt.Vector]("public", "vector"))`. PostGIS enveloppe 624 fonctions et 52 opérateurs (les fonctions de fenêtre, comme `ST_ClusterDBSCAN`, se terminent par `Over`) ; les types `geometry` et `geography` sont mappés, les valeurs circulent en hexadécimal WKB étendu.
 
 ### 11.2 Opérateurs
 

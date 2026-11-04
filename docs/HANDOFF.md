@@ -524,7 +524,7 @@ operators, 26 casts**. `ledgers/postgis.json` is their merge over
 `pgcat diff` against each extraction is `No differences.` and
 `pgcat versions -like pgcat.json` passes.
 
-`pgcat/ext/postgis` wraps **560 of 809 functions** and **37 of 52 operators**
+`pgcat/ext/postgis` wrapped **560 of 809 functions** and **37 of 52 operators** before the type and window mapping (see "Regenerating the PostGIS wrappers" for the current figures)
 (the rest are operator implementations, casts, `internal`/`cstring`, or use
 unmapped types: box2d/box2df/box3d, gidx, spheroid, valid_detail,
 geometry_dump). The generated `prepare_test` prepares **1017 wrappers on each of
@@ -547,16 +547,18 @@ The root suite is now 34 packages. Still open: the first GitHub Actions run and
 `go.sum` regeneration on the author's machine.
 
 
-## Regenerating the PostGIS ledger
+## Regenerating the PostGIS wrappers
 
-The pack now maps `box2d`, `box2df`, `box3d`, `gidx`, `spheroid`, `geometry_dump` and `valid_detail` (`internal/packs/packs.go`, types in `qt/ext.go`). The committed `ledgers/postgis.json` and `pgcat/ext/postgis` were generated before that, so the new wrappers appear only after regeneration, on a server with PostGIS 3.7 on each of PostgreSQL 16 to 19:
+The pack maps `box2d`, `box2df`, `box3d`, `gidx`, `spheroid`, `geometry_dump` and `valid_detail` (`internal/packs/packs.go`, types in `qt/ext.go`), and the generator now emits an extension's window functions as `qlx.WinFn` (`qlx.WinCall`; the nine of PostGIS: `ST_ClusterDBSCAN`, `ST_ClusterKMeans`, `ST_ClusterIntersectingWin`, `ST_ClusterRelateWin`, `ST_ClusterWithinWin`, `ST_CoverageClean`, `ST_CoverageInvalidEdges`, `ST_CoverageSimplify`, `ST_MinimumSpanningTree`). The committed `pgcat/ext/postgis` predates both, so `TestGeneratedPackagesAreUpToDate` fails until it is regenerated.
 
-1. `pgcat extract -ext postgis` on each major, then merge as for the other packs (the same commands used for the existing ledger).
-2. `pgcat gen -ledger ledgers/postgis.json -o pgcat`; commit `ledgers/postgis.json` and `pgcat/ext/postgis`. `docs/pgcat/` is generated from the core `pgcat.json` ledger, not from an extension ledger: it does not change.
-3. Run the generated `prepare_test` on the four majors: every new wrapper must prepare.
-4. Expect the "Not wrapped" counts for postgis to fall; `TestPostGISTypesMapped` pins nine types.
+Regeneration is a pure function of the committed ledger and needs **no PostGIS server**:
 
-Do not regenerate with a PostGIS version other than the one named in the pack notes without updating them.
+1. `go run ./cmd/pgcat gen -ledger ledgers/postgis.json -o pgcat`
+2. `go run ./cmd/pgcat docs -ledger pgcat.json -o docs/pgcat` (no change expected: the facade pages list `pg_catalog` only).
+3. `python3 docs/guide/gen.py` for the guide, if its template changed.
+4. Commit `pgcat/ext/postgis`. Measured on the committed ledger: 624 of 809 functions (was 560) and 52 of 52 operators (was 37 of 52); `prepare_test.go` lists 1140 wrappers (was 1017).
+
+Only `prepare_test` needs a server: run it with PostGIS 3.7 on PostgreSQL 16 to 19. Window wrappers are prepared as `fn(...) OVER ()`. Do not change the PostGIS version without updating the pack notes. (A new ledger, as opposed to regenerating from this one, does need a server: `pgcat extract -ext postgis` on each major, then `pgcat merge`.)
 
 ## Adding a contrib pack (pgcrypto, uuid-ossp, unaccent, fuzzystrmatch, btree_gist)
 
