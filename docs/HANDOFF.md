@@ -308,7 +308,7 @@ allocations but touch every builder.
 
 Tree 11 adds rounds 9, 9b and 9c: the analyzer's shape rules (V012-V017) and
 result-type mapping (V018), `pgxexec.VerifyRow`, `q.Nullable`, outer-join
-nullability, and a generated guide (`docs/guide/GEN.py` + `GUIDE.tmpl.md` +
+nullability, and a generated guide (`docs/guide/gen.py` + `GUIDE.tmpl.md` +
 `guide_examples_test.go`). Everything below was run here, not assumed.
 
 Found in the received tree and fixed here:
