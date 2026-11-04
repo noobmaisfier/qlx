@@ -109,3 +109,36 @@ func TestDTOPatchBody(t *testing.T) {
 		}
 	}
 }
+
+// Absent and null are the same thing for qt.Null; they differ only for a pointer
+// (nil is both too) and for qt.Opt. This is why a column with a DEFAULT needs
+// a pointer or an Opt in a create body, and a column without one does not.
+func TestDTOCreateBodyNullVersusPointer(t *testing.T) {
+	type body struct {
+		N qt.Null[string]         `json:"n"`
+		P *string                 `json:"p"`
+		O qt.Opt[qt.Null[string]] `json:"o"`
+	}
+	var absent, null, value body
+	if err := json.Unmarshal([]byte(`{}`), &absent); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal([]byte(`{"n":null,"p":null,"o":null}`), &null); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal([]byte(`{"n":"x","p":"x","o":"x"}`), &value); err != nil {
+		t.Fatal(err)
+	}
+	if absent.N.Valid || null.N.Valid || absent.N != null.N {
+		t.Errorf("Null cannot tell absent from null: %+v %+v", absent.N, null.N)
+	}
+	if absent.P != nil || null.P != nil {
+		t.Errorf("a pointer cannot either: %v %v", absent.P, null.P)
+	}
+	if absent.O.Set || !null.O.Set || null.O.V.Valid {
+		t.Errorf("Opt[Null] tells them apart: %+v %+v", absent.O, null.O)
+	}
+	if !value.N.Valid || value.N.V != "x" || *value.P != "x" || value.O.V != qt.Some("x") {
+		t.Errorf("values: %+v", value)
+	}
+}
