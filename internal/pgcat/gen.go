@@ -377,7 +377,7 @@ func Generate(l *Ledger, pkg string) (*Result, error) {
 			return nil, err
 		}
 		defer restore()
-		extPkg = strings.ReplaceAll(l.Extension, "_", "")
+		extPkg = ExtPackage(l.Extension)
 	}
 	areaFor := func(w *wrapper) string {
 		if extPkg != "" {
@@ -1312,4 +1312,11 @@ func (w *wrapper) versions() (since, until int) {
 		return w.fn.Since, w.fn.Until
 	}
 	return w.op.Since, w.op.Until
+}
+
+// ExtPackage is the Go package (and pgcat/ext directory) name of an
+// extension: its name without the characters an identifier cannot hold
+// ("pg_trgm" is pgtrgm, "uuid-ossp" is uuidossp).
+func ExtPackage(extension string) string {
+	return strings.NewReplacer("_", "", "-", "").Replace(extension)
 }

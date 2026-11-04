@@ -12,6 +12,12 @@ import (
 var (
 	pgBool         = qlx.PgBool
 	pgBoolArr      = qlx.ArrayOf(pgBool)
+	pgBox2d        = qlx.NewPgType[qt.Box2D]("public", "box2d")
+	pgBox2dArr     = qlx.ArrayOf(pgBox2d)
+	pgBox2df       = qlx.NewPgType[qt.Box2DF]("public", "box2df")
+	pgBox2dfArr    = qlx.ArrayOf(pgBox2df)
+	pgBox3d        = qlx.NewPgType[qt.Box3D]("public", "box3d")
+	pgBox3dArr     = qlx.ArrayOf(pgBox3d)
 	pgBytea        = qlx.PgBytea
 	pgByteaArr     = qlx.ArrayOf(pgBytea)
 	pgFloat8       = qlx.PgFloat8
@@ -20,6 +26,8 @@ var (
 	pgGeographyArr = qlx.ArrayOf(pgGeography)
 	pgGeometry     = qlx.NewPgType[qt.Geometry]("public", "geometry")
 	pgGeometryArr  = qlx.ArrayOf(pgGeometry)
+	pgGidx         = qlx.NewPgType[qt.GIDX]("public", "gidx")
+	pgGidxArr      = qlx.ArrayOf(pgGidx)
 	pgInt4         = qlx.PgInt4
 	pgInt4Arr      = qlx.ArrayOf(pgInt4)
 	pgInt8         = qlx.PgInt8
@@ -32,6 +40,8 @@ var (
 	pgOidArr       = qlx.ArrayOf(pgOid)
 	pgRegclass     = qlx.NewPgType[qt.RegClass]("pg_catalog", "regclass")
 	pgRegclassArr  = qlx.ArrayOf(pgRegclass)
+	pgSpheroid     = qlx.NewPgType[qt.Spheroid]("public", "spheroid")
+	pgSpheroidArr  = qlx.ArrayOf(pgSpheroid)
 	pgText         = qlx.PgText
 	pgTextArr      = qlx.ArrayOf(pgText)
 	pgVarchar      = qlx.NewPgType[string]("pg_catalog", "varchar")

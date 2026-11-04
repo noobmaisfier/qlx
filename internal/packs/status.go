@@ -8,8 +8,13 @@ package packs
 // When ledgers/NAME.json lands, remove the entry: TestExtractionOnlyHasNoLedger
 // fails while both exist.
 var extractionOnly = map[string]bool{
-	// Empty: every pack with a committed mapping has a ledger and a generated
-	// package. PostGIS moved out when ledgers/postgis.json landed.
+	// The contrib packs: definitions only, until the ledgers are extracted on
+	// PostgreSQL 16 to 19 (docs/HANDOFF.md, "Adding a contrib pack").
+	"pgcrypto":      true,
+	"uuid-ossp":     true,
+	"unaccent":      true,
+	"fuzzystrmatch": true,
+	"btree_gist":    true,
 }
 
 // ExtractionOnly reports whether the pack has no committed ledger yet.

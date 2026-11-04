@@ -376,7 +376,14 @@ func (c *checker) mapResult(call *ast.CallExpr, r types.Type, items []item) {
 		return
 	}
 	if len(items) == 1 {
-		return // may be a struct that is one value (time.Time, qt.Null[T], ...)
+		// A struct that is one value (time.Time, qt.Null[T], ...). When the
+		// type is one the analyzer classifies, the column is compared with it.
+		if classOf(r) != "" {
+			if msg := mismatch(items[0], r); msg != "" {
+				c.report(call, "V018", "column "+items[0].text+": "+msg+" ("+name+")")
+			}
+		}
+		return
 	}
 	var fields []field
 	collectFields(st, &fields)
@@ -474,8 +481,28 @@ func isNullType(t types.Type) (types.Type, bool) {
 // classOf buckets a type for the scan rules that matter; "" means unknown,
 // and unknown never produces a finding.
 func classOf(t types.Type) string {
-	if n, ok := t.(*types.Named); ok && n.Obj().Pkg() != nil && n.Obj().Pkg().Path() == "time" && n.Obj().Name() == "Time" {
-		return "time"
+	if n, ok := t.(*types.Named); ok && n.Obj().Pkg() != nil {
+		switch pkg, name := n.Obj().Pkg().Path(), n.Obj().Name(); {
+		case pkg == "time" && name == "Time", pkg == qtPath && name == "Timestamptz":
+			return "time"
+		case pkg == qtPath && name == "Date":
+			return "date"
+		case pkg == qtPath && name == "Interval":
+			return "interval"
+		case pkg == qtPath && name == "TimeTZ":
+			return "timetz"
+		case pkg == qtPath && (name == "Range" || name == "Multirange"):
+			return "range"
+		case pkg == qtPath && name == "JSONB":
+			return "json"
+		case pkg == "net/netip" && (name == "Addr" || name == "Prefix"):
+			return "inet"
+		}
+	}
+	if a, ok := t.Underlying().(*types.Array); ok {
+		if b, ok := a.Elem().Underlying().(*types.Basic); ok && b.Kind() == types.Uint8 && a.Len() == 16 {
+			return "uuid"
+		}
 	}
 	switch u := t.Underlying().(type) {
 	case *types.Basic:
@@ -531,6 +558,30 @@ func mismatch(it item, y types.Type) string {
 		return ""
 	}
 	num := func(c string) bool { return c == "int" || c == "float" }
+	// Types that carry their own wire format (dates, intervals, ranges, inet,
+	// uuid, time with zone): a column of one reads into a field of the same
+	// kind, or into text, bytes or a JSON-ish value, which pgx can render. The
+	// text-like side is never decided by the Go type alone (a uuid column may
+	// be mapped to string, a range to a string alias), so it stays silent.
+	rich := func(c string) bool {
+		switch c {
+		case "date", "interval", "timetz", "range", "inet", "uuid":
+			return true
+		}
+		return false
+	}
+	vague := func(c string) bool { return c == "string" || c == "bytes" || c == "slice" || c == "json" }
+	if rich(a) || rich(b) {
+		switch {
+		case vague(a) || vague(b):
+			return ""
+		case a == "date" && b == "time", a == "time" && b == "date":
+			return "" // a date reads into time.Time and back
+		}
+	}
+	if (a == "json" || b == "json") && (num(a) || num(b) || a == "bool" || b == "bool") {
+		return "" // a JSON value may be a scalar
+	}
 	switch {
 	case num(a) && num(b):
 		return "" // pgx plans int <-> float (a value that does not fit fails on that row)

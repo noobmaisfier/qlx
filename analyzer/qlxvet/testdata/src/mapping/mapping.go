@@ -1,6 +1,7 @@
 package mapping
 
 import (
+	"net/netip"
 	"time"
 
 	q "github.com/noobmaisfier/qlx"
@@ -134,4 +135,39 @@ func classes() {
 	pgxexec.One[string](nil, nil, q.Select(Users.CreatedAt).From(Users)) // want `V018 column Users.CreatedAt: time column`
 	pgxexec.One[bool](nil, nil, q.Select(Users.Balance).From(Users))     // want `V018 column Users.Balance: int column`
 	pgxexec.One[int64](nil, nil, q.Select(Users.Email).From(Users))      // want `V018 column Users.Email: string column`
+}
+
+// Types that carry their own wire format (V018 knows them since the type
+// table was extended): the same kind reads, an unrelated one is reported, and
+// text-like fields stay silent because the mapping of such a column may be
+// text.
+var (
+	dateCol  q.Expr[qt.Date]
+	ivCol    q.Expr[qt.Interval]
+	rangeCol q.Expr[qt.Range[int32]]
+	inetCol  q.Expr[netip.Addr]
+	uuidCol  q.Expr[[16]byte]
+	jsonCol  q.Expr[qt.JSONB[map[string]any]]
+	tstzCol  q.Expr[qt.Timestamptz]
+)
+
+func richTypes() {
+	pgxexec.One[qt.Date](nil, nil, q.Select(dateCol))          // fine
+	pgxexec.One[time.Time](nil, nil, q.Select(dateCol))        // fine: a date reads into time.Time
+	pgxexec.One[string](nil, nil, q.Select(dateCol))           // fine: text is never decided by the type
+	pgxexec.One[int64](nil, nil, q.Select(dateCol))            // want `V018 column dateCol: date column`
+	pgxexec.One[qt.Interval](nil, nil, q.Select(ivCol))        // fine
+	pgxexec.One[time.Time](nil, nil, q.Select(ivCol))          // want `V018 column ivCol: interval column`
+	pgxexec.One[int32](nil, nil, q.Select(rangeCol))           // want `V018 column rangeCol: range column`
+	pgxexec.One[qt.Range[int32]](nil, nil, q.Select(rangeCol)) // fine
+	pgxexec.One[netip.Addr](nil, nil, q.Select(inetCol))       // fine
+	pgxexec.One[bool](nil, nil, q.Select(inetCol))             // want `V018 column inetCol: inet column`
+	pgxexec.One[[16]byte](nil, nil, q.Select(uuidCol))         // fine
+	pgxexec.One[int64](nil, nil, q.Select(uuidCol))            // want `V018 column uuidCol: uuid column`
+	pgxexec.One[string](nil, nil, q.Select(uuidCol))           // fine
+	pgxexec.One[map[string]any](nil, nil, q.Select(jsonCol))   // fine: JSON decodes into anything
+	pgxexec.One[time.Time](nil, nil, q.Select(tstzCol))        // fine
+	pgxexec.One[qt.Timestamptz](nil, nil, q.Select(tstzCol))   // fine
+	pgxexec.One[qt.Date](nil, nil, q.Select(tstzCol))          // fine: a timestamp reads into a date
+	pgxexec.One[qt.Interval](nil, nil, q.Select(tstzCol))      // want `V018 column tstzCol: time column`
 }

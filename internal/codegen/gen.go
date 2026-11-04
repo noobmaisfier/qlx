@@ -43,6 +43,16 @@ type Config struct {
 	// Date chooses the Go type of date columns: "qt" (default) is qt.Date, a
 	// calendar date with no time zone; "stdlib" is time.Time at midnight UTC.
 	Date string `json:"date,omitempty"`
+	// Timestamptz chooses the Go type of timestamptz columns: "stdlib"
+	// (default) is time.Time, which cannot hold 'infinity' (reading such a row
+	// fails); "qt" is qt.Timestamptz, which can, and also reads and writes
+	// -infinity.
+	Timestamptz string `json:"timestamptz,omitempty"`
+	// ArrayNulls types the elements of every array column as qt.Null[T], so a
+	// NULL element can be read. PostgreSQL never says whether an array may hold
+	// NULLs, so the default ([]T) fails, on the row that holds one, when it
+	// does. Costs a wrapper per element.
+	ArrayNulls bool `json:"array_nulls,omitempty"`
 	// Targets lists the PostgreSQL majors the generated code must run on
 	// (default 18 and 19). It is written into the generated package, where
 	// the runtime and the analyzer read it: a construct newer than the oldest

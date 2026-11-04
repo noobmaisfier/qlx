@@ -46,6 +46,8 @@ type mapper struct {
 	warn      func(string)
 	ids       bool // IDs mode "string": integer keys become qt.ID[Space]
 	dateStd   bool // Date mode "stdlib": date is time.Time
+	tsQT      bool // Timestamptz mode "qt": timestamptz is qt.Timestamptz
+	arrayNull bool // array_nulls: array elements are qt.Null[T]
 	exclude   map[string]bool
 	idInfos   map[string]*idInfo
 	uuidBytes bool                  // UUID mode "bytes": [16]byte instead of the standard library type
@@ -131,6 +133,10 @@ func (m *mapper) resolve(oid uint32) goType {
 	switch {
 	case t.Category == "A" && t.Elem != 0:
 		e := m.resolve(t.Elem)
+		if m.arrayNull && e.nullOK && e.fam != famArray {
+			el := "qt.Null[" + e.expr + "]"
+			return goType{expr: "[]" + el, fam: famArray, elem: el, imports: e.imports}
+		}
 		out := goType{expr: "[]" + e.expr, fam: famArray, elem: e.expr, imports: e.imports}
 		if e.pg != "" {
 			out.pg = "qlx.ArrayOf(" + e.pg + ")"
@@ -151,6 +157,9 @@ func (m *mapper) resolve(oid uint32) goType {
 	if g, ok := builtin[t.Name]; ok {
 		if t.Name == "date" && m.dateStd {
 			return goType{expr: "time.Time", fam: famTime, pg: "qlx.NewPgType[time.Time](\"pg_catalog\", \"date\")", imports: []string{"time"}, nullOK: true}
+		}
+		if t.Name == "timestamptz" && m.tsQT {
+			return goType{expr: "qt.Timestamptz", fam: famTime, pg: "qlx.NewPgType[qt.Timestamptz](\"pg_catalog\", \"timestamptz\")", nullOK: true}
 		}
 		if t.Name == "uuid" && m.uuidBytes {
 			return goType{expr: "[16]byte", fam: famCol, pg: `qlx.NewPgType[[16]byte]("pg_catalog", "uuid")`, nullOK: true}

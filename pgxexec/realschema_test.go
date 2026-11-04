@@ -10,7 +10,9 @@ package pgxexec_test
 //	   server's description (VerifyRow) and runs it
 //
 // The first line of a file may say which schemas to generate, as
-// "-- schemas: public" or "-- schemas: app, billing" (default: public).
+// "-- schemas: public" or "-- schemas: app, billing" (default: public). Further
+// "-- qlx: key: value" lines at the top are added to qlx.yaml (for example
+// "-- qlx: timestamptz: qt").
 //
 // The bundled schemas are written for this repository, in the style of the
 // classic sample databases, and carry no third-party licence. Needs the same
@@ -118,6 +120,20 @@ func rsTables(t *testing.T, dbDir string) []rsTable {
 			continue
 		}
 		out = append(out, rsTable{string(s[1]), string(r[1])})
+	}
+	return out
+}
+
+// rsConfigLines returns the "-- qlx: key: value" lines at the top of a file.
+func rsConfigLines(sql string) []string {
+	var out []string
+	for _, l := range strings.Split(sql, "\n") {
+		if !strings.HasPrefix(l, "--") {
+			break
+		}
+		if rest, ok := strings.CutPrefix(l, "-- qlx:"); ok {
+			out = append(out, strings.TrimSpace(rest))
+		}
 	}
 	return out
 }
@@ -233,7 +249,9 @@ func TestRealWorldSchemas(t *testing.T) {
 					lines = append(lines, l)
 				}
 			}
-			lines = append(lines, "schemas: ["+strings.Join(rsSchemas(sql), ", ")+"]", "targets: [16, 17, 18, 19]", "")
+			lines = append(lines, "schemas: ["+strings.Join(rsSchemas(sql), ", ")+"]", "targets: [16, 17, 18, 19]")
+			lines = append(lines, rsConfigLines(sql)...)
+			lines = append(lines, "")
 			rsWrite(t, cfgPath, strings.Join(lines, "\n"))
 
 			run(nil, bin, "gen")

@@ -203,8 +203,10 @@ renderer on a server that lacks it.
 
 What is not wrapped is server plumbing (`internal` and `cstring` arguments,
 operator implementations, casts, which `Cast` covers), a few types with no Go
-mapping yet (PostGIS `box2d`, `box3d`, `gidx`, `spheroid`) and window functions of
-extensions. Set-returning, variadic, default-argument and `OUT`-parameter
+mapping yet (`pg_ddl_command`, `fdw_handler`, `index_am_handler`) and window functions of
+extensions. The PostGIS text-form types (`box2d`, `box3d`, `gidx`, `spheroid`, ...) are mapped
+as named strings; the committed PostGIS ledger predates that mapping until it is regenerated
+(see docs/HANDOFF.md, "Regenerating the PostGIS ledger"). Set-returning, variadic, default-argument and `OUT`-parameter
 functions are generated with their own shapes, never guessed.
 
 Extension packs are enabled in `qlx.yaml` (`extensions: [pgvector, postgis,
@@ -284,8 +286,9 @@ module, so your `go.mod` only gains what you use.
 - `COPY (query)` and `COPY ... WHERE` cannot take parameters (the server refuses them).
 - There are no DDL builders: migrations stay SQL.
 - PostgreSQL 19 support is verified on a release candidate.
-- PostGIS wrappers cover the types mapped so far; `box2d`, `box3d`, `gidx` and
-  `spheroid` functions are not wrapped.
+- PostGIS wrappers cover the committed ledger; the functions that use `box2d`, `box3d`,
+  `gidx`, `spheroid`, `geometry_dump` and `valid_detail` appear after the ledger is
+  regenerated with the extended pack (their Go types exist already).
 
 Details, and the reasoning, in [docs/limits.md](docs/limits.md).
 

@@ -228,7 +228,7 @@ func TestOddSchemasNeverGenerateBrokenCode(t *testing.T) {
 		cfg  codegen.Config
 	}{
 		{"def", codegen.Config{}},
-		{"alt", codegen.Config{IDs: "string", Date: "stdlib", UUID: "bytes"}},
+		{"alt", codegen.Config{IDs: "string", Date: "stdlib", UUID: "bytes", Timestamptz: "qt", ArrayNulls: true}},
 	}
 	var accepted []string
 	rejected := map[string]string{}
@@ -260,6 +260,14 @@ func TestOddSchemasNeverGenerateBrokenCode(t *testing.T) {
 			again, err := codegen.Generate(s, cfg)
 			if err != nil || !reflect.DeepEqual(res.Files, again.Files) {
 				t.Errorf("%s/%s: generation is not deterministic", c.name, v.name)
+			}
+			if c.name == "every_type" && v.name == "alt" { // the options do what they say
+				src := string(res.Files["everything.go"])
+				for _, want := range []string{"qt.Null[qt.Timestamptz]", "[]qt.Null[int32]", "[]qt.Null[string]"} {
+					if !strings.Contains(src, want) {
+						t.Errorf("timestamptz: qt / array_nulls: generated code lacks %s", want)
+					}
+				}
 			}
 			pkg := filepath.Join(dir, "g", c.name+"_"+v.name)
 			os.MkdirAll(pkg, 0o755)

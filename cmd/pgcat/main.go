@@ -39,7 +39,7 @@ func run(args []string, out, errw io.Writer) int {
 	outPath := fs.String("o", "", "output file (extract, merge) or directory (gen)")
 	ledgerPath := fs.String("ledger", "pgcat.json", "ledger file (gen, coverage)")
 	pkg := fs.String("pkg", "pg", "package name of the facade (gen, docs)")
-	ext := fs.String("ext", "", "extract: read an extension pack's API (pgvector, postgis, pg_trgm, hstore, ltree, citext)")
+	ext := fs.String("ext", "", "extract: read an extension pack's API (pgvector, postgis, pg_trgm, hstore, ltree, citext, pgcrypto, uuid-ossp, unaccent, fuzzystrmatch, btree_gist)")
 	gramY := fs.String("y", "", "grammar: path to gram.y (or an https URL)")
 	mapPath := fs.String("map", "ledgers/grammar_map.json", "grammar: mapping file")
 	cheat := fs.String("cheatsheet", "", "grammar: write the generated SQL-to-Go cheat sheet to this file")

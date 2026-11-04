@@ -28,7 +28,7 @@ func TestExtractionOnlyHasNoLedger(t *testing.T) {
 // The PostGIS types stay mapped now that the wrappers are generated.
 func TestPostGISTypesMapped(t *testing.T) {
 	p, ok := Lookup("postgis")
-	if !ok || len(p.Types) != 2 || p.Types[0].Expr != "qt.Geometry" || p.Types[1].Expr != "qt.Geography" {
+	if !ok || len(p.Types) != 9 || p.Types[0].Expr != "qt.Geometry" || p.Types[1].Expr != "qt.Geography" {
 		t.Fatalf("postgis pack changed: %+v", p)
 	}
 }

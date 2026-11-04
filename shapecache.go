@@ -32,6 +32,25 @@ type ShapeCache struct {
 	hits   atomic.Int64
 	misses atomic.Int64
 	evicts atomic.Int64
+
+	thrash atomic.Pointer[func(ShapeStats)]
+	warned atomic.Bool
+}
+
+// OnThrash registers fn to be called once, the first time the cache has to
+// evict a shape: the sign that the program builds more distinct shapes than
+// fit (a select list, join set or IN list taken from input). It is called
+// from the goroutine that rendered the statement, outside any lock, with the
+// counters at that moment; log from it and return. Pass nil to remove it.
+// The static analyzer cannot tell a data-dependent shape from a legitimate
+// one, so this is the check that sees the real program.
+func (c *ShapeCache) OnThrash(fn func(ShapeStats)) {
+	if fn == nil {
+		c.thrash.Store(nil)
+		return
+	}
+	c.warned.Store(false)
+	c.thrash.Store(&fn)
 }
 
 const shapeShards = 32
@@ -156,6 +175,11 @@ func (c *ShapeCache) miss(d Dialect, s Statement, binds []Binding) (string, []an
 			sh.m[key] = shapeEntry{sql: st.SQL, nslots: len(st.slots)}
 		}
 		sh.mu.Unlock()
+		if c.evicts.Load() > 0 {
+			if fn := c.thrash.Load(); fn != nil && c.warned.CompareAndSwap(false, true) {
+				(*fn)(c.Stats())
+			}
+		}
 	}
 	args, err := st.Args(binds...)
 	return st.SQL, args, err

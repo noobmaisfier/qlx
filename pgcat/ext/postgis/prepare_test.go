@@ -39,6 +39,26 @@ var wrapperCases = []wrapperCase{
 	{"AddgeometrycolumnVarcharVarcharVarcharVarcharInt4VarcharInt4BoolN", 0, 0, func() qlx.Statement {
 		return qlx.Select(AddgeometrycolumnVarcharVarcharVarcharVarcharInt4VarcharInt4BoolN(qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[int32]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[int32]](), qlx.NewParam[qt.Null[bool]]()))
 	}},
+	{"Box3dtobox", 0, 0, func() qlx.Statement { return qlx.Select(Box3dtobox(qlx.NewParam[qt.Box3D]())) }},
+	{"Box3dtoboxN", 0, 0, func() qlx.Statement { return qlx.Select(Box3dtoboxN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
+	{"Contains2dBox2dfBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(Contains2dBox2dfBox2df(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"Contains2dBox2dfBox2dfN", 0, 0, func() qlx.Statement {
+		return qlx.Select(Contains2dBox2dfBox2dfN(qlx.NewParam[qt.Null[qt.Box2DF]](), qlx.NewParam[qt.Null[qt.Box2DF]]()))
+	}},
+	{"Contains2dBox2dfGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(Contains2dBox2dfGeometry(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"Contains2dBox2dfGeometryN", 0, 0, func() qlx.Statement {
+		return qlx.Select(Contains2dBox2dfGeometryN(qlx.NewParam[qt.Null[qt.Box2DF]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	}},
+	{"Contains2dGeometryBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(Contains2dGeometryBox2df(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"Contains2dGeometryBox2dfN", 0, 0, func() qlx.Statement {
+		return qlx.Select(Contains2dGeometryBox2dfN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Box2DF]]()))
+	}},
 	{"DropgeometrycolumnVarcharVarchar", 0, 0, func() qlx.Statement {
 		return qlx.Select(DropgeometrycolumnVarcharVarchar(qlx.NewParam[string](), qlx.NewParam[string]()))
 	}},
@@ -108,14 +128,59 @@ var wrapperCases = []wrapperCase{
 	{"GeomfromewktN", 0, 0, func() qlx.Statement { return qlx.Select(GeomfromewktN(qlx.NewParam[qt.Null[string]]())) }},
 	{"GetProj4FromSrid", 0, 0, func() qlx.Statement { return qlx.Select(GetProj4FromSrid(qlx.NewParam[int32]())) }},
 	{"GetProj4FromSridN", 0, 0, func() qlx.Statement { return qlx.Select(GetProj4FromSridN(qlx.NewParam[qt.Null[int32]]())) }},
+	{"IsContained2dBox2dfBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(IsContained2dBox2dfBox2df(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"IsContained2dBox2dfBox2dfN", 0, 0, func() qlx.Statement {
+		return qlx.Select(IsContained2dBox2dfBox2dfN(qlx.NewParam[qt.Null[qt.Box2DF]](), qlx.NewParam[qt.Null[qt.Box2DF]]()))
+	}},
+	{"IsContained2dBox2dfGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(IsContained2dBox2dfGeometry(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"IsContained2dBox2dfGeometryN", 0, 0, func() qlx.Statement {
+		return qlx.Select(IsContained2dBox2dfGeometryN(qlx.NewParam[qt.Null[qt.Box2DF]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	}},
+	{"IsContained2dGeometryBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(IsContained2dGeometryBox2df(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"IsContained2dGeometryBox2dfN", 0, 0, func() qlx.Statement {
+		return qlx.Select(IsContained2dGeometryBox2dfN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Box2DF]]()))
+	}},
 	{"OpAmpAmpAmpGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpAmpAmpAmpGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"OpAmpAmpAmpGeometryGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpAmpGeometryGidx(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.GIDX]()))
+	}},
+	{"OpAmpAmpAmpGidxGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpAmpGidxGeometry(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"OpAmpAmpAmpGidxGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpAmpGidxGidx(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.GIDX]()))
+	}},
+	{"OpAmpAmpBox2dfBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpBox2dfBox2df(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"OpAmpAmpBox2dfGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpBox2dfGeometry(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Geometry]()))
 	}},
 	{"OpAmpAmpGeographyGeography", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpAmpAmpGeographyGeography(qlx.NewParam[qt.Geography](), qlx.NewParam[qt.Geography]()))
 	}},
+	{"OpAmpAmpGeographyGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpGeographyGidx(qlx.NewParam[qt.Geography](), qlx.NewParam[qt.GIDX]()))
+	}},
+	{"OpAmpAmpGeometryBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpGeometryBox2df(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2DF]()))
+	}},
 	{"OpAmpAmpGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpAmpAmpGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"OpAmpAmpGidxGeography", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpGidxGeography(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.Geography]()))
+	}},
+	{"OpAmpAmpGidxGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAmpAmpGidxGidx(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.GIDX]()))
 	}},
 	{"OpAmpGtGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpAmpGtGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
@@ -131,6 +196,15 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"OpAtAtGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpAtAtGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"OpAtBox2dfBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAtBox2dfBox2df(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"OpAtBox2dfGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAtBox2dfGeometry(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"OpAtGeometryBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpAtGeometryBox2df(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2DF]()))
 	}},
 	{"OpAtGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpAtGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
@@ -204,11 +278,20 @@ var wrapperCases = []wrapperCase{
 	{"OpPipeGtGtGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpPipeGtGtGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
 	}},
+	{"OpTildeBox2dfBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpTildeBox2dfBox2df(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"OpTildeBox2dfGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpTildeBox2dfGeometry(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Geometry]()))
+	}},
 	{"OpTildeEqEqGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpTildeEqEqGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
 	}},
 	{"OpTildeEqGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpTildeEqGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"OpTildeGeometryBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(OpTildeGeometryBox2df(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2DF]()))
 	}},
 	{"OpTildeGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpTildeGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
@@ -218,6 +301,60 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"OpTildeTildeGeometryGeometry", 0, 0, func() qlx.Statement {
 		return qlx.Select(OpTildeTildeGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"Overlaps2dBox2dfBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(Overlaps2dBox2dfBox2df(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"Overlaps2dBox2dfBox2dfN", 0, 0, func() qlx.Statement {
+		return qlx.Select(Overlaps2dBox2dfBox2dfN(qlx.NewParam[qt.Null[qt.Box2DF]](), qlx.NewParam[qt.Null[qt.Box2DF]]()))
+	}},
+	{"Overlaps2dBox2dfGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(Overlaps2dBox2dfGeometry(qlx.NewParam[qt.Box2DF](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"Overlaps2dBox2dfGeometryN", 0, 0, func() qlx.Statement {
+		return qlx.Select(Overlaps2dBox2dfGeometryN(qlx.NewParam[qt.Null[qt.Box2DF]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	}},
+	{"Overlaps2dGeometryBox2df", 0, 0, func() qlx.Statement {
+		return qlx.Select(Overlaps2dGeometryBox2df(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2DF]()))
+	}},
+	{"Overlaps2dGeometryBox2dfN", 0, 0, func() qlx.Statement {
+		return qlx.Select(Overlaps2dGeometryBox2dfN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Box2DF]]()))
+	}},
+	{"OverlapsGeogGeographyGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsGeogGeographyGidx(qlx.NewParam[qt.Geography](), qlx.NewParam[qt.GIDX]()))
+	}},
+	{"OverlapsGeogGeographyGidxN", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsGeogGeographyGidxN(qlx.NewParam[qt.Null[qt.Geography]](), qlx.NewParam[qt.Null[qt.GIDX]]()))
+	}},
+	{"OverlapsGeogGidxGeography", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsGeogGidxGeography(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.Geography]()))
+	}},
+	{"OverlapsGeogGidxGeographyN", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsGeogGidxGeographyN(qlx.NewParam[qt.Null[qt.GIDX]](), qlx.NewParam[qt.Null[qt.Geography]]()))
+	}},
+	{"OverlapsGeogGidxGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsGeogGidxGidx(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.GIDX]()))
+	}},
+	{"OverlapsGeogGidxGidxN", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsGeogGidxGidxN(qlx.NewParam[qt.Null[qt.GIDX]](), qlx.NewParam[qt.Null[qt.GIDX]]()))
+	}},
+	{"OverlapsNdGeometryGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsNdGeometryGidx(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.GIDX]()))
+	}},
+	{"OverlapsNdGeometryGidxN", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsNdGeometryGidxN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.GIDX]]()))
+	}},
+	{"OverlapsNdGidxGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsNdGidxGeometry(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"OverlapsNdGidxGeometryN", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsNdGidxGeometryN(qlx.NewParam[qt.Null[qt.GIDX]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	}},
+	{"OverlapsNdGidxGidx", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsNdGidxGidx(qlx.NewParam[qt.GIDX](), qlx.NewParam[qt.GIDX]()))
+	}},
+	{"OverlapsNdGidxGidxN", 0, 0, func() qlx.Statement {
+		return qlx.Select(OverlapsNdGidxGidxN(qlx.NewParam[qt.Null[qt.GIDX]](), qlx.NewParam[qt.Null[qt.GIDX]]()))
 	}},
 	{"PopulateGeometryColumnsBool", 0, 0, func() qlx.Statement { return qlx.Select(PopulateGeometryColumnsBool(qlx.NewParam[bool]())) }},
 	{"PopulateGeometryColumnsOidBool", 0, 0, func() qlx.Statement {
@@ -260,8 +397,16 @@ var wrapperCases = []wrapperCase{
 	{"PostgisGeosNoop", 0, 0, func() qlx.Statement { return qlx.Select(PostgisGeosNoop(qlx.NewParam[qt.Geometry]())) }},
 	{"PostgisGeosNoopN", 0, 0, func() qlx.Statement { return qlx.Select(PostgisGeosNoopN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
 	{"PostgisGeosVersion", 0, 0, func() qlx.Statement { return qlx.Select(PostgisGeosVersion()) }},
+	{"PostgisGetbbox", 0, 0, func() qlx.Statement { return qlx.Select(PostgisGetbbox(qlx.NewParam[qt.Geometry]())) }},
+	{"PostgisGetbboxN", 0, 0, func() qlx.Statement { return qlx.Select(PostgisGetbboxN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
 	{"PostgisHasbbox", 0, 0, func() qlx.Statement { return qlx.Select(PostgisHasbbox(qlx.NewParam[qt.Geometry]())) }},
 	{"PostgisHasbboxN", 0, 0, func() qlx.Statement { return qlx.Select(PostgisHasbboxN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"PostgisIndexExtent", 0, 0, func() qlx.Statement {
+		return qlx.Select(PostgisIndexExtent(qlx.NewParam[qt.RegClass](), qlx.NewParam[string]()))
+	}},
+	{"PostgisIndexExtentN", 0, 0, func() qlx.Statement {
+		return qlx.Select(PostgisIndexExtentN(qlx.NewParam[qt.Null[qt.RegClass]](), qlx.NewParam[qt.Null[string]]()))
+	}},
 	{"PostgisJoinSelectivity", 0, 0, func() qlx.Statement {
 		return qlx.Select(PostgisJoinSelectivity(qlx.NewParam[qt.RegClass](), qlx.NewParam[string](), qlx.NewParam[qt.RegClass](), qlx.NewParam[string](), qlx.NewParam[string]()))
 	}},
@@ -372,6 +517,7 @@ var wrapperCases = []wrapperCase{
 	{"St3ddwithinGeometryGeometryFloat82N", 0, 0, func() qlx.Statement {
 		return qlx.Select(St3ddwithinGeometryGeometryFloat82N(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[float64]]()))
 	}},
+	{"St3dextent", 0, 0, func() qlx.Statement { return qlx.Select(St3dextent(qlx.NewParam[qt.Geometry]())) }},
 	{"St3dinterpolatepoint", 0, 0, func() qlx.Statement {
 		return qlx.Select(St3dinterpolatepoint(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
 	}},
@@ -403,6 +549,12 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"St3dlongestlineN", 0, 0, func() qlx.Statement {
 		return qlx.Select(St3dlongestlineN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	}},
+	{"St3dmakebox", 0, 0, func() qlx.Statement {
+		return qlx.Select(St3dmakebox(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"St3dmakeboxN", 0, 0, func() qlx.Statement {
+		return qlx.Select(St3dmakeboxN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
 	}},
 	{"St3dmaxdistance", 0, 0, func() qlx.Statement {
 		return qlx.Select(St3dmaxdistance(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
@@ -603,6 +755,9 @@ var wrapperCases = []wrapperCase{
 	{"StAsmvtAnyelementTextInt4TextText", 0, 0, func() qlx.Statement {
 		return qlx.Select(StAsmvtAnyelementTextInt4TextText[int32](qlx.NewParam[int32](), qlx.NewParam[string](), qlx.NewParam[int32](), qlx.NewParam[string](), qlx.NewParam[string]()))
 	}},
+	{"StAsmvtgeom", 0, 0, func() qlx.Statement {
+		return qlx.Select(StAsmvtgeom(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2D](), qlx.NewParam[int32](), qlx.NewParam[int32](), qlx.NewParam[bool]()))
+	}},
 	{"StAssvgGeographyInt4Int4", 0, 0, func() qlx.Statement {
 		return qlx.Select(StAssvgGeographyInt4Int4(qlx.NewParam[qt.Geography](), qlx.NewParam[int32](), qlx.NewParam[int32]()))
 	}},
@@ -687,6 +842,9 @@ var wrapperCases = []wrapperCase{
 	{"StBoundingdiagonalN", 0, 0, func() qlx.Statement {
 		return qlx.Select(StBoundingdiagonalN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[bool]]()))
 	}},
+	{"StBox2dfromgeohash", 0, 0, func() qlx.Statement {
+		return qlx.Select(StBox2dfromgeohash(qlx.NewParam[string](), qlx.NewParam[int32]()))
+	}},
 	{"StBufferGeographyFloat8", 0, 0, func() qlx.Statement {
 		return qlx.Select(StBufferGeographyFloat8(qlx.NewParam[qt.Geography](), qlx.NewParam[float64]()))
 	}},
@@ -761,6 +919,12 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"StCleangeometry", 0, 0, func() qlx.Statement { return qlx.Select(StCleangeometry(qlx.NewParam[qt.Geometry]())) }},
 	{"StCleangeometryN", 0, 0, func() qlx.Statement { return qlx.Select(StCleangeometryN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StClipbybox2d", 0, 0, func() qlx.Statement {
+		return qlx.Select(StClipbybox2d(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2D]()))
+	}},
+	{"StClipbybox2dN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StClipbybox2dN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Box2D]]()))
+	}},
 	{"StClosestpointGeographyGeographyBool", 0, 0, func() qlx.Statement {
 		return qlx.Select(StClosestpointGeographyGeographyBool(qlx.NewParam[qt.Geography](), qlx.NewParam[qt.Geography](), qlx.NewParam[bool]()))
 	}},
@@ -809,6 +973,15 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"StCollectionhomogenize", 0, 0, func() qlx.Statement { return qlx.Select(StCollectionhomogenize(qlx.NewParam[qt.Geometry]())) }},
 	{"StCollectionhomogenizeN", 0, 0, func() qlx.Statement { return qlx.Select(StCollectionhomogenizeN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StCombinebboxBox2dGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(StCombinebboxBox2dGeometry(qlx.NewParam[qt.Box2D](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"StCombinebboxBox3dBox3d", 0, 0, func() qlx.Statement {
+		return qlx.Select(StCombinebboxBox3dBox3d(qlx.NewParam[qt.Box3D](), qlx.NewParam[qt.Box3D]()))
+	}},
+	{"StCombinebboxBox3dGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(StCombinebboxBox3dGeometry(qlx.NewParam[qt.Box3D](), qlx.NewParam[qt.Geometry]()))
+	}},
 	{"StConcavehull", 0, 0, func() qlx.Statement {
 		return qlx.Select(StConcavehull(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64](), qlx.NewParam[bool]()))
 	}},
@@ -1008,11 +1181,17 @@ var wrapperCases = []wrapperCase{
 	{"StDistancesphereGeometryGeometryFloat8N", 0, 0, func() qlx.Statement {
 		return qlx.Select(StDistancesphereGeometryGeometryFloat8N(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[float64]]()))
 	}},
-	{"StDistancespheroid", 0, 0, func() qlx.Statement {
-		return qlx.Select(StDistancespheroid(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	{"StDistancespheroidGeometryGeometry", 0, 0, func() qlx.Statement {
+		return qlx.Select(StDistancespheroidGeometryGeometry(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
 	}},
-	{"StDistancespheroidN", 0, 0, func() qlx.Statement {
-		return qlx.Select(StDistancespheroidN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	{"StDistancespheroidGeometryGeometryN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StDistancespheroidGeometryGeometryN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	}},
+	{"StDistancespheroidGeometryGeometrySpheroid", 0, 0, func() qlx.Statement {
+		return qlx.Select(StDistancespheroidGeometryGeometrySpheroid(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Spheroid]()))
+	}},
+	{"StDistancespheroidGeometryGeometrySpheroidN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StDistancespheroidGeometryGeometrySpheroidN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Spheroid]]()))
 	}},
 	{"StDistancetreeGeographyGeography", 0, 0, func() qlx.Statement {
 		return qlx.Select(StDistancetreeGeographyGeography(qlx.NewParam[qt.Geography](), qlx.NewParam[qt.Geography]()))
@@ -1043,6 +1222,18 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"StDistanceuncachedGeographyGeographyFloat8BoolN", 0, 0, func() qlx.Statement {
 		return qlx.Select(StDistanceuncachedGeographyGeographyFloat8BoolN(qlx.NewParam[qt.Null[qt.Geography]](), qlx.NewParam[qt.Null[qt.Geography]](), qlx.NewParam[qt.Null[float64]](), qlx.NewParam[qt.Null[bool]]()))
+	}},
+	{"StDump", 0, 0, func() qlx.Statement {
+		return qlx.Select(qlx.CountAll()).From(StDump(qlx.NewParam[qt.Geometry]()).As("t", qlx.NewField[int32]("c")))
+	}},
+	{"StDumppoints", 0, 0, func() qlx.Statement {
+		return qlx.Select(qlx.CountAll()).From(StDumppoints(qlx.NewParam[qt.Geometry]()).As("t", qlx.NewField[int32]("c")))
+	}},
+	{"StDumprings", 0, 0, func() qlx.Statement {
+		return qlx.Select(qlx.CountAll()).From(StDumprings(qlx.NewParam[qt.Geometry]()).As("t", qlx.NewField[int32]("c")))
+	}},
+	{"StDumpsegments", 0, 0, func() qlx.Statement {
+		return qlx.Select(qlx.CountAll()).From(StDumpsegments(qlx.NewParam[qt.Geometry]()).As("t", qlx.NewField[int32]("c")))
 	}},
 	{"StDwithinGeographyGeographyFloat8Bool", 0, 0, func() qlx.Statement {
 		return qlx.Select(StDwithinGeographyGeographyFloat8Bool(qlx.NewParam[qt.Geography](), qlx.NewParam[qt.Geography](), qlx.NewParam[float64](), qlx.NewParam[bool]()))
@@ -1098,11 +1289,53 @@ var wrapperCases = []wrapperCase{
 	{"StEqualsGeometryGeometry2N", 0, 0, func() qlx.Statement {
 		return qlx.Select(StEqualsGeometryGeometry2N(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
 	}},
+	{"StEstimatedextentTextText", 0, 0, func() qlx.Statement {
+		return qlx.Select(StEstimatedextentTextText(qlx.NewParam[string](), qlx.NewParam[string]()))
+	}},
+	{"StEstimatedextentTextTextN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StEstimatedextentTextTextN(qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]]()))
+	}},
+	{"StEstimatedextentTextTextText", 0, 0, func() qlx.Statement {
+		return qlx.Select(StEstimatedextentTextTextText(qlx.NewParam[string](), qlx.NewParam[string](), qlx.NewParam[string]()))
+	}},
+	{"StEstimatedextentTextTextTextN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StEstimatedextentTextTextTextN(qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]]()))
+	}},
+	{"StEstimatedextentTextTextTextBool", 0, 0, func() qlx.Statement {
+		return qlx.Select(StEstimatedextentTextTextTextBool(qlx.NewParam[string](), qlx.NewParam[string](), qlx.NewParam[string](), qlx.NewParam[bool]()))
+	}},
+	{"StEstimatedextentTextTextTextBoolN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StEstimatedextentTextTextTextBoolN(qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[bool]]()))
+	}},
 	{"StEvaluate", 0, 0, func() qlx.Statement {
 		return qlx.Select(StEvaluate(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64]()))
 	}},
 	{"StEvaluateN", 0, 0, func() qlx.Statement {
 		return qlx.Select(StEvaluateN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[float64]]()))
+	}},
+	{"StExpandBox2dFloat8", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox2dFloat8(qlx.NewParam[qt.Box2D](), qlx.NewParam[float64]()))
+	}},
+	{"StExpandBox2dFloat8N", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox2dFloat8N(qlx.NewParam[qt.Null[qt.Box2D]](), qlx.NewParam[qt.Null[float64]]()))
+	}},
+	{"StExpandBox2dFloat8Float8", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox2dFloat8Float8(qlx.NewParam[qt.Box2D](), qlx.NewParam[float64](), qlx.NewParam[float64]()))
+	}},
+	{"StExpandBox2dFloat8Float8N", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox2dFloat8Float8N(qlx.NewParam[qt.Null[qt.Box2D]](), qlx.NewParam[qt.Null[float64]](), qlx.NewParam[qt.Null[float64]]()))
+	}},
+	{"StExpandBox3dFloat8", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox3dFloat8(qlx.NewParam[qt.Box3D](), qlx.NewParam[float64]()))
+	}},
+	{"StExpandBox3dFloat8N", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox3dFloat8N(qlx.NewParam[qt.Null[qt.Box3D]](), qlx.NewParam[qt.Null[float64]]()))
+	}},
+	{"StExpandBox3dFloat8Float8Float8", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox3dFloat8Float8Float8(qlx.NewParam[qt.Box3D](), qlx.NewParam[float64](), qlx.NewParam[float64](), qlx.NewParam[float64]()))
+	}},
+	{"StExpandBox3dFloat8Float8Float8N", 0, 0, func() qlx.Statement {
+		return qlx.Select(StExpandBox3dFloat8Float8Float8N(qlx.NewParam[qt.Null[qt.Box3D]](), qlx.NewParam[qt.Null[float64]](), qlx.NewParam[qt.Null[float64]](), qlx.NewParam[qt.Null[float64]]()))
 	}},
 	{"StExpandGeographyFloat8", 0, 0, func() qlx.Statement {
 		return qlx.Select(StExpandGeographyFloat8(qlx.NewParam[qt.Geography](), qlx.NewParam[float64]()))
@@ -1122,10 +1355,23 @@ var wrapperCases = []wrapperCase{
 	{"StExpandGeometryFloat8Float8Float8Float8N", 0, 0, func() qlx.Statement {
 		return qlx.Select(StExpandGeometryFloat8Float8Float8Float8N(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[float64]](), qlx.NewParam[qt.Null[float64]](), qlx.NewParam[qt.Null[float64]](), qlx.NewParam[qt.Null[float64]]()))
 	}},
+	{"StExtent", 0, 0, func() qlx.Statement { return qlx.Select(StExtent(qlx.NewParam[qt.Geometry]())) }},
 	{"StExteriorring", 0, 0, func() qlx.Statement { return qlx.Select(StExteriorring(qlx.NewParam[qt.Geometry]())) }},
 	{"StExteriorringN", 0, 0, func() qlx.Statement { return qlx.Select(StExteriorringN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
 	{"StFilterbym", 0, 0, func() qlx.Statement {
 		return qlx.Select(StFilterbym(qlx.NewParam[qt.Geometry](), qlx.NewParam[float64](), qlx.NewParam[float64](), qlx.NewParam[bool]()))
+	}},
+	{"StFindextentTextText", 0, 0, func() qlx.Statement {
+		return qlx.Select(StFindextentTextText(qlx.NewParam[string](), qlx.NewParam[string]()))
+	}},
+	{"StFindextentTextTextN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StFindextentTextTextN(qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]]()))
+	}},
+	{"StFindextentTextTextText", 0, 0, func() qlx.Statement {
+		return qlx.Select(StFindextentTextTextText(qlx.NewParam[string](), qlx.NewParam[string](), qlx.NewParam[string]()))
+	}},
+	{"StFindextentTextTextTextN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StFindextentTextTextTextN(qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]]()))
 	}},
 	{"StFlipcoordinates", 0, 0, func() qlx.Statement { return qlx.Select(StFlipcoordinates(qlx.NewParam[qt.Geometry]())) }},
 	{"StFlipcoordinatesN", 0, 0, func() qlx.Statement { return qlx.Select(StFlipcoordinatesN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
@@ -1412,6 +1658,12 @@ var wrapperCases = []wrapperCase{
 	{"StIsvalidGeometryInt4N", 0, 0, func() qlx.Statement {
 		return qlx.Select(StIsvalidGeometryInt4N(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[int32]]()))
 	}},
+	{"StIsvaliddetail", 0, 0, func() qlx.Statement {
+		return qlx.Select(StIsvaliddetail(qlx.NewParam[qt.Geometry](), qlx.NewParam[int32]()))
+	}},
+	{"StIsvaliddetailN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StIsvaliddetailN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[int32]]()))
+	}},
 	{"StIsvalidreasonGeometry", 0, 0, func() qlx.Statement { return qlx.Select(StIsvalidreasonGeometry(qlx.NewParam[qt.Geometry]())) }},
 	{"StIsvalidreasonGeometryN", 0, 0, func() qlx.Statement {
 		return qlx.Select(StIsvalidreasonGeometryN(qlx.NewParam[qt.Null[qt.Geometry]]()))
@@ -1430,6 +1682,12 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"StLength2d", 0, 0, func() qlx.Statement { return qlx.Select(StLength2d(qlx.NewParam[qt.Geometry]())) }},
 	{"StLength2dN", 0, 0, func() qlx.Statement { return qlx.Select(StLength2dN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StLength2dspheroid", 0, 0, func() qlx.Statement {
+		return qlx.Select(StLength2dspheroid(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Spheroid]()))
+	}},
+	{"StLength2dspheroidN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StLength2dspheroidN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Spheroid]]()))
+	}},
 	{"StLengthGeographyBool", 0, 0, func() qlx.Statement {
 		return qlx.Select(StLengthGeographyBool(qlx.NewParam[qt.Geography](), qlx.NewParam[bool]()))
 	}},
@@ -1440,6 +1698,12 @@ var wrapperCases = []wrapperCase{
 	{"StLengthGeometryN", 0, 0, func() qlx.Statement { return qlx.Select(StLengthGeometryN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
 	{"StLengthText", 0, 0, func() qlx.Statement { return qlx.Select(StLengthText(qlx.NewParam[string]())) }},
 	{"StLengthTextN", 0, 0, func() qlx.Statement { return qlx.Select(StLengthTextN(qlx.NewParam[qt.Null[string]]())) }},
+	{"StLengthspheroid", 0, 0, func() qlx.Statement {
+		return qlx.Select(StLengthspheroid(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Spheroid]()))
+	}},
+	{"StLengthspheroidN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StLengthspheroidN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Spheroid]]()))
+	}},
 	{"StLetters", 0, 0, func() qlx.Statement {
 		return qlx.Select(StLetters(qlx.NewParam[string](), qlx.NewParam[qt.JSONB[json.RawMessage]]()))
 	}},
@@ -1589,6 +1853,12 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"StM", 0, 0, func() qlx.Statement { return qlx.Select(StM(qlx.NewParam[qt.Geometry]())) }},
 	{"StMN", 0, 0, func() qlx.Statement { return qlx.Select(StMN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StMakebox2d", 0, 0, func() qlx.Statement {
+		return qlx.Select(StMakebox2d(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Geometry]()))
+	}},
+	{"StMakebox2dN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StMakebox2dN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Geometry]]()))
+	}},
 	{"StMakeenvelope", 0, 0, func() qlx.Statement {
 		return qlx.Select(StMakeenvelope(qlx.NewParam[float64](), qlx.NewParam[float64](), qlx.NewParam[float64](), qlx.NewParam[float64](), qlx.NewParam[int32]()))
 	}},
@@ -1966,6 +2236,12 @@ var wrapperCases = []wrapperCase{
 	{"StRelatematch", 0, 0, func() qlx.Statement { return qlx.Select(StRelatematch(qlx.NewParam[string](), qlx.NewParam[string]())) }},
 	{"StRelatematchN", 0, 0, func() qlx.Statement {
 		return qlx.Select(StRelatematchN(qlx.NewParam[qt.Null[string]](), qlx.NewParam[qt.Null[string]]()))
+	}},
+	{"StRemoveirrelevantpointsforview", 0, 0, func() qlx.Statement {
+		return qlx.Select(StRemoveirrelevantpointsforview(qlx.NewParam[qt.Geometry](), qlx.NewParam[qt.Box2D](), qlx.NewParam[bool]()))
+	}},
+	{"StRemoveirrelevantpointsforviewN", 0, 0, func() qlx.Statement {
+		return qlx.Select(StRemoveirrelevantpointsforviewN(qlx.NewParam[qt.Null[qt.Geometry]](), qlx.NewParam[qt.Null[qt.Box2D]](), qlx.NewParam[qt.Null[bool]]()))
 	}},
 	{"StRemovepoint", 0, 0, func() qlx.Statement {
 		return qlx.Select(StRemovepoint(qlx.NewParam[qt.Geometry](), qlx.NewParam[int32]()))
@@ -2346,12 +2622,30 @@ var wrapperCases = []wrapperCase{
 	}},
 	{"StX", 0, 0, func() qlx.Statement { return qlx.Select(StX(qlx.NewParam[qt.Geometry]())) }},
 	{"StXN", 0, 0, func() qlx.Statement { return qlx.Select(StXN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StXmax", 0, 0, func() qlx.Statement { return qlx.Select(StXmax(qlx.NewParam[qt.Box3D]())) }},
+	{"StXmaxN", 0, 0, func() qlx.Statement { return qlx.Select(StXmaxN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
+	{"StXmin", 0, 0, func() qlx.Statement { return qlx.Select(StXmin(qlx.NewParam[qt.Box3D]())) }},
+	{"StXminN", 0, 0, func() qlx.Statement { return qlx.Select(StXminN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
+	{"StXsize", 0, 0, func() qlx.Statement { return qlx.Select(StXsize(qlx.NewParam[qt.Box3D]())) }},
+	{"StXsizeN", 0, 0, func() qlx.Statement { return qlx.Select(StXsizeN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
 	{"StY", 0, 0, func() qlx.Statement { return qlx.Select(StY(qlx.NewParam[qt.Geometry]())) }},
 	{"StYN", 0, 0, func() qlx.Statement { return qlx.Select(StYN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StYmax", 0, 0, func() qlx.Statement { return qlx.Select(StYmax(qlx.NewParam[qt.Box3D]())) }},
+	{"StYmaxN", 0, 0, func() qlx.Statement { return qlx.Select(StYmaxN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
+	{"StYmin", 0, 0, func() qlx.Statement { return qlx.Select(StYmin(qlx.NewParam[qt.Box3D]())) }},
+	{"StYminN", 0, 0, func() qlx.Statement { return qlx.Select(StYminN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
+	{"StYsize", 0, 0, func() qlx.Statement { return qlx.Select(StYsize(qlx.NewParam[qt.Box3D]())) }},
+	{"StYsizeN", 0, 0, func() qlx.Statement { return qlx.Select(StYsizeN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
 	{"StZ", 0, 0, func() qlx.Statement { return qlx.Select(StZ(qlx.NewParam[qt.Geometry]())) }},
 	{"StZN", 0, 0, func() qlx.Statement { return qlx.Select(StZN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StZmax", 0, 0, func() qlx.Statement { return qlx.Select(StZmax(qlx.NewParam[qt.Box3D]())) }},
+	{"StZmaxN", 0, 0, func() qlx.Statement { return qlx.Select(StZmaxN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
 	{"StZmflag", 0, 0, func() qlx.Statement { return qlx.Select(StZmflag(qlx.NewParam[qt.Geometry]())) }},
 	{"StZmflagN", 0, 0, func() qlx.Statement { return qlx.Select(StZmflagN(qlx.NewParam[qt.Null[qt.Geometry]]())) }},
+	{"StZmin", 0, 0, func() qlx.Statement { return qlx.Select(StZmin(qlx.NewParam[qt.Box3D]())) }},
+	{"StZminN", 0, 0, func() qlx.Statement { return qlx.Select(StZminN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
+	{"StZsize", 0, 0, func() qlx.Statement { return qlx.Select(StZsize(qlx.NewParam[qt.Box3D]())) }},
+	{"StZsizeN", 0, 0, func() qlx.Statement { return qlx.Select(StZsizeN(qlx.NewParam[qt.Null[qt.Box3D]]())) }},
 	{"UpdategeometrysridVarcharVarcharInt4", 0, 0, func() qlx.Statement {
 		return qlx.Select(UpdategeometrysridVarcharVarcharInt4(qlx.NewParam[string](), qlx.NewParam[string](), qlx.NewParam[int32]()))
 	}},

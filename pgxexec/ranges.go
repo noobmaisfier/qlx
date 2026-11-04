@@ -24,7 +24,8 @@ import (
 // MultirangeSetter/Getter interfaces; not compiled yet (see package doc).
 func RegisterRangeTypes(m *pgtype.Map) {
 	m.TryWrapEncodePlanFuncs = append([]pgtype.TryWrapEncodePlanFunc{tryWrapRangeEncode, tryWrapMultirangeEncode, tryWrapIntervalEncode}, m.TryWrapEncodePlanFuncs...)
-	m.TryWrapScanPlanFuncs = append([]pgtype.TryWrapScanPlanFunc{tryWrapRangeScan, tryWrapMultirangeScan}, m.TryWrapScanPlanFuncs...)
+	m.TryWrapEncodePlanFuncs = append(m.TryWrapEncodePlanFuncs, tryWrapArrayLiteral) // last resort: text form, for the simple protocol
+	m.TryWrapScanPlanFuncs = append([]pgtype.TryWrapScanPlanFunc{tryWrapRangeScan, tryWrapMultirangeScan, tryWrapArrayGuard}, m.TryWrapScanPlanFuncs...)
 }
 
 // AfterConnect is a pgxpool.Config.AfterConnect hook that registers the range

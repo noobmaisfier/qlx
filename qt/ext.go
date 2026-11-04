@@ -53,6 +53,21 @@ type Geometry string
 // Geography is a PostGIS geography as extended well-known binary in hex.
 type Geography string
 
+// Box2D, Box2DF, Box3D, GIDX, Spheroid, GeometryDump and ValidDetail are the
+// other PostGIS types in PostgreSQL's text form: "BOX(1 2,3 4)", "BOX(1 2 3,4 5 6)",
+// "SPHEROID[...]", and the composite literals "({1,2},0101...)" and
+// "(t,,)". They are named strings, so a value of one cannot be passed where
+// another is expected; decode them with the library of your choice.
+type (
+	Box2D        string // box2d
+	Box2DF       string // box2df
+	Box3D        string // box3d
+	GIDX         string // gidx
+	Spheroid     string // spheroid
+	GeometryDump string // geometry_dump (path int4[], geom geometry)
+	ValidDetail  string // valid_detail (valid bool, reason text, location geometry)
+)
+
 // LTree is an ltree label path, "Top.Science.Astronomy".
 type LTree string
 

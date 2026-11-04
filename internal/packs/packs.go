@@ -36,6 +36,13 @@ var all = []Pack{
 	{Name: "postgis", Extension: "postgis", Verified: true, Types: []Type{
 		{Name: "geometry", Expr: "qt.Geometry", NullOK: true},
 		{Name: "geography", Expr: "qt.Geography", NullOK: true},
+		{Name: "box2d", Expr: "qt.Box2D", NullOK: true},
+		{Name: "box2df", Expr: "qt.Box2DF", NullOK: true},
+		{Name: "box3d", Expr: "qt.Box3D", NullOK: true},
+		{Name: "gidx", Expr: "qt.GIDX", NullOK: true},
+		{Name: "spheroid", Expr: "qt.Spheroid", NullOK: true},
+		{Name: "geometry_dump", Expr: "qt.GeometryDump", NullOK: true},
+		{Name: "valid_detail", Expr: "qt.ValidDetail", NullOK: true},
 	}, Notes: "PostGIS 3.7.0; values are extended well-known binary in hex; decode them with the geometry library of your choice"},
 	{Name: "pg_trgm", Extension: "pg_trgm", Notes: "functions and operators only (similarity, %, <->)"},
 	{Name: "hstore", Extension: "hstore", Verified: true, Types: []Type{
@@ -46,6 +53,15 @@ var all = []Pack{
 		{Name: "lquery", Expr: "qt.LQuery", NullOK: true},
 		{Name: "ltxtquery", Expr: "qt.LTxtQuery", NullOK: true},
 	}},
+	// The contrib packs below have no types of their own to map (they use text,
+	// bytea, uuid and the operator classes of existing types), so a pack is just
+	// its name: the API is generated from the ledger. They are extractionOnly
+	// (status.go) until a ledger from a real server lands.
+	{Name: "pgcrypto", Extension: "pgcrypto", Notes: "digest, hmac, crypt, gen_salt, pgp_*, gen_random_bytes; functions only"},
+	{Name: "uuid-ossp", Extension: "uuid-ossp", Notes: "uuid_generate_v1/v3/v4/v5, uuid_ns_*; on 18 and later prefer the built-in uuidv7"},
+	{Name: "unaccent", Extension: "unaccent", Notes: "unaccent(); the text-search dictionary is configured in SQL"},
+	{Name: "fuzzystrmatch", Extension: "fuzzystrmatch", Notes: "levenshtein, soundex, metaphone, difference, daitch_mokotoff"},
+	{Name: "btree_gist", Extension: "btree_gist", Notes: "operators and the distance functions on scalar types; the operator classes themselves are index DDL"},
 	{Name: "citext", Extension: "citext", Verified: true, Types: []Type{
 		{Name: "citext", Expr: "string", NullOK: true, Family: "text"},
 	}},

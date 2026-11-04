@@ -570,8 +570,8 @@ type Text interface{ ~string | qt.Null[string] }
 
 // TimeT is the set of timestamp Go types, nullable or not.
 type TimeT interface {
-	time.Time | qt.LocalTime | qt.Date | qt.TimeOfDay | qt.TimeTZ |
-		qt.Null[time.Time] | qt.Null[qt.LocalTime] | qt.Null[qt.Date] | qt.Null[qt.TimeOfDay] | qt.Null[qt.TimeTZ]
+	time.Time | qt.LocalTime | qt.Timestamptz | qt.Date | qt.TimeOfDay | qt.TimeTZ |
+		qt.Null[time.Time] | qt.Null[qt.LocalTime] | qt.Null[qt.Timestamptz] | qt.Null[qt.Date] | qt.Null[qt.TimeOfDay] | qt.Null[qt.TimeTZ]
 }
 
 func ordCmp(l node, op string, r node) Pred { return Pred{cmpNode{l: l, op: op, r: r}} }
@@ -665,6 +665,13 @@ func (e TimeExpr[T]) Gt(v T) Pred  { return ordCmp(e.n, ">", argNode{v}) }
 func (e TimeExpr[T]) Gte(v T) Pred { return ordCmp(e.n, ">=", argNode{v}) }
 func (e TimeExpr[T]) Lt(v T) Pred  { return ordCmp(e.n, "<", argNode{v}) }
 func (e TimeExpr[T]) Lte(v T) Pred { return ordCmp(e.n, "<=", argNode{v}) }
+
+// GtX, GteX, LtX and LteX compare with another expression of the same type,
+// such as a column or Now().
+func (e TimeExpr[T]) GtX(o Operand[T]) Pred  { return ordCmp(e.n, ">", o.exprNode()) }
+func (e TimeExpr[T]) GteX(o Operand[T]) Pred { return ordCmp(e.n, ">=", o.exprNode()) }
+func (e TimeExpr[T]) LtX(o Operand[T]) Pred  { return ordCmp(e.n, "<", o.exprNode()) }
+func (e TimeExpr[T]) LteX(o Operand[T]) Pred { return ordCmp(e.n, "<=", o.exprNode()) }
 func (e TimeExpr[T]) Between(lo, hi T) Pred {
 	return And(e.Gte(lo), e.Lte(hi))
 }
@@ -679,6 +686,12 @@ type TimeCol[T TimeT] struct {
 func NewTimeCol[T TimeT](t TableRef, name string) TimeCol[T] {
 	r := colRef{t, name}
 	return TimeCol[T]{TimeExpr[T]{Expr[T]{r}}, colOps[T]{r}}
+}
+
+// NowTZ is now() typed as qt.Timestamptz, for columns generated with
+// `timestamptz: qt`: valid_until > NowTZ() compares like for like.
+func NowTZ() TimeExpr[qt.Timestamptz] {
+	return TimeExpr[qt.Timestamptz]{Expr[qt.Timestamptz]{fnNode{"now", nil}}}
 }
 
 // Now is now().

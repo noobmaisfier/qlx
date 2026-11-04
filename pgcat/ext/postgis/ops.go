@@ -13,14 +13,59 @@ func OpAmpAmpAmpGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.
 	return qlx.BinaryOp[bool]("public", "&&&", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGeometry))
 }
 
+// OpAmpAmpAmpGeometryGidx applies the operator &&& to (geometry, gidx).
+func OpAmpAmpAmpGeometryGidx(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.GIDX]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&&", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGidx))
+}
+
+// OpAmpAmpAmpGidxGeometry applies the operator &&& to (gidx, geometry).
+func OpAmpAmpAmpGidxGeometry(a1 qlx.Operand[qt.GIDX], a2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&&", qlx.ArgT(a1, pgGidx), qlx.ArgT(a2, pgGeometry))
+}
+
+// OpAmpAmpAmpGidxGidx applies the operator &&& to (gidx, gidx).
+func OpAmpAmpAmpGidxGidx(a1 qlx.Operand[qt.GIDX], a2 qlx.Operand[qt.GIDX]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&&", qlx.ArgT(a1, pgGidx), qlx.ArgT(a2, pgGidx))
+}
+
+// OpAmpAmpBox2dfBox2df applies the operator && to (box2df, box2df).
+func OpAmpAmpBox2dfBox2df(a1 qlx.Operand[qt.Box2DF], a2 qlx.Operand[qt.Box2DF]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&", qlx.ArgT(a1, pgBox2df), qlx.ArgT(a2, pgBox2df))
+}
+
+// OpAmpAmpBox2dfGeometry applies the operator && to (box2df, geometry).
+func OpAmpAmpBox2dfGeometry(a1 qlx.Operand[qt.Box2DF], a2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&", qlx.ArgT(a1, pgBox2df), qlx.ArgT(a2, pgGeometry))
+}
+
 // OpAmpAmpGeographyGeography applies the operator && to (geography, geography).
 func OpAmpAmpGeographyGeography(a1 qlx.Operand[qt.Geography], a2 qlx.Operand[qt.Geography]) qlx.Expr[bool] {
 	return qlx.BinaryOp[bool]("public", "&&", qlx.ArgT(a1, pgGeography), qlx.ArgT(a2, pgGeography))
 }
 
+// OpAmpAmpGeographyGidx applies the operator && to (geography, gidx).
+func OpAmpAmpGeographyGidx(a1 qlx.Operand[qt.Geography], a2 qlx.Operand[qt.GIDX]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&", qlx.ArgT(a1, pgGeography), qlx.ArgT(a2, pgGidx))
+}
+
+// OpAmpAmpGeometryBox2df applies the operator && to (geometry, box2df).
+func OpAmpAmpGeometryBox2df(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Box2DF]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgBox2df))
+}
+
 // OpAmpAmpGeometryGeometry applies the operator && to (geometry, geometry).
 func OpAmpAmpGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Geometry]) qlx.Expr[bool] {
 	return qlx.BinaryOp[bool]("public", "&&", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGeometry))
+}
+
+// OpAmpAmpGidxGeography applies the operator && to (gidx, geography).
+func OpAmpAmpGidxGeography(a1 qlx.Operand[qt.GIDX], a2 qlx.Operand[qt.Geography]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&", qlx.ArgT(a1, pgGidx), qlx.ArgT(a2, pgGeography))
+}
+
+// OpAmpAmpGidxGidx applies the operator && to (gidx, gidx).
+func OpAmpAmpGidxGidx(a1 qlx.Operand[qt.GIDX], a2 qlx.Operand[qt.GIDX]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "&&", qlx.ArgT(a1, pgGidx), qlx.ArgT(a2, pgGidx))
 }
 
 // OpAmpGtGeometryGeometry applies the operator &> to (geometry, geometry).
@@ -46,6 +91,21 @@ func OpAmpSlashAmpGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[q
 // OpAtAtGeometryGeometry applies the operator @@ to (geometry, geometry).
 func OpAtAtGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Geometry]) qlx.Expr[bool] {
 	return qlx.BinaryOp[bool]("public", "@@", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGeometry))
+}
+
+// OpAtBox2dfBox2df applies the operator @ to (box2df, box2df).
+func OpAtBox2dfBox2df(a1 qlx.Operand[qt.Box2DF], a2 qlx.Operand[qt.Box2DF]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "@", qlx.ArgT(a1, pgBox2df), qlx.ArgT(a2, pgBox2df))
+}
+
+// OpAtBox2dfGeometry applies the operator @ to (box2df, geometry).
+func OpAtBox2dfGeometry(a1 qlx.Operand[qt.Box2DF], a2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "@", qlx.ArgT(a1, pgBox2df), qlx.ArgT(a2, pgGeometry))
+}
+
+// OpAtGeometryBox2df applies the operator @ to (geometry, box2df).
+func OpAtGeometryBox2df(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Box2DF]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "@", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgBox2df))
 }
 
 // OpAtGeometryGeometry applies the operator @ to (geometry, geometry).
@@ -168,6 +228,16 @@ func OpPipeGtGtGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.G
 	return qlx.BinaryOp[bool]("public", "|>>", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGeometry))
 }
 
+// OpTildeBox2dfBox2df applies the operator ~ to (box2df, box2df).
+func OpTildeBox2dfBox2df(a1 qlx.Operand[qt.Box2DF], a2 qlx.Operand[qt.Box2DF]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "~", qlx.ArgT(a1, pgBox2df), qlx.ArgT(a2, pgBox2df))
+}
+
+// OpTildeBox2dfGeometry applies the operator ~ to (box2df, geometry).
+func OpTildeBox2dfGeometry(a1 qlx.Operand[qt.Box2DF], a2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "~", qlx.ArgT(a1, pgBox2df), qlx.ArgT(a2, pgGeometry))
+}
+
 // OpTildeEqEqGeometryGeometry applies the operator ~== to (geometry, geometry).
 func OpTildeEqEqGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Geometry]) qlx.Expr[bool] {
 	return qlx.BinaryOp[bool]("public", "~==", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGeometry))
@@ -176,6 +246,11 @@ func OpTildeEqEqGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.
 // OpTildeEqGeometryGeometry applies the operator ~= to (geometry, geometry).
 func OpTildeEqGeometryGeometry(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Geometry]) qlx.Expr[bool] {
 	return qlx.BinaryOp[bool]("public", "~=", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgGeometry))
+}
+
+// OpTildeGeometryBox2df applies the operator ~ to (geometry, box2df).
+func OpTildeGeometryBox2df(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Box2DF]) qlx.Expr[qt.Null[bool]] {
+	return qlx.BinaryOp[qt.Null[bool]]("public", "~", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgBox2df))
 }
 
 // OpTildeGeometryGeometry applies the operator ~ to (geometry, geometry).

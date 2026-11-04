@@ -545,3 +545,27 @@ Changes:
 
 The root suite is now 34 packages. Still open: the first GitHub Actions run and
 `go.sum` regeneration on the author's machine.
+
+
+## Regenerating the PostGIS ledger
+
+The pack now maps `box2d`, `box2df`, `box3d`, `gidx`, `spheroid`, `geometry_dump` and `valid_detail` (`internal/packs/packs.go`, types in `qt/ext.go`). The committed `ledgers/postgis.json` and `pgcat/ext/postgis` were generated before that, so the new wrappers appear only after regeneration, on a server with PostGIS 3.7 on each of PostgreSQL 16 to 19:
+
+1. `pgcat extract -ext postgis` on each major, then merge as for the other packs (the same commands used for the existing ledger).
+2. `pgcat gen -ledger ledgers/postgis.json -o pgcat`; commit `ledgers/postgis.json` and `pgcat/ext/postgis`. `docs/pgcat/` is generated from the core `pgcat.json` ledger, not from an extension ledger: it does not change.
+3. Run the generated `prepare_test` on the four majors: every new wrapper must prepare.
+4. Expect the "Not wrapped" counts for postgis to fall; `TestPostGISTypesMapped` pins nine types.
+
+Do not regenerate with a PostGIS version other than the one named in the pack notes without updating them.
+
+## Adding a contrib pack (pgcrypto, uuid-ossp, unaccent, fuzzystrmatch, btree_gist)
+
+The five packs are defined in `internal/packs/packs.go` and listed in `extractionOnly` (`status.go`): the mapping exists, the ledger does not, and a ledger comes only from a real server. For each pack NAME, on PostgreSQL 16, 17, 18 and 19 with the contrib module installed:
+
+1. `psql -c 'CREATE EXTENSION "NAME"'` in a scratch database (the name is quoted: `uuid-ossp` has a hyphen).
+2. `pgcat extract -ext NAME` and merge the four extractions into `ledgers/NAME.json`, as was done for `pg_trgm`.
+3. `pgcat gen` and `pgcat docs`. The package directory is `pgcat/ext/` plus the name without `_` and `-` (`uuidossp`, `btreegist`), see `pgcat.ExtPackage`.
+4. Remove NAME from `extractionOnly`; `TestExtractionOnlyHasNoLedger` fails while both exist.
+5. Run the generated `prepare_test` on the four majors: every wrapper must prepare.
+
+Expect `pgcrypto` and `fuzzystrmatch` to be mostly text/bytea functions, `btree_gist` mostly operators and `<->` distance functions, `uuid-ossp` four to six functions plus the `uuid_ns_*` constants (these take no arguments and return `uuid`).

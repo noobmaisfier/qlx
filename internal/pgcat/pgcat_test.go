@@ -67,3 +67,11 @@ func TestMergeSince(t *testing.T) {
 		t.Fatalf("incremental merge wrong: %v", got)
 	}
 }
+
+func TestExtPackageName(t *testing.T) {
+	for in, want := range map[string]string{"pg_trgm": "pgtrgm", "uuid-ossp": "uuidossp", "btree_gist": "btreegist", "citext": "citext"} {
+		if got := pgcat.ExtPackage(in); got != want {
+			t.Errorf("ExtPackage(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

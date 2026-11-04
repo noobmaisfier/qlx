@@ -1,4 +1,6 @@
 -- schemas: app
+-- qlx: timestamptz: qt
+-- qlx: array_nulls: true
 -- Multi-tenant SaaS: composite foreign keys that carry the tenant, soft deletes,
 -- arrays, intervals, a partitioned event table and an outbox with no key.
 CREATE SCHEMA app;
@@ -78,3 +80,14 @@ CREATE TABLE app.outbox (
     created timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE app.schema_migrations (version bigint PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now());
+
+-- Rows that real data has and Go types often cannot hold: infinite timestamps
+-- and NULL elements inside arrays. With `timestamptz: qt` and `array_nulls: true`
+-- the program must read them back.
+INSERT INTO app.tenants (slug) VALUES ('acme');
+INSERT INTO app.api_keys (tenant_id, key_hash, expires_at, allowed_ips, scopes)
+    VALUES (1, '\x01', 'infinity', ARRAY['10.0.0.1'::inet, NULL], ARRAY['read', NULL]),
+           (1, '\x02', '-infinity', '{}', '{}'),
+           (1, '\x03', NULL, '{}', '{}');
+INSERT INTO app.projects (tenant_id, id, name) VALUES (1, 1, 'p');
+INSERT INTO app.tasks (tenant_id, project_id, title, labels) VALUES (1, 1, 't', ARRAY['a', NULL, 'c']);

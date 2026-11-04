@@ -1,5 +1,12 @@
 package qt
 
+import (
+	"database/sql/driver"
+	"strings"
+
+	"github.com/noobmaisfier/qlx/internal/pgtext"
+)
+
 // Range and Multirange are generic, but a driver codec has to handle them
 // without knowing T. These methods are that bridge: the value is read and
 // filled through small non-generic interfaces, so a driver adapter (see
@@ -86,3 +93,39 @@ func (m *Multirange[T]) MultirangeSetNull()            { *m = nil }
 func (m *Multirange[T]) MultirangeSetLen(n int)        { *m = make(Multirange[T], n) }
 func (m *Multirange[T]) MultirangeScanIndex(i int) any { return &(*m)[i] }
 func (m *Multirange[T]) MultirangeScanIndexType() any  { return &Range[T]{} }
+
+// Value implements driver.Valuer with the range's text form, which is what a
+// connection without type information (pgx's simple protocol, database/sql)
+// needs. A binary-protocol pgx connection never calls it: the codec for the
+// range type is chosen from the server's OID.
+func (r Range[T]) Value() (driver.Value, error) {
+	if r.Null {
+		return nil, nil
+	}
+	lo, up := r.RangeBounds()
+	return pgtext.RangeLiteral(r.Empty, lo, up, r.LowerInc, r.UpperInc)
+}
+
+// Value implements driver.Valuer with the multirange's text form; a nil
+// Multirange is NULL.
+func (m Multirange[T]) Value() (driver.Value, error) {
+	if m == nil {
+		return nil, nil
+	}
+	parts := make([]string, len(m))
+	for i, r := range m {
+		s, err := pgtext.RangeLiteral(r.Empty, boundAny(r.Lower), boundAny(r.Upper), r.LowerInc, r.UpperInc)
+		if err != nil {
+			return nil, err
+		}
+		parts[i] = s
+	}
+	return "{" + strings.Join(parts, ",") + "}", nil
+}
+
+func boundAny[T any](p *T) any {
+	if p == nil {
+		return nil
+	}
+	return *p
+}

@@ -6,7 +6,12 @@ package qt
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"net/netip"
+	"strings"
 )
 
 // Null is a nullable value. The zero value is NULL.
@@ -40,15 +45,76 @@ func (n Null[T]) Ptr() *T {
 }
 
 // Scan implements sql.Scanner so Null[T] works with database/sql and with pgx,
-// which both accept it. It delegates to sql.Null[T], so the conversions are
-// the standard library's.
+// which both accept it. Conversions are the standard library's (sql.Null[T]),
+// with one extension: when that cannot convert a text source (pgx hands
+// inet, cidr and uuid columns over as strings) and *T implements
+// encoding.TextUnmarshaler (netip.Addr, netip.Prefix), the text is parsed
+// with it; a [16]byte target accepts the canonical uuid text form.
 func (n *Null[T]) Scan(src any) error {
 	var s sql.Null[T]
-	if err := s.Scan(src); err != nil {
+	err := s.Scan(src)
+	if err == nil {
+		n.V, n.Valid = s.V, s.Valid
+		return nil
+	}
+	var text string
+	switch x := src.(type) {
+	case string:
+		text = x
+	case []byte:
+		text = string(x)
+	default:
 		return err
 	}
-	n.V, n.Valid = s.V, s.Valid
+	var v T
+	switch p := any(&v).(type) {
+	case *[16]byte:
+		u, perr := parseUUIDText(text)
+		if perr != nil {
+			return perr
+		}
+		*p = u
+	case *netip.Addr:
+		// inet text form carries a mask: a host address comes as "10.0.0.1/32".
+		if i := strings.IndexByte(text, '/'); i >= 0 {
+			pf, perr := netip.ParsePrefix(text)
+			if perr != nil || pf.Bits() != pf.Addr().BitLen() {
+				return fmt.Errorf("qt: inet %q has a network mask, scan into netip.Prefix", text)
+			}
+			*p = pf.Addr()
+			break
+		}
+		a, perr := netip.ParseAddr(text)
+		if perr != nil {
+			return perr
+		}
+		*p = a
+	case encoding.TextUnmarshaler:
+		if perr := p.UnmarshalText([]byte(text)); perr != nil {
+			return perr
+		}
+	default:
+		return err
+	}
+	n.V, n.Valid = v, true
 	return nil
+}
+
+func parseUUIDText(s string) ([16]byte, error) {
+	var u [16]byte
+	h := make([]byte, 0, 32)
+	for i := 0; i < len(s); i++ {
+		if s[i] != '-' {
+			h = append(h, s[i])
+		}
+	}
+	if len(h) != 32 {
+		return u, fmt.Errorf("qt: invalid uuid %q", s)
+	}
+	if _, err := hex.Decode(u[:], h); err != nil {
+		return u, fmt.Errorf("qt: invalid uuid %q", s)
+	}
+	return u, nil
 }
 
 // Value implements driver.Valuer.

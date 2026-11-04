@@ -113,6 +113,16 @@ func PostgisGeosVersion() qlx.Expr[qt.Null[string]] {
 	return qlx.FuncCall[qt.Null[string]]("public", "postgis_geos_version")
 }
 
+// PostgisGetbbox calls public.postgis_getbbox(geometry).
+func PostgisGetbbox(a1 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "postgis_getbbox", qlx.ArgT(a1, pgGeometry))
+}
+
+// PostgisGetbboxN calls public.postgis_getbbox(geometry). Arguments may be NULL; the result is NULL if any is.
+func PostgisGetbboxN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "postgis_getbbox", qlx.ArgT(a1, pgGeometry))
+}
+
 // PostgisHasbbox calls public.postgis_hasbbox(geometry).
 func PostgisHasbbox(a1 qlx.Operand[qt.Geometry]) qlx.Expr[bool] {
 	return qlx.FuncCall[bool]("public", "postgis_hasbbox", qlx.ArgT(a1, pgGeometry))
@@ -121,6 +131,16 @@ func PostgisHasbbox(a1 qlx.Operand[qt.Geometry]) qlx.Expr[bool] {
 // PostgisHasbboxN calls public.postgis_hasbbox(geometry). Arguments may be NULL; the result is NULL if any is.
 func PostgisHasbboxN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[bool]] {
 	return qlx.FuncCall[qt.Null[bool]]("public", "postgis_hasbbox", qlx.ArgT(a1, pgGeometry))
+}
+
+// PostgisIndexExtent calls public._postgis_index_extent(regclass, text).
+func PostgisIndexExtent(tbl qlx.Operand[qt.RegClass], col qlx.Operand[string]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "_postgis_index_extent", qlx.ArgT(tbl, pgRegclass), qlx.ArgT(col, pgText))
+}
+
+// PostgisIndexExtentN calls public._postgis_index_extent(regclass, text). Arguments may be NULL; the result is NULL if any is.
+func PostgisIndexExtentN(tbl qlx.Operand[qt.Null[qt.RegClass]], col qlx.Operand[qt.Null[string]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "_postgis_index_extent", qlx.ArgT(tbl, pgRegclass), qlx.ArgT(col, pgText))
 }
 
 // PostgisJoinSelectivity calls public._postgis_join_selectivity(regclass, text, regclass, text, text). VOLATILE.

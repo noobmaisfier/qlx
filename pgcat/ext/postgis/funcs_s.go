@@ -69,6 +69,11 @@ func St3ddwithinGeometryGeometryFloat82N(geom1 qlx.Operand[qt.Null[qt.Geometry]]
 	return qlx.FuncCall[qt.Null[bool]]("public", "st_3ddwithin", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry), qlx.ArgT(a3, pgFloat8))
 }
 
+// St3dextent calls public.st_3dextent(geometry).
+func St3dextent(a1 qlx.Operand[qt.Geometry]) qlx.AggExpr[qt.Null[qt.Box3D]] {
+	return qlx.AggCall[qt.Null[qt.Box3D]](0, 0, "public", "st_3dextent", qlx.ArgT(a1, pgGeometry))
+}
+
 // St3dinterpolatepoint calls public.st_3dinterpolatepoint(geometry, geometry).
 func St3dinterpolatepoint(line qlx.Operand[qt.Geometry], point qlx.Operand[qt.Geometry]) qlx.Expr[float64] {
 	return qlx.FuncCall[float64]("public", "st_3dinterpolatepoint", qlx.ArgT(line, pgGeometry), qlx.ArgT(point, pgGeometry))
@@ -127,6 +132,16 @@ func St3dlongestline(geom1 qlx.Operand[qt.Geometry], geom2 qlx.Operand[qt.Geomet
 // St3dlongestlineN calls public.st_3dlongestline(geometry, geometry). Arguments may be NULL; the result is NULL if any is.
 func St3dlongestlineN(geom1 qlx.Operand[qt.Null[qt.Geometry]], geom2 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.Geometry]] {
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_3dlongestline", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
+}
+
+// St3dmakebox calls public.st_3dmakebox(geometry, geometry).
+func St3dmakebox(geom1 qlx.Operand[qt.Geometry], geom2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Box3D] {
+	return qlx.FuncCall[qt.Box3D]("public", "st_3dmakebox", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
+}
+
+// St3dmakeboxN calls public.st_3dmakebox(geometry, geometry). Arguments may be NULL; the result is NULL if any is.
+func St3dmakeboxN(geom1 qlx.Operand[qt.Null[qt.Geometry]], geom2 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.Box3D]] {
+	return qlx.FuncCall[qt.Null[qt.Box3D]]("public", "st_3dmakebox", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
 }
 
 // St3dmaxdistance calls public.st_3dmaxdistance(geometry, geometry).
@@ -554,6 +569,11 @@ func StAsmvtAnyelementTextInt4TextText[E any](a1 qlx.Operand[E], a2 qlx.Operand[
 	return qlx.AggCall[[]byte](0, 0, "public", "st_asmvt", qlx.ArgP(a1), qlx.ArgT(a2, pgText), qlx.ArgT(a3, pgInt4), qlx.ArgT(a4, pgText), qlx.ArgT(a5, pgText))
 }
 
+// StAsmvtgeom calls public.st_asmvtgeom(geometry, box2d, int4, int4, bool).
+func StAsmvtgeom(geom qlx.Operand[qt.Geometry], bounds qlx.Operand[qt.Box2D], extent qlx.Operand[int32], buffer qlx.Operand[int32], clip_geom qlx.Operand[bool]) qlx.Expr[qt.Null[qt.Geometry]] {
+	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_asmvtgeom", qlx.ArgT(geom, pgGeometry), qlx.ArgT(bounds, pgBox2d), qlx.ArgT(extent, pgInt4), qlx.ArgT(buffer, pgInt4), qlx.ArgT(clip_geom, pgBool))
+}
+
 // StAssvgGeographyInt4Int4 calls public.st_assvg(geography, int4, int4).
 func StAssvgGeographyInt4Int4(geog qlx.Operand[qt.Geography], rel qlx.Operand[int32], maxdecimaldigits qlx.Operand[int32]) qlx.Expr[string] {
 	return qlx.FuncCall[string]("public", "st_assvg", qlx.ArgT(geog, pgGeography), qlx.ArgT(rel, pgInt4), qlx.ArgT(maxdecimaldigits, pgInt4))
@@ -734,6 +754,11 @@ func StBoundingdiagonalN(geom qlx.Operand[qt.Null[qt.Geometry]], fits qlx.Operan
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_boundingdiagonal", qlx.ArgT(geom, pgGeometry), qlx.ArgT(fits, pgBool))
 }
 
+// StBox2dfromgeohash calls public.st_box2dfromgeohash(text, int4).
+func StBox2dfromgeohash(a1 qlx.Operand[string], a2 qlx.Operand[int32]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_box2dfromgeohash", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgInt4))
+}
+
 // StBufferGeographyFloat8 calls public.st_buffer(geography, float8).
 func StBufferGeographyFloat8(a1 qlx.Operand[qt.Geography], a2 qlx.Operand[float64]) qlx.Expr[qt.Geography] {
 	return qlx.FuncCall[qt.Geography]("public", "st_buffer", qlx.ArgT(a1, pgGeography), qlx.ArgT(a2, pgFloat8))
@@ -884,6 +909,16 @@ func StCleangeometryN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_cleangeometry", qlx.ArgT(a1, pgGeometry))
 }
 
+// StClipbybox2d calls public.st_clipbybox2d(geometry, box2d).
+func StClipbybox2d(geom qlx.Operand[qt.Geometry], box qlx.Operand[qt.Box2D]) qlx.Expr[qt.Geometry] {
+	return qlx.FuncCall[qt.Geometry]("public", "st_clipbybox2d", qlx.ArgT(geom, pgGeometry), qlx.ArgT(box, pgBox2d))
+}
+
+// StClipbybox2dN calls public.st_clipbybox2d(geometry, box2d). Arguments may be NULL; the result is NULL if any is.
+func StClipbybox2dN(geom qlx.Operand[qt.Null[qt.Geometry]], box qlx.Operand[qt.Null[qt.Box2D]]) qlx.Expr[qt.Null[qt.Geometry]] {
+	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_clipbybox2d", qlx.ArgT(geom, pgGeometry), qlx.ArgT(box, pgBox2d))
+}
+
 // StClosestpointGeographyGeographyBool calls public.st_closestpoint(geography, geography, bool).
 func StClosestpointGeographyGeographyBool(a1 qlx.Operand[qt.Geography], a2 qlx.Operand[qt.Geography], use_spheroid qlx.Operand[bool]) qlx.Expr[qt.Geography] {
 	return qlx.FuncCall[qt.Geography]("public", "st_closestpoint", qlx.ArgT(a1, pgGeography), qlx.ArgT(a2, pgGeography), qlx.ArgT(use_spheroid, pgBool))
@@ -982,6 +1017,21 @@ func StCollectionhomogenize(a1 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Geometry] {
 // StCollectionhomogenizeN calls public.st_collectionhomogenize(geometry). Arguments may be NULL; the result is NULL if any is.
 func StCollectionhomogenizeN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.Geometry]] {
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_collectionhomogenize", qlx.ArgT(a1, pgGeometry))
+}
+
+// StCombinebboxBox2dGeometry calls public.st_combinebbox(box2d, geometry).
+func StCombinebboxBox2dGeometry(a1 qlx.Operand[qt.Box2D], a2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_combinebbox", qlx.ArgT(a1, pgBox2d), qlx.ArgT(a2, pgGeometry))
+}
+
+// StCombinebboxBox3dBox3d calls public.st_combinebbox(box3d, box3d).
+func StCombinebboxBox3dBox3d(a1 qlx.Operand[qt.Box3D], a2 qlx.Operand[qt.Box3D]) qlx.Expr[qt.Null[qt.Box3D]] {
+	return qlx.FuncCall[qt.Null[qt.Box3D]]("public", "st_combinebbox", qlx.ArgT(a1, pgBox3d), qlx.ArgT(a2, pgBox3d))
+}
+
+// StCombinebboxBox3dGeometry calls public.st_combinebbox(box3d, geometry).
+func StCombinebboxBox3dGeometry(a1 qlx.Operand[qt.Box3D], a2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Null[qt.Box3D]] {
+	return qlx.FuncCall[qt.Null[qt.Box3D]]("public", "st_combinebbox", qlx.ArgT(a1, pgBox3d), qlx.ArgT(a2, pgGeometry))
 }
 
 // StConcavehull calls public.st_concavehull(geometry, float8, bool).
@@ -1359,14 +1409,24 @@ func StDistancesphereGeometryGeometryFloat8N(geom1 qlx.Operand[qt.Null[qt.Geomet
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_distancesphere", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry), qlx.ArgT(radius, pgFloat8))
 }
 
-// StDistancespheroid calls public.st_distancespheroid(geometry, geometry).
-func StDistancespheroid(geom1 qlx.Operand[qt.Geometry], geom2 qlx.Operand[qt.Geometry]) qlx.Expr[float64] {
+// StDistancespheroidGeometryGeometry calls public.st_distancespheroid(geometry, geometry).
+func StDistancespheroidGeometryGeometry(geom1 qlx.Operand[qt.Geometry], geom2 qlx.Operand[qt.Geometry]) qlx.Expr[float64] {
 	return qlx.FuncCall[float64]("public", "st_distancespheroid", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
 }
 
-// StDistancespheroidN calls public.st_distancespheroid(geometry, geometry). Arguments may be NULL; the result is NULL if any is.
-func StDistancespheroidN(geom1 qlx.Operand[qt.Null[qt.Geometry]], geom2 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[float64]] {
+// StDistancespheroidGeometryGeometryN calls public.st_distancespheroid(geometry, geometry). Arguments may be NULL; the result is NULL if any is.
+func StDistancespheroidGeometryGeometryN(geom1 qlx.Operand[qt.Null[qt.Geometry]], geom2 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[float64]] {
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_distancespheroid", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
+}
+
+// StDistancespheroidGeometryGeometrySpheroid calls public.st_distancespheroid(geometry, geometry, spheroid).
+func StDistancespheroidGeometryGeometrySpheroid(geom1 qlx.Operand[qt.Geometry], geom2 qlx.Operand[qt.Geometry], a3 qlx.Operand[qt.Spheroid]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_distancespheroid", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry), qlx.ArgT(a3, pgSpheroid))
+}
+
+// StDistancespheroidGeometryGeometrySpheroidN calls public.st_distancespheroid(geometry, geometry, spheroid). Arguments may be NULL; the result is NULL if any is.
+func StDistancespheroidGeometryGeometrySpheroidN(geom1 qlx.Operand[qt.Null[qt.Geometry]], geom2 qlx.Operand[qt.Null[qt.Geometry]], a3 qlx.Operand[qt.Null[qt.Spheroid]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_distancespheroid", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry), qlx.ArgT(a3, pgSpheroid))
 }
 
 // StDistancetreeGeographyGeography calls public._st_distancetree(geography, geography).
@@ -1417,6 +1477,26 @@ func StDistanceuncachedGeographyGeographyFloat8Bool(a1 qlx.Operand[qt.Geography]
 // StDistanceuncachedGeographyGeographyFloat8BoolN calls public._st_distanceuncached(geography, geography, float8, bool). Arguments may be NULL; the result is NULL if any is.
 func StDistanceuncachedGeographyGeographyFloat8BoolN(a1 qlx.Operand[qt.Null[qt.Geography]], a2 qlx.Operand[qt.Null[qt.Geography]], a3 qlx.Operand[qt.Null[float64]], a4 qlx.Operand[qt.Null[bool]]) qlx.Expr[qt.Null[float64]] {
 	return qlx.FuncCall[qt.Null[float64]]("public", "_st_distanceuncached", qlx.ArgT(a1, pgGeography), qlx.ArgT(a2, pgGeography), qlx.ArgT(a3, pgFloat8), qlx.ArgT(a4, pgBool))
+}
+
+// StDump calls public.st_dump(geometry).
+func StDump(a1 qlx.Operand[qt.Geometry]) qlx.TableFunc {
+	return qlx.FuncRange(0, 0, "public", "st_dump", qlx.ArgT(a1, pgGeometry))
+}
+
+// StDumppoints calls public.st_dumppoints(geometry).
+func StDumppoints(a1 qlx.Operand[qt.Geometry]) qlx.TableFunc {
+	return qlx.FuncRange(0, 0, "public", "st_dumppoints", qlx.ArgT(a1, pgGeometry))
+}
+
+// StDumprings calls public.st_dumprings(geometry).
+func StDumprings(a1 qlx.Operand[qt.Geometry]) qlx.TableFunc {
+	return qlx.FuncRange(0, 0, "public", "st_dumprings", qlx.ArgT(a1, pgGeometry))
+}
+
+// StDumpsegments calls public.st_dumpsegments(geometry).
+func StDumpsegments(a1 qlx.Operand[qt.Geometry]) qlx.TableFunc {
+	return qlx.FuncRange(0, 0, "public", "st_dumpsegments", qlx.ArgT(a1, pgGeometry))
 }
 
 // StDwithinGeographyGeographyFloat8Bool calls public._st_dwithin(geography, geography, float8, bool).
@@ -1529,6 +1609,36 @@ func StEqualsGeometryGeometry2N(geom1 qlx.Operand[qt.Null[qt.Geometry]], geom2 q
 	return qlx.FuncCall[qt.Null[bool]]("public", "st_equals", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
 }
 
+// StEstimatedextentTextText calls public.st_estimatedextent(text, text).
+func StEstimatedextentTextText(a1 qlx.Operand[string], a2 qlx.Operand[string]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_estimatedextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText))
+}
+
+// StEstimatedextentTextTextN calls public.st_estimatedextent(text, text). Arguments may be NULL; the result is NULL if any is.
+func StEstimatedextentTextTextN(a1 qlx.Operand[qt.Null[string]], a2 qlx.Operand[qt.Null[string]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_estimatedextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText))
+}
+
+// StEstimatedextentTextTextText calls public.st_estimatedextent(text, text, text).
+func StEstimatedextentTextTextText(a1 qlx.Operand[string], a2 qlx.Operand[string], a3 qlx.Operand[string]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_estimatedextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText), qlx.ArgT(a3, pgText))
+}
+
+// StEstimatedextentTextTextTextN calls public.st_estimatedextent(text, text, text). Arguments may be NULL; the result is NULL if any is.
+func StEstimatedextentTextTextTextN(a1 qlx.Operand[qt.Null[string]], a2 qlx.Operand[qt.Null[string]], a3 qlx.Operand[qt.Null[string]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_estimatedextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText), qlx.ArgT(a3, pgText))
+}
+
+// StEstimatedextentTextTextTextBool calls public.st_estimatedextent(text, text, text, bool).
+func StEstimatedextentTextTextTextBool(a1 qlx.Operand[string], a2 qlx.Operand[string], a3 qlx.Operand[string], a4 qlx.Operand[bool]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_estimatedextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText), qlx.ArgT(a3, pgText), qlx.ArgT(a4, pgBool))
+}
+
+// StEstimatedextentTextTextTextBoolN calls public.st_estimatedextent(text, text, text, bool). Arguments may be NULL; the result is NULL if any is.
+func StEstimatedextentTextTextTextBoolN(a1 qlx.Operand[qt.Null[string]], a2 qlx.Operand[qt.Null[string]], a3 qlx.Operand[qt.Null[string]], a4 qlx.Operand[qt.Null[bool]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_estimatedextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText), qlx.ArgT(a3, pgText), qlx.ArgT(a4, pgBool))
+}
+
 // StEvaluate calls public.st_evaluate(geometry, float8).
 func StEvaluate(nurbscurve qlx.Operand[qt.Geometry], parameter qlx.Operand[float64]) qlx.Expr[qt.Geometry] {
 	return qlx.FuncCall[qt.Geometry]("public", "st_evaluate", qlx.ArgT(nurbscurve, pgGeometry), qlx.ArgT(parameter, pgFloat8))
@@ -1537,6 +1647,46 @@ func StEvaluate(nurbscurve qlx.Operand[qt.Geometry], parameter qlx.Operand[float
 // StEvaluateN calls public.st_evaluate(geometry, float8). Arguments may be NULL; the result is NULL if any is.
 func StEvaluateN(nurbscurve qlx.Operand[qt.Null[qt.Geometry]], parameter qlx.Operand[qt.Null[float64]]) qlx.Expr[qt.Null[qt.Geometry]] {
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_evaluate", qlx.ArgT(nurbscurve, pgGeometry), qlx.ArgT(parameter, pgFloat8))
+}
+
+// StExpandBox2dFloat8 calls public.st_expand(box2d, float8).
+func StExpandBox2dFloat8(a1 qlx.Operand[qt.Box2D], a2 qlx.Operand[float64]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_expand", qlx.ArgT(a1, pgBox2d), qlx.ArgT(a2, pgFloat8))
+}
+
+// StExpandBox2dFloat8N calls public.st_expand(box2d, float8). Arguments may be NULL; the result is NULL if any is.
+func StExpandBox2dFloat8N(a1 qlx.Operand[qt.Null[qt.Box2D]], a2 qlx.Operand[qt.Null[float64]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_expand", qlx.ArgT(a1, pgBox2d), qlx.ArgT(a2, pgFloat8))
+}
+
+// StExpandBox2dFloat8Float8 calls public.st_expand(box2d, float8, float8).
+func StExpandBox2dFloat8Float8(box qlx.Operand[qt.Box2D], dx qlx.Operand[float64], dy qlx.Operand[float64]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_expand", qlx.ArgT(box, pgBox2d), qlx.ArgT(dx, pgFloat8), qlx.ArgT(dy, pgFloat8))
+}
+
+// StExpandBox2dFloat8Float8N calls public.st_expand(box2d, float8, float8). Arguments may be NULL; the result is NULL if any is.
+func StExpandBox2dFloat8Float8N(box qlx.Operand[qt.Null[qt.Box2D]], dx qlx.Operand[qt.Null[float64]], dy qlx.Operand[qt.Null[float64]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_expand", qlx.ArgT(box, pgBox2d), qlx.ArgT(dx, pgFloat8), qlx.ArgT(dy, pgFloat8))
+}
+
+// StExpandBox3dFloat8 calls public.st_expand(box3d, float8).
+func StExpandBox3dFloat8(a1 qlx.Operand[qt.Box3D], a2 qlx.Operand[float64]) qlx.Expr[qt.Box3D] {
+	return qlx.FuncCall[qt.Box3D]("public", "st_expand", qlx.ArgT(a1, pgBox3d), qlx.ArgT(a2, pgFloat8))
+}
+
+// StExpandBox3dFloat8N calls public.st_expand(box3d, float8). Arguments may be NULL; the result is NULL if any is.
+func StExpandBox3dFloat8N(a1 qlx.Operand[qt.Null[qt.Box3D]], a2 qlx.Operand[qt.Null[float64]]) qlx.Expr[qt.Null[qt.Box3D]] {
+	return qlx.FuncCall[qt.Null[qt.Box3D]]("public", "st_expand", qlx.ArgT(a1, pgBox3d), qlx.ArgT(a2, pgFloat8))
+}
+
+// StExpandBox3dFloat8Float8Float8 calls public.st_expand(box3d, float8, float8, float8).
+func StExpandBox3dFloat8Float8Float8(box qlx.Operand[qt.Box3D], dx qlx.Operand[float64], dy qlx.Operand[float64], dz qlx.Operand[float64]) qlx.Expr[qt.Box3D] {
+	return qlx.FuncCall[qt.Box3D]("public", "st_expand", qlx.ArgT(box, pgBox3d), qlx.ArgT(dx, pgFloat8), qlx.ArgT(dy, pgFloat8), qlx.ArgT(dz, pgFloat8))
+}
+
+// StExpandBox3dFloat8Float8Float8N calls public.st_expand(box3d, float8, float8, float8). Arguments may be NULL; the result is NULL if any is.
+func StExpandBox3dFloat8Float8Float8N(box qlx.Operand[qt.Null[qt.Box3D]], dx qlx.Operand[qt.Null[float64]], dy qlx.Operand[qt.Null[float64]], dz qlx.Operand[qt.Null[float64]]) qlx.Expr[qt.Null[qt.Box3D]] {
+	return qlx.FuncCall[qt.Null[qt.Box3D]]("public", "st_expand", qlx.ArgT(box, pgBox3d), qlx.ArgT(dx, pgFloat8), qlx.ArgT(dy, pgFloat8), qlx.ArgT(dz, pgFloat8))
 }
 
 // StExpandGeographyFloat8 calls public._st_expand(geography, float8).
@@ -1569,6 +1719,11 @@ func StExpandGeometryFloat8Float8Float8Float8N(geom qlx.Operand[qt.Null[qt.Geome
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_expand", qlx.ArgT(geom, pgGeometry), qlx.ArgT(dx, pgFloat8), qlx.ArgT(dy, pgFloat8), qlx.ArgT(dz, pgFloat8), qlx.ArgT(dm, pgFloat8))
 }
 
+// StExtent calls public.st_extent(geometry).
+func StExtent(a1 qlx.Operand[qt.Geometry]) qlx.AggExpr[qt.Null[qt.Box2D]] {
+	return qlx.AggCall[qt.Null[qt.Box2D]](0, 0, "public", "st_extent", qlx.ArgT(a1, pgGeometry))
+}
+
 // StExteriorring calls public.st_exteriorring(geometry).
 func StExteriorring(a1 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Geometry] {
 	return qlx.FuncCall[qt.Geometry]("public", "st_exteriorring", qlx.ArgT(a1, pgGeometry))
@@ -1582,6 +1737,26 @@ func StExteriorringN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.G
 // StFilterbym calls public.st_filterbym(geometry, float8, float8, bool).
 func StFilterbym(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[float64], a3 qlx.Operand[float64], a4 qlx.Operand[bool]) qlx.Expr[qt.Null[qt.Geometry]] {
 	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_filterbym", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgFloat8), qlx.ArgT(a3, pgFloat8), qlx.ArgT(a4, pgBool))
+}
+
+// StFindextentTextText calls public.st_findextent(text, text).
+func StFindextentTextText(a1 qlx.Operand[string], a2 qlx.Operand[string]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_findextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText))
+}
+
+// StFindextentTextTextN calls public.st_findextent(text, text). Arguments may be NULL; the result is NULL if any is.
+func StFindextentTextTextN(a1 qlx.Operand[qt.Null[string]], a2 qlx.Operand[qt.Null[string]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_findextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText))
+}
+
+// StFindextentTextTextText calls public.st_findextent(text, text, text).
+func StFindextentTextTextText(a1 qlx.Operand[string], a2 qlx.Operand[string], a3 qlx.Operand[string]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_findextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText), qlx.ArgT(a3, pgText))
+}
+
+// StFindextentTextTextTextN calls public.st_findextent(text, text, text). Arguments may be NULL; the result is NULL if any is.
+func StFindextentTextTextTextN(a1 qlx.Operand[qt.Null[string]], a2 qlx.Operand[qt.Null[string]], a3 qlx.Operand[qt.Null[string]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_findextent", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText), qlx.ArgT(a3, pgText))
 }
 
 // StFlipcoordinates calls public.st_flipcoordinates(geometry).
@@ -2325,6 +2500,16 @@ func StIsvalidGeometryInt4N(a1 qlx.Operand[qt.Null[qt.Geometry]], a2 qlx.Operand
 	return qlx.FuncCall[qt.Null[bool]]("public", "st_isvalid", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgInt4))
 }
 
+// StIsvaliddetail calls public.st_isvaliddetail(geometry, int4).
+func StIsvaliddetail(geom qlx.Operand[qt.Geometry], flags qlx.Operand[int32]) qlx.Expr[qt.ValidDetail] {
+	return qlx.FuncCall[qt.ValidDetail]("public", "st_isvaliddetail", qlx.ArgT(geom, pgGeometry), qlx.ArgT(flags, pgInt4))
+}
+
+// StIsvaliddetailN calls public.st_isvaliddetail(geometry, int4). Arguments may be NULL; the result is NULL if any is.
+func StIsvaliddetailN(geom qlx.Operand[qt.Null[qt.Geometry]], flags qlx.Operand[qt.Null[int32]]) qlx.Expr[qt.Null[qt.ValidDetail]] {
+	return qlx.FuncCall[qt.Null[qt.ValidDetail]]("public", "st_isvaliddetail", qlx.ArgT(geom, pgGeometry), qlx.ArgT(flags, pgInt4))
+}
+
 // StIsvalidreasonGeometry calls public.st_isvalidreason(geometry).
 func StIsvalidreasonGeometry(a1 qlx.Operand[qt.Geometry]) qlx.Expr[string] {
 	return qlx.FuncCall[string]("public", "st_isvalidreason", qlx.ArgT(a1, pgGeometry))
@@ -2394,6 +2579,16 @@ func StLength2dN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[float64]
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_length2d", qlx.ArgT(a1, pgGeometry))
 }
 
+// StLength2dspheroid calls public.st_length2dspheroid(geometry, spheroid).
+func StLength2dspheroid(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Spheroid]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_length2dspheroid", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgSpheroid))
+}
+
+// StLength2dspheroidN calls public.st_length2dspheroid(geometry, spheroid). Arguments may be NULL; the result is NULL if any is.
+func StLength2dspheroidN(a1 qlx.Operand[qt.Null[qt.Geometry]], a2 qlx.Operand[qt.Null[qt.Spheroid]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_length2dspheroid", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgSpheroid))
+}
+
 // StLengthGeographyBool calls public.st_length(geography, bool).
 func StLengthGeographyBool(geog qlx.Operand[qt.Geography], use_spheroid qlx.Operand[bool]) qlx.Expr[float64] {
 	return qlx.FuncCall[float64]("public", "st_length", qlx.ArgT(geog, pgGeography), qlx.ArgT(use_spheroid, pgBool))
@@ -2422,6 +2617,16 @@ func StLengthText(a1 qlx.Operand[string]) qlx.Expr[float64] {
 // StLengthTextN calls public.st_length(text). Arguments may be NULL; the result is NULL if any is.
 func StLengthTextN(a1 qlx.Operand[qt.Null[string]]) qlx.Expr[qt.Null[float64]] {
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_length", qlx.ArgT(a1, pgText))
+}
+
+// StLengthspheroid calls public.st_lengthspheroid(geometry, spheroid).
+func StLengthspheroid(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Spheroid]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_lengthspheroid", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgSpheroid))
+}
+
+// StLengthspheroidN calls public.st_lengthspheroid(geometry, spheroid). Arguments may be NULL; the result is NULL if any is.
+func StLengthspheroidN(a1 qlx.Operand[qt.Null[qt.Geometry]], a2 qlx.Operand[qt.Null[qt.Spheroid]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_lengthspheroid", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgSpheroid))
 }
 
 // StLetters calls public.st_letters(text, json).
@@ -2717,6 +2922,16 @@ func StM(a1 qlx.Operand[qt.Geometry]) qlx.Expr[float64] {
 // StMN calls public.st_m(geometry). Arguments may be NULL; the result is NULL if any is.
 func StMN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[float64]] {
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_m", qlx.ArgT(a1, pgGeometry))
+}
+
+// StMakebox2d calls public.st_makebox2d(geometry, geometry).
+func StMakebox2d(geom1 qlx.Operand[qt.Geometry], geom2 qlx.Operand[qt.Geometry]) qlx.Expr[qt.Box2D] {
+	return qlx.FuncCall[qt.Box2D]("public", "st_makebox2d", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
+}
+
+// StMakebox2dN calls public.st_makebox2d(geometry, geometry). Arguments may be NULL; the result is NULL if any is.
+func StMakebox2dN(geom1 qlx.Operand[qt.Null[qt.Geometry]], geom2 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[qt.Box2D]] {
+	return qlx.FuncCall[qt.Null[qt.Box2D]]("public", "st_makebox2d", qlx.ArgT(geom1, pgGeometry), qlx.ArgT(geom2, pgGeometry))
 }
 
 // StMakeenvelope calls public.st_makeenvelope(float8, float8, float8, float8, int4).
@@ -3695,6 +3910,16 @@ func StRelatematchN(a1 qlx.Operand[qt.Null[string]], a2 qlx.Operand[qt.Null[stri
 	return qlx.FuncCall[qt.Null[bool]]("public", "st_relatematch", qlx.ArgT(a1, pgText), qlx.ArgT(a2, pgText))
 }
 
+// StRemoveirrelevantpointsforview calls public.st_removeirrelevantpointsforview(geometry, box2d, bool).
+func StRemoveirrelevantpointsforview(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[qt.Box2D], a3 qlx.Operand[bool]) qlx.Expr[qt.Geometry] {
+	return qlx.FuncCall[qt.Geometry]("public", "st_removeirrelevantpointsforview", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgBox2d), qlx.ArgT(a3, pgBool))
+}
+
+// StRemoveirrelevantpointsforviewN calls public.st_removeirrelevantpointsforview(geometry, box2d, bool). Arguments may be NULL; the result is NULL if any is.
+func StRemoveirrelevantpointsforviewN(a1 qlx.Operand[qt.Null[qt.Geometry]], a2 qlx.Operand[qt.Null[qt.Box2D]], a3 qlx.Operand[qt.Null[bool]]) qlx.Expr[qt.Null[qt.Geometry]] {
+	return qlx.FuncCall[qt.Null[qt.Geometry]]("public", "st_removeirrelevantpointsforview", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgBox2d), qlx.ArgT(a3, pgBool))
+}
+
 // StRemovepoint calls public.st_removepoint(geometry, int4).
 func StRemovepoint(a1 qlx.Operand[qt.Geometry], a2 qlx.Operand[int32]) qlx.Expr[qt.Geometry] {
 	return qlx.FuncCall[qt.Geometry]("public", "st_removepoint", qlx.ArgT(a1, pgGeometry), qlx.ArgT(a2, pgInt4))
@@ -4439,6 +4664,36 @@ func StXN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[float64]] {
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_x", qlx.ArgT(a1, pgGeometry))
 }
 
+// StXmax calls public.st_xmax(box3d).
+func StXmax(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_xmax", qlx.ArgT(a1, pgBox3d))
+}
+
+// StXmaxN calls public.st_xmax(box3d). Arguments may be NULL; the result is NULL if any is.
+func StXmaxN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_xmax", qlx.ArgT(a1, pgBox3d))
+}
+
+// StXmin calls public.st_xmin(box3d).
+func StXmin(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_xmin", qlx.ArgT(a1, pgBox3d))
+}
+
+// StXminN calls public.st_xmin(box3d). Arguments may be NULL; the result is NULL if any is.
+func StXminN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_xmin", qlx.ArgT(a1, pgBox3d))
+}
+
+// StXsize calls public.st_xsize(box3d).
+func StXsize(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_xsize", qlx.ArgT(a1, pgBox3d))
+}
+
+// StXsizeN calls public.st_xsize(box3d). Arguments may be NULL; the result is NULL if any is.
+func StXsizeN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_xsize", qlx.ArgT(a1, pgBox3d))
+}
+
 // StY calls public.st_y(geometry).
 func StY(a1 qlx.Operand[qt.Geometry]) qlx.Expr[float64] {
 	return qlx.FuncCall[float64]("public", "st_y", qlx.ArgT(a1, pgGeometry))
@@ -4447,6 +4702,36 @@ func StY(a1 qlx.Operand[qt.Geometry]) qlx.Expr[float64] {
 // StYN calls public.st_y(geometry). Arguments may be NULL; the result is NULL if any is.
 func StYN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[float64]] {
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_y", qlx.ArgT(a1, pgGeometry))
+}
+
+// StYmax calls public.st_ymax(box3d).
+func StYmax(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_ymax", qlx.ArgT(a1, pgBox3d))
+}
+
+// StYmaxN calls public.st_ymax(box3d). Arguments may be NULL; the result is NULL if any is.
+func StYmaxN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_ymax", qlx.ArgT(a1, pgBox3d))
+}
+
+// StYmin calls public.st_ymin(box3d).
+func StYmin(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_ymin", qlx.ArgT(a1, pgBox3d))
+}
+
+// StYminN calls public.st_ymin(box3d). Arguments may be NULL; the result is NULL if any is.
+func StYminN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_ymin", qlx.ArgT(a1, pgBox3d))
+}
+
+// StYsize calls public.st_ysize(box3d).
+func StYsize(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_ysize", qlx.ArgT(a1, pgBox3d))
+}
+
+// StYsizeN calls public.st_ysize(box3d). Arguments may be NULL; the result is NULL if any is.
+func StYsizeN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_ysize", qlx.ArgT(a1, pgBox3d))
 }
 
 // StZ calls public.st_z(geometry).
@@ -4459,6 +4744,16 @@ func StZN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[float64]] {
 	return qlx.FuncCall[qt.Null[float64]]("public", "st_z", qlx.ArgT(a1, pgGeometry))
 }
 
+// StZmax calls public.st_zmax(box3d).
+func StZmax(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_zmax", qlx.ArgT(a1, pgBox3d))
+}
+
+// StZmaxN calls public.st_zmax(box3d). Arguments may be NULL; the result is NULL if any is.
+func StZmaxN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_zmax", qlx.ArgT(a1, pgBox3d))
+}
+
 // StZmflag calls public.st_zmflag(geometry).
 func StZmflag(a1 qlx.Operand[qt.Geometry]) qlx.Expr[int16] {
 	return qlx.FuncCall[int16]("public", "st_zmflag", qlx.ArgT(a1, pgGeometry))
@@ -4467,4 +4762,24 @@ func StZmflag(a1 qlx.Operand[qt.Geometry]) qlx.Expr[int16] {
 // StZmflagN calls public.st_zmflag(geometry). Arguments may be NULL; the result is NULL if any is.
 func StZmflagN(a1 qlx.Operand[qt.Null[qt.Geometry]]) qlx.Expr[qt.Null[int16]] {
 	return qlx.FuncCall[qt.Null[int16]]("public", "st_zmflag", qlx.ArgT(a1, pgGeometry))
+}
+
+// StZmin calls public.st_zmin(box3d).
+func StZmin(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_zmin", qlx.ArgT(a1, pgBox3d))
+}
+
+// StZminN calls public.st_zmin(box3d). Arguments may be NULL; the result is NULL if any is.
+func StZminN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_zmin", qlx.ArgT(a1, pgBox3d))
+}
+
+// StZsize calls public.st_zsize(box3d).
+func StZsize(a1 qlx.Operand[qt.Box3D]) qlx.Expr[float64] {
+	return qlx.FuncCall[float64]("public", "st_zsize", qlx.ArgT(a1, pgBox3d))
+}
+
+// StZsizeN calls public.st_zsize(box3d). Arguments may be NULL; the result is NULL if any is.
+func StZsizeN(a1 qlx.Operand[qt.Null[qt.Box3D]]) qlx.Expr[qt.Null[float64]] {
+	return qlx.FuncCall[qt.Null[float64]]("public", "st_zsize", qlx.ArgT(a1, pgBox3d))
 }

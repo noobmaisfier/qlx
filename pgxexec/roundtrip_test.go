@@ -191,6 +191,17 @@ func rtCases() []rtCase {
 		rtCase{name: "timestamptz/9999", typ: "timestamptz", lit: "'9999-12-31 23:59:59.999999+00'", val: time.Date(9999, 12, 31, 23, 59, 59, 999999000, time.UTC), exact: true},
 		rtCase{name: "timestamptz/infinity", typ: "timestamptz", lit: "'infinity'", val: pgtype.Timestamptz{InfinityModifier: pgtype.Infinity, Valid: true}, exact: true},
 		rtCase{name: "timestamptz/-infinity", typ: "timestamptz", lit: "'-infinity'", val: pgtype.Timestamptz{InfinityModifier: pgtype.NegativeInfinity, Valid: true}, exact: true},
+		rtCase{name: "tstz qt/finite", typ: "timestamptz", lit: "'2024-02-29 23:59:59.999999+00'", val: qt.TimestamptzOf(t0), exact: true},
+		rtCase{name: "tstz qt/offset zone", typ: "timestamptz", lit: "'2024-02-29 21:29:59.999999+00'", val: qt.TimestamptzOf(t0.In(paris).Add(-2*time.Hour - 30*time.Minute)), exact: true},
+		rtCase{name: "tstz qt/infinity", typ: "timestamptz", lit: "'infinity'", val: qt.TimestamptzInfinity, exact: true},
+		rtCase{name: "tstz qt/-infinity", typ: "timestamptz", lit: "'-infinity'", val: qt.TimestamptzNegInfinity, exact: true},
+		rtCase{name: "tstz qt/year 1", typ: "timestamptz", lit: "'0001-01-01 00:00:00+00'", val: qt.TimestamptzOf(time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)), exact: true},
+		rtCase{name: "tstz qt/BC", typ: "timestamptz", lit: "'0044-03-15 BC'", val: qt.TimestamptzOf(time.Date(-43, 3, 15, 0, 0, 0, 0, time.UTC)), exact: true},
+		rtCase{name: "tstz qt/null value", typ: "timestamptz", lit: "'infinity'", val: qt.Some(qt.TimestamptzInfinity), exact: true},
+		rtCase{name: "tstz qt/null NULL", typ: "timestamptz", lit: "NULL", val: qt.Null[qt.Timestamptz]{}, exact: true},
+		rtCase{name: "array/tstz qt", typ: "timestamptz[]", lit: "ARRAY['infinity','-infinity','2024-02-29 23:59:59.999999+00']::timestamptz[]", val: []qt.Timestamptz{qt.TimestamptzInfinity, qt.TimestamptzNegInfinity, qt.TimestamptzOf(t0)}, exact: true},
+		rtCase{name: "array/Null elements", typ: "int4[]", lit: "'{1,NULL,3}'", val: []qt.Null[int32]{qt.Some(int32(1)), {}, qt.Some(int32(3))}, exact: true},
+		rtCase{name: "array/Null text elements", typ: "text[]", lit: `'{a,NULL,"NULL"}'`, val: []qt.Null[string]{qt.Some("a"), {}, qt.Some("NULL")}, exact: true},
 		rtCase{name: "timestamp/local", typ: "timestamp", lit: "'2024-02-29 23:59:59.999999'", val: qt.LocalTime(time.Date(2024, 2, 29, 23, 59, 59, 999999000, time.UTC)), exact: true},
 		rtCase{name: "time/midnight", typ: "time", lit: "'00:00:00'", val: qt.TimeOfDay(0), exact: true},
 		rtCase{name: "time/24:00", typ: "time", lit: "'24:00:00'", val: qt.TimeOfDay(24 * 3600 * 1e6), exact: true},
@@ -239,14 +250,14 @@ func rtCases() []rtCase {
 		rtCase{name: "char/high byte", typ: `"char"`, lit: "'\\377'::\"char\"", val: qt.Char(255), exact: true, noText: "pgx cannot read the text form of a high-bit char"},
 
 		// ranges
-		rtCase{name: "int4range/bounded", typ: "int4range", lit: "'[-5,7)'", val: qt.Range[int32]{Lower: &lo, Upper: &hi, LowerInc: true}, exact: true, noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "int4range/empty", typ: "int4range", lit: "'empty'", val: qt.Range[int32]{Empty: true}, exact: true, noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "int4range/unbounded", typ: "int4range", lit: "'(,)'", val: qt.Range[int32]{}, exact: true, noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "int4range/lower only", typ: "int4range", lit: "'[-5,)'", val: qt.Range[int32]{Lower: &lo, LowerInc: true}, exact: true, noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "int4range/overflow", typ: "int4range", val: qt.Range[int32]{Lower: ptr(int32(1)), Upper: ptr(int32(math.MaxInt32)), LowerInc: true, UpperInc: true}, fails: "22003", noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "tstzrange/infinite upper", typ: "tstzrange", lit: "'[2024-02-29 23:59:59.999999+00,)'", val: qt.Range[time.Time]{Lower: &t0, LowerInc: true}, noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "multirange/two", typ: "int4multirange", lit: "'{[-5,7),[10,20)}'", val: qt.Multirange[int32]{{Lower: &lo, Upper: &hi, LowerInc: true}, {Lower: ptr(int32(10)), Upper: ptr(int32(20)), LowerInc: true}}, exact: true, min: 14, noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "multirange/empty is not NULL", typ: "int4multirange", lit: "'{}'", val: qt.Multirange[int32]{}, exact: true, min: 14, noText: "no type OID: qt ranges and arrays of qt types need one"},
+		rtCase{name: "int4range/bounded", typ: "int4range", lit: "'[-5,7)'", val: qt.Range[int32]{Lower: &lo, Upper: &hi, LowerInc: true}, exact: true},
+		rtCase{name: "int4range/empty", typ: "int4range", lit: "'empty'", val: qt.Range[int32]{Empty: true}, exact: true},
+		rtCase{name: "int4range/unbounded", typ: "int4range", lit: "'(,)'", val: qt.Range[int32]{}, exact: true},
+		rtCase{name: "int4range/lower only", typ: "int4range", lit: "'[-5,)'", val: qt.Range[int32]{Lower: &lo, LowerInc: true}, exact: true},
+		rtCase{name: "int4range/overflow", typ: "int4range", val: qt.Range[int32]{Lower: ptr(int32(1)), Upper: ptr(int32(math.MaxInt32)), LowerInc: true, UpperInc: true}, fails: "22003"},
+		rtCase{name: "tstzrange/infinite upper", typ: "tstzrange", lit: "'[2024-02-29 23:59:59.999999+00,)'", val: qt.Range[time.Time]{Lower: &t0, LowerInc: true}},
+		rtCase{name: "multirange/two", typ: "int4multirange", lit: "'{[-5,7),[10,20)}'", val: qt.Multirange[int32]{{Lower: &lo, Upper: &hi, LowerInc: true}, {Lower: ptr(int32(10)), Upper: ptr(int32(20)), LowerInc: true}}, exact: true, min: 14},
+		rtCase{name: "multirange/empty is not NULL", typ: "int4multirange", lit: "'{}'", val: qt.Multirange[int32]{}, exact: true, min: 14},
 
 		// arrays
 		rtCase{name: "array/empty", typ: "int4[]", lit: "'{}'", val: []int32{}, exact: true},
@@ -257,10 +268,10 @@ func rtCases() []rtCase {
 		rtCase{name: "array/3-dim with NULL", typ: "int4[]", lit: "'{{{1,NULL}},{{3,4}}}'", val: pgtype.Array[*int32]{Elements: []*int32{ptr(int32(1)), nil, ptr(int32(3)), ptr(int32(4))}, Dims: []pgtype.ArrayDimension{{Length: 2, LowerBound: 1}, {Length: 1, LowerBound: 1}, {Length: 2, LowerBound: 1}}, Valid: true}, exact: true},
 		rtCase{name: "array/lower bound 0", typ: "int4[]", lit: "'[0:2]={1,2,3}'", val: pgtype.Array[int32]{Elements: i32(1, 2, 3), Dims: []pgtype.ArrayDimension{{Length: 3, LowerBound: 0}}, Valid: true}, exact: true},
 		rtCase{name: "array/bytea", typ: "bytea[]", lit: "ARRAY['\\x'::bytea, '\\x00ff'::bytea]", val: [][]byte{{}, {0, 255}}, exact: true},
-		rtCase{name: "array/jsonb", typ: "jsonb[]", lit: `ARRAY['null'::jsonb, '{"a":1}'::jsonb]`, val: []qt.RawJSON{qt.Raw([]byte("null")), qt.Raw([]byte(`{"a":1}`))}, noText: "no type OID: qt ranges and arrays of qt types need one"},
+		rtCase{name: "array/jsonb", typ: "jsonb[]", lit: `ARRAY['null'::jsonb, '{"a":1}'::jsonb]`, val: []qt.RawJSON{qt.Raw([]byte("null")), qt.Raw([]byte(`{"a":1}`))}},
 		rtCase{name: "array/float8 specials", typ: "float8[]", lit: "ARRAY['NaN','Infinity','-Infinity','-0']::float8[]", val: []float64{math.NaN(), math.Inf(1), math.Inf(-1), math.Copysign(0, -1)}, exact: true},
-		rtCase{name: "array/numeric", typ: "numeric[]", lit: "ARRAY['1.50','NaN','-0.001']::numeric[]", val: []qt.Numeric{"1.50", "NaN", "-0.001"}, exact: true, noText: "no type OID: qt ranges and arrays of qt types need one"},
-		rtCase{name: "array/date infinity", typ: "date[]", lit: "ARRAY['infinity','-infinity','2024-02-29']::date[]", val: []qt.Date{qt.DateInfinity, qt.DateNegInfinity, qt.DateOf(2024, 2, 29)}, exact: true, noText: "no type OID: qt ranges and arrays of qt types need one"},
+		rtCase{name: "array/numeric", typ: "numeric[]", lit: "ARRAY['1.50','NaN','-0.001']::numeric[]", val: []qt.Numeric{"1.50", "NaN", "-0.001"}, exact: true},
+		rtCase{name: "array/date infinity", typ: "date[]", lit: "ARRAY['infinity','-infinity','2024-02-29']::date[]", val: []qt.Date{qt.DateInfinity, qt.DateNegInfinity, qt.DateOf(2024, 2, 29)}, exact: true},
 		rtCase{name: "array/timestamptz", typ: "timestamptz[]", lit: "ARRAY['2024-02-29 23:59:59.999999+00']::timestamptz[]", val: []time.Time{t0}, exact: true},
 		rtCase{name: "array/inet", typ: "inet[]", lit: "ARRAY['10.0.0.1','::1']::inet[]", val: []netip.Addr{netip.MustParseAddr("10.0.0.1"), netip.MustParseAddr("::1")}, exact: true},
 	)
@@ -300,7 +311,7 @@ func TestTypeRoundTripMatrix(t *testing.T) {
 	for _, mode := range []struct {
 		name string
 		m    pgx.QueryExecMode
-	}{{"binary", pgx.QueryExecModeCacheStatement}, {"text", pgx.QueryExecModeSimpleProtocol}} {
+	}{{"binary", pgx.QueryExecModeCacheStatement}, {"describe", pgx.QueryExecModeCacheDescribe}, {"text", pgx.QueryExecModeSimpleProtocol}} {
 		t.Run(mode.name, func(t *testing.T) {
 			c := rtConn(t, mode.m)
 			major := serverMajor(t, c)
@@ -397,6 +408,59 @@ func TestNullsStayNull(t *testing.T) {
 		var empty []byte
 		if err := c.QueryRow(ctx, "SELECT ''::bytea").Scan(&empty); err != nil || empty == nil {
 			t.Errorf("mode %v: empty bytea read as nil: %v %v", mode, empty, err)
+		}
+	}
+}
+
+// A multi-dimensional array, or one that does not start at index 1, must not be
+// flattened into a plain slice without a word.
+func TestArraysAreNeverFlattenedSilently(t *testing.T) {
+	for _, mode := range []pgx.QueryExecMode{pgx.QueryExecModeCacheStatement, pgx.QueryExecModeSimpleProtocol} {
+		c := rtConn(t, mode)
+		ctx := context.Background()
+		var flat []int32
+		err := c.QueryRow(ctx, "SELECT '{{1,2},{3,4}}'::int4[]").Scan(&flat)
+		if err == nil || !strings.Contains(err.Error(), "2-dimensional") {
+			t.Errorf("mode %v: 2-dimensional array into []int32: %v %v", mode, flat, err)
+		}
+		err = c.QueryRow(ctx, "SELECT '[0:1]={5,6}'::int4[]").Scan(&flat)
+		if err == nil || !strings.Contains(err.Error(), "lower bound") {
+			t.Errorf("mode %v: lower bound 0 into []int32: %v %v", mode, flat, err)
+		}
+		// what must keep working
+		if err := c.QueryRow(ctx, "SELECT '{1,2,3}'::int4[]").Scan(&flat); err != nil || len(flat) != 3 || flat[2] != 3 {
+			t.Errorf("mode %v: plain array: %v %v", mode, flat, err)
+		}
+		if err := c.QueryRow(ctx, "SELECT '{}'::int4[]").Scan(&flat); err != nil || flat == nil || len(flat) != 0 {
+			t.Errorf("mode %v: empty array: %#v %v", mode, flat, err)
+		}
+		flat = []int32{9}
+		if err := c.QueryRow(ctx, "SELECT NULL::int4[]").Scan(&flat); err != nil || flat != nil {
+			t.Errorf("mode %v: NULL array: %#v %v", mode, flat, err)
+		}
+		var strs []string
+		if err := c.QueryRow(ctx, `SELECT ARRAY['a,b','"q"','']`).Scan(&strs); err != nil || len(strs) != 3 || strs[1] != `"q"` {
+			t.Errorf("mode %v: text array: %q %v", mode, strs, err)
+		}
+		var raw []byte
+		if err := c.QueryRow(ctx, `SELECT '\x0001'::bytea`).Scan(&raw); err != nil || len(raw) != 2 {
+			t.Errorf("mode %v: bytea into []byte: %v %v", mode, raw, err)
+		}
+		var bs [][]byte
+		if err := c.QueryRow(ctx, `SELECT ARRAY['\x00ff'::bytea, ''::bytea]`).Scan(&bs); err != nil || len(bs) != 2 || len(bs[0]) != 2 {
+			t.Errorf("mode %v: bytea array: %v %v", mode, bs, err)
+		}
+		var nulls []qt.Null[int32]
+		if err := c.QueryRow(ctx, "SELECT '{1,NULL}'::int4[]").Scan(&nulls); err != nil || len(nulls) != 2 || nulls[1].Valid {
+			t.Errorf("mode %v: array with NULL into []qt.Null: %v %v", mode, nulls, err)
+		}
+		var multi [][]int32
+		if err := c.QueryRow(ctx, "SELECT '{{1,2},{3,4}}'::int4[]").Scan(&multi); err != nil || len(multi) != 2 || multi[1][0] != 3 {
+			t.Errorf("mode %v: [][]int32 for a 2-dimensional array: %v %v", mode, multi, err)
+		}
+		var pa pgtype.Array[int32]
+		if err := c.QueryRow(ctx, "SELECT '[0:1]={5,6}'::int4[]").Scan(&pa); err != nil || pa.Dims[0].LowerBound != 0 {
+			t.Errorf("mode %v: pgtype.Array keeps its bounds: %+v %v", mode, pa, err)
 		}
 	}
 }

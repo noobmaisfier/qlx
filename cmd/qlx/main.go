@@ -168,6 +168,11 @@ func loadConfig(path string) (File, error) {
 	default:
 		return f, fmt.Errorf(`%s: date must be "qt" or "stdlib", not %q`, path, f.Date)
 	}
+	switch f.Timestamptz {
+	case "", "qt", "stdlib":
+	default:
+		return f, fmt.Errorf(`%s: timestamptz must be "qt" or "stdlib", not %q`, path, f.Timestamptz)
+	}
 	if f.Nullable != "" && f.Nullable != "null" {
 		return f, fmt.Errorf(`%s: nullable must be "null" (qt.Null[T]); pointers cannot tell NULL from not-loaded`, path)
 	}
