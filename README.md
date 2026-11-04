@@ -300,7 +300,7 @@ Details, and the reasoning, in [docs/limits.md](docs/limits.md).
 Contributions are welcome: bug reports (especially queries that compiled and
 passed the analyzer but that PostgreSQL rejected), tests, documentation,
 analyzer rules and generator improvements. Read [CONTRIBUTING.md](CONTRIBUTING.md)
-and the [code of conduct](CODE_OF_CONDUCT.md) first.
+first.
 
 ```bash
 go build ./... && go test ./...            # tests that need a server skip themselves
@@ -309,4 +309,4 @@ scripts/with_pg.sh go test ./...           # the same against a throwaway Postgr
 
 ## License
 
-To be decided before the first release (see `LICENSE`).
+MIT. See [LICENSE](LICENSE).
