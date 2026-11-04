@@ -27,12 +27,12 @@ QLX moves as much as it can into the Go compiler, then into render time, then in
 
 ## What the analyzer reads, and what it leaves alone
 
-`go vet -vettool=qlxvet ./...` (the `analyzer` module) reports V001 to V017. It works on the source, so it follows two rules:
+`go vet -vettool=qlxvet ./...` (the `analyzer` module) reports V001 to V026. It works on the source, so it follows two rules:
 
 - A finding about something that is **present** (a column assigned twice, `Limit` and `FetchFirst` together, `Explain(stmt, IO)` without `Analyze`) holds for any chain and is always reported.
 - A finding about something **absent** (an UPDATE with no `Set`, an INSERT with no row) is reported only when the chain is handed straight to something: an argument, a composite literal, or a return from a function whose result is `qlx.Statement`. A builder stored in a variable, or returned as a builder type (a helper that returns `SelectQuery` or `TableFunc`), may be completed later by the caller, so it is left alone, exactly like V002.
 
-When the analyzer cannot resolve an argument (a spread `args...`, a helper function that builds assignments, an aliased table, a subquery used as a table), the check stays silent rather than guess. `//qlx:ignore <reason>` suppresses one finding; `-audit` lists every suppression.
+When the analyzer cannot resolve an argument (a spread `args...`, a helper function that builds assignments, an alias whose name is not a constant or comes from a parameter or a reassigned variable, a subquery used as a table), the check stays silent rather than guess. `//qlx:ignore <reason>` suppresses one finding; `-audit` lists every suppression.
 
 Version gates (V009) read the sentence `Requires PostgreSQL N.` (or `Removed in PostgreSQL N.`) from the doc comment of the function or method, which the generator writes for every catalog wrapper and which hand-written gated APIs carry too (`TestVersionGatedAPIIsDocumented` keeps it that way). `EXPLAIN` options, `Checkpoint(opts...)` and `WithHeader(n > 1)` are checked by call shape.
 
@@ -44,7 +44,7 @@ V019 to V026 close the shape rules that `Render` only reports at run time: windo
 
 `qlx vet` (standard library only) remains the zero-dependency subset: V001 to V005.
 
-Left to render time and to `PREPARE` because the source does not decide them: values computed at run time (a `TABLESAMPLE` percentage, an LSN, an identifier built from input), queries assembled across functions or in loops, parameters left unbound, and everything that depends on the live schema.
+Left to render time and to `PREPARE` because the source does not decide them: values computed at run time (a `TABLESAMPLE` percentage, an LSN, an identifier built from input), queries assembled at run time (a helper with several statements or returns, a loop, a reassigned variable), parameters left unbound, and everything that depends on the live schema.
 
 ## What nothing can check
 
@@ -58,7 +58,7 @@ Left to render time and to `PREPARE` because the source does not decide them: va
 - **DDL**: QLX builds none (decision D2). Migrations stay in SQL.
 - **XML special syntax, time-of-day types, a few JSON constructors**: see "Not supported" in [sql-to-go.md](sql-to-go.md). Each is tracked in the grammar ledger with a reason.
 - **Extensions not in a pack**: the generator reads any installed extension (`pgcat extract -ext`), but only the listed packs are generated and tested in CI.
-- **Unwrapped APIs in extension packs**: extension packs only wrap functions and operators whose types are mapped in Go. The PostGIS pack maps `box2d`, `box2df`, `box3d`, `gidx`, `spheroid`, `geometry_dump` and `valid_detail` as text-form named strings; the functions that use them are generated once the ledger is regenerated. Window functions of an extension (9 in PostGIS) are generated as `qlx.WinFn` and completed with `Over`; those of `pg_catalog` are hand-written in the core package. Functions and operators depending on them are omitted from `pgcat/ext/<pack>`.
+- **Unwrapped APIs in extension packs**: extension packs only wrap functions and operators whose types are mapped in Go. The PostGIS pack maps `box2d`, `box2df`, `box3d`, `gidx`, `spheroid`, `geometry_dump` and `valid_detail` as text-form named strings, so the functions that use them are generated from the committed ledger. Window functions of an extension (9 in PostGIS) are generated as `qlx.WinFn` and completed with `Over`; those of `pg_catalog` are hand-written in the core package. Functions and operators depending on them are omitted from `pgcat/ext/<pack>`.
 - **A newer server than the generated code**: allowed (the ledger is pinned, the server is not); `ConnectOptions.OnAhead` reports it.
 
 ## What Go types cannot represent
