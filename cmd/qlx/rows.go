@@ -32,15 +32,25 @@ import (
 // Output goes to qlx_rows.go in each package directory.
 func cmdRows(args []string, out io.Writer) error {
 	fs := flag.NewFlagSet("rows", flag.ContinueOnError)
-	root := fs.String("dir", ".", "directory containing the Go package")
+	root := fs.String("dir", ".", "directory containing the Go package (default \".\"; a trailing \"...\" is accepted)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	src, n, err := genRows(*root)
+	dir := *root
+	if fs.NArg() > 0 {
+		arg := fs.Arg(0)
+		arg = strings.TrimSuffix(arg, "/...")
+		arg = strings.TrimSuffix(arg, "...")
+		if arg == "" || arg == "." {
+			arg = "."
+		}
+		dir = arg
+	}
+	src, n, err := genRows(dir)
 	if err != nil {
 		return err
 	}
-	dst := filepath.Join(*root, "qlx_rows.go")
+	dst := filepath.Join(dir, "qlx_rows.go")
 	if n == 0 {
 		if _, err := os.Stat(dst); err == nil {
 			if err := os.Remove(dst); err != nil {

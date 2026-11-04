@@ -209,9 +209,9 @@ Reflection happens once per (type, columns) pair, then the plan is cached.
 ```go
 //qlx:row
 type UserSummary struct {
-    ID    int64
-    Email string
-    Posts int64
+    ID       int64
+    Email    string
+    Nickname string
 }
 ```
 
