@@ -68,7 +68,7 @@ func (q MergeQuery) WhenMatched(cond ...Pred) MatchedBuilder {
 }
 
 func (m MatchedBuilder) w(action string, sets []Assignment) MergeQuery {
-	return m.q.addWhen(mergeWhen{kind: "MATCHED", cond: m.cond, action: action, sets: sets, scopeSrc: true, scopeTgt: true})
+	return m.q.addWhen(mergeWhen{kind: "MATCHED", cond: m.cond, action: action, sets: live(sets), scopeSrc: true, scopeTgt: true})
 }
 func (m MatchedBuilder) ThenUpdate(sets ...Assignment) MergeQuery { return m.w("update", sets) }
 func (m MatchedBuilder) ThenDelete() MergeQuery                   { return m.w("delete", nil) }
@@ -87,7 +87,7 @@ func (q MergeQuery) WhenNotMatched(cond ...Pred) NotMatchedBuilder {
 }
 
 func (m NotMatchedBuilder) w(action string, sets []Assignment) MergeQuery {
-	return m.q.addWhen(mergeWhen{kind: "NOT MATCHED", cond: m.cond, action: action, sets: sets, scopeSrc: true})
+	return m.q.addWhen(mergeWhen{kind: "NOT MATCHED", cond: m.cond, action: action, sets: live(sets), scopeSrc: true})
 }
 func (m NotMatchedBuilder) ThenInsert(as ...Assignment) MergeQuery { return m.w("insert", as) }
 func (m NotMatchedBuilder) ThenInsertDefaults() MergeQuery         { return m.w("insert-default", nil) }
@@ -106,7 +106,7 @@ func (q MergeQuery) WhenNotMatchedBySource(cond ...Pred) BySourceBuilder {
 }
 
 func (m BySourceBuilder) w(action string, sets []Assignment) MergeQuery {
-	return m.q.addWhen(mergeWhen{kind: "NOT MATCHED BY SOURCE", cond: m.cond, action: action, sets: sets, scopeTgt: true})
+	return m.q.addWhen(mergeWhen{kind: "NOT MATCHED BY SOURCE", cond: m.cond, action: action, sets: live(sets), scopeTgt: true})
 }
 func (m BySourceBuilder) ThenUpdate(sets ...Assignment) MergeQuery { return m.w("update", sets) }
 func (m BySourceBuilder) ThenDelete() MergeQuery                   { return m.w("delete", nil) }

@@ -400,6 +400,15 @@ ins := q.InsertInto(Users).Values(
 
 `DefaultValues()`, `OverridingSystemValue()` et `OverridingUserValue()` couvrent les colonnes d'identité.
 
+Les champs facultatifs d'un corps de requête s'écrivent avec `ToIf(opt)` plutôt qu'un `if` par champ : un `qt.Opt` non renseigné retire l'affectation (la colonne n'est pas dans l'`INSERT`, intacte dans l'`UPDATE`). `ToOrDefault(opt)` écrit `DEFAULT` à la place, ce qui garde alignées les lignes d'un `INSERT` multiple ; `ToDefault()` le fait toujours. Le détail et les règles sont dans [le guide des DTO](dtos.md).
+
+```go
+q.InsertInto(Users).Row(
+    Users.Email.To(r.Email),
+    Users.Tier.ToIf(r.Tier), // r.Tier est un qt.Opt[string] : absent, la colonne prend son DEFAULT
+)
+```
+
 ### 5.2 Upsert
 
 {{ex:upsert}}
@@ -1026,6 +1035,7 @@ Codes de l'analyseur (`go vet -vettool`, gopls, golangci-lint). Règle : une err
 | V024 | `Refresh...Concurrently()` avec `WithNoData()` ; `SetConstraints` sans nom |
 | V025 | `SearchOrder()` / `CycleMark()` sur une CTE construite sans `SearchDepthFirst`/`SearchBreadthFirst` / `Cycle` |
 | V026 | colonne de conflit ou affectation (`Set`, `Row`, `DoUpdate`) qui désigne une colonne d'une autre table que celle écrite |
+| V027 | `ToOrDefault` dans une liste `SET` (`Set`, `DoUpdate`, `ThenUpdate`) : un champ absent remettrait la colonne à son défaut, `ToIf` la laisse intacte |
 
 Un constat accepté se supprime avec un commentaire sur la même ligne ou la précédente : `//qlx:ignore <raison>`. Avec `-audit`, chaque suppression est elle-même listée (V011).
 

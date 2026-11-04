@@ -523,17 +523,76 @@ func (o OrderTerm) render(b *builder) {
 
 // Assignment sets a column in INSERT, UPDATE or ON CONFLICT DO UPDATE.
 type Assignment struct {
-	col colRef
-	val node
+	col  colRef
+	val  node
+	skip bool // from ToIf with an unset option: left out when the statement is built
 }
 
 type colOps[T any] struct{ ref colRef }
 
 func (c colOps[T]) columnRef() colRef           { return c.ref }
-func (c colOps[T]) To(v T) Assignment           { return Assignment{c.ref, argNode{v}} }
-func (c colOps[T]) ToX(o Operand[T]) Assignment { return Assignment{c.ref, o.exprNode()} }
-func (c colOps[T]) ToDefault() Assignment       { return Assignment{c.ref, defaultNode{}} }
-func (c colOps[T]) Excluded() Expr[T]           { return Expr[T]{excludedNode{c.ref.name}} }
+func (c colOps[T]) To(v T) Assignment           { return Assignment{c.ref, argNode{v}, false} }
+func (c colOps[T]) ToX(o Operand[T]) Assignment { return Assignment{c.ref, o.exprNode(), false} }
+func (c colOps[T]) ToDefault() Assignment       { return Assignment{c.ref, defaultNode{}, false} }
+
+// ToIf assigns the value of an option and leaves the assignment out when the
+// option is unset: no column in an INSERT (the column takes its DEFAULT), no
+// SET in an UPDATE (the column is not touched). It is the inline form of a
+// generated patch, for a body whose fields may be absent:
+//
+//	q.InsertInto(Users).Row(Users.Email.To(r.Email), Users.Tier.ToIf(r.Tier))
+//	q.Update(Users).Set(Users.Email.ToIf(p.Email), Users.Nickname.ToIf(p.Nickname))
+//
+// With a nullable column, the option holds a qt.Null: Opt[Null[string]] is
+// "absent", "NULL" or "a value". Every combination of present columns is a
+// different statement shape, and the shape cache stores each one: with n
+// optional columns there can be 2^n shapes (watch ShapeCache.OnThrash). A
+// required column (NOT NULL without default) assigned with ToIf can disappear;
+// the renderer reports it as it does for a missing column, and the analyzer
+// (V008) reports it. If every assignment of an UPDATE is left out, the
+// statement has no SET and does not render. In a multi-row INSERT every row
+// must keep the same columns, so rows that differ in which options are set
+// do not render: use ToOrDefault.
+func (c colOps[T]) ToIf(o qt.Opt[T]) Assignment {
+	return Assignment{c.ref, argNode{o.V}, !o.Set}
+}
+
+// ToOrDefault assigns the value of an option, or DEFAULT when it is unset. It
+// is for INSERT: the column is always in the list, so the rows of a multi-row
+// insert keep the same columns whatever each row's options hold (the SQL text
+// still differs between a value and DEFAULT, so the shape count is the same as
+// with ToIf). In an UPDATE it would reset the column to its default, which is
+// almost never what an absent field means; use ToIf there (the analyzer
+// reports ToOrDefault in a SET, V027).
+func (c colOps[T]) ToOrDefault(o qt.Opt[T]) Assignment {
+	if !o.Set {
+		return Assignment{c.ref, defaultNode{}, false}
+	}
+	return Assignment{c.ref, argNode{o.V}, false}
+}
+
+// live drops the assignments that ToIf left out. The slice is returned as it
+// is when nothing was dropped.
+func live(as []Assignment) []Assignment {
+	n := 0
+	for _, a := range as {
+		if a.skip {
+			n++
+		}
+	}
+	if n == 0 {
+		return as
+	}
+	out := make([]Assignment, 0, len(as)-n)
+	for _, a := range as {
+		if !a.skip {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+func (c colOps[T]) Excluded() Expr[T] { return Expr[T]{excludedNode{c.ref.name}} }
 
 // Old: Requires PostgreSQL 18.
 func (c colOps[T]) Old() ReturningExpr[T] { return ReturningExpr[T]{oldNewNode{"old", c.ref.name}} }

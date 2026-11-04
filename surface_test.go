@@ -15,7 +15,7 @@ func TestColumnFamilySurface(t *testing.T) {
 		"Col":      30,
 		"NumCol":   46,
 		"TextCol":  52,
-		"TimeCol":  38,
+		"TimeCol":  40, // 38 + ToIf, ToOrDefault (every column type has them)
 		"BoolCol":  35,
 		"ArrayCol": 37,
 		"JSONBCol": 37,

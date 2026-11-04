@@ -46,7 +46,7 @@ seen:
 | Tier | Catches | Example |
 | --- | --- | --- |
 | **Go compiler** | wrong operand types, nullability, `LIKE` on a number, `SUM` over text, an aggregate in `WHERE`, `OLD`/`NEW` outside `RETURNING`, mixing ids of two tables, an insert missing a required column | `Users.Balance.Like("%x")` does not compile |
-| **Analyzer** (`go vet`, gopls) | what the types cannot express but the source shows: a column of a table that is not in `FROM`, a bare column next to a `GROUP BY`, `UPDATE` without `WHERE`, a row type that disagrees with the selected columns, a PostgreSQL 19 feature when your targets include 18 | V001–V026 |
+| **Analyzer** (`go vet`, gopls) | what the types cannot express but the source shows: a column of a table that is not in `FROM`, a bare column next to a `GROUP BY`, `UPDATE` without `WHERE`, a row type that disagrees with the selected columns, a PostgreSQL 19 feature when your targets include 18 | V001–V027 |
 | **Render time** | scope, grouping, shape and version rules on statements built dynamically | `ErrScope`, `ErrShape`, `ErrUnsupportedByServer` |
 | **The server** | everything only PostgreSQL knows | `PREPARE` in tests (`qlx prepare`), `VerifyRow`, `VerifySchema` |
 
@@ -161,7 +161,7 @@ go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest
 go vet -vettool=$(which qlxvet) ./...
 ```
 
-It reports 26 stable codes, V001 to V026 (V011 is the audit report of
+It reports 27 stable codes, V001 to V027 (V011 is the audit report of
 suppressions). A few of them:
 
 | Code | Reports |
@@ -174,6 +174,7 @@ suppressions). A few of them:
 | V019 | a window function in `WHERE`/`HAVING`/`ON` |
 | V022 | a JSON path variable that is not passed |
 | V026 | a column of another table used as an assignment or conflict target |
+| V027 | `ToOrDefault` in a `SET` list, which would reset an absent field to its default |
 
 The full list is in [the guide](docs/GUIDE.en.md#121-who-catches-what). The
 analyzer **stays silent rather than guess**: a query built in a loop, across

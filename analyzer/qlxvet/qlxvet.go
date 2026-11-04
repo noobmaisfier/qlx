@@ -28,6 +28,7 @@
 //	V024 REFRESH CONCURRENTLY with NO DATA, SET CONSTRAINTS without a name
 //	V025 SearchOrder/CycleMark on a CTE built without SEARCH/CYCLE
 //	V026 conflict column or assignment naming a column of another table
+//	V027 ToOrDefault in a SET list (an absent field would reset the column)
 //	V018 result type that does not match the selected columns (count, names, Go types, nullability, order)
 //
 // A finding is suppressed by a comment on the same or the previous line:
@@ -720,6 +721,7 @@ func (c *checker) requiredCheck(root *ast.CallExpr, links []link) {
 			continue
 		}
 		have := map[string]bool{}
+		maybe := map[string]string{} // required column -> ToIf / ToOrDefault that may leave it out
 		complete := true
 		for _, a := range l.call.Args {
 			ac, ok := ast.Unparen(a).(*ast.CallExpr)
@@ -743,6 +745,9 @@ func (c *checker) requiredCheck(root *ast.CallExpr, links []link) {
 				break
 			}
 			have[col] = true
+			if m := sel.Sel.Name; m == "ToIf" || m == "ToOrDefault" {
+				maybe[col] = m
+			}
 		}
 		if !complete {
 			continue
@@ -755,6 +760,11 @@ func (c *checker) requiredCheck(root *ast.CallExpr, links []link) {
 		}
 		if len(missing) > 0 {
 			c.report(l.call, "V008", "INSERT INTO "+tf.Name+" does not set required column(s) "+strings.Join(missing, ", ")+" (NOT NULL without default)")
+		}
+		for _, r := range tf.Required {
+			if m, ok := maybe[r]; ok {
+				c.report(l.call, "V008", "INSERT INTO "+tf.Name+" sets required column "+r+" with "+m+", which leaves it out or writes DEFAULT when the option is unset (NOT NULL without default): use To")
+			}
 		}
 	}
 }

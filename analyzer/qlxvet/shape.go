@@ -128,7 +128,7 @@ func findLinks(ls []link, name string) []link {
 }
 
 // assignKeys returns a key per recognisable assignment (Col.To, ToX,
-// ToDefault) in args, and whether every argument was recognised.
+// ToDefault, ToIf, ToOrDefault) in args, and whether every argument was recognised.
 func (c *checker) assignKeys(args []ast.Expr) (keys []string, all bool) {
 	all = true
 	for _, a := range args {
@@ -143,7 +143,7 @@ func (c *checker) assignKeys(args []ast.Expr) (keys []string, all bool) {
 			continue
 		}
 		switch sel.Sel.Name {
-		case "To", "ToX", "ToDefault":
+		case "To", "ToX", "ToDefault", "ToIf", "ToOrDefault":
 			keys = append(keys, types.ExprString(ast.Unparen(sel.X)))
 		default:
 			all = false
@@ -220,10 +220,13 @@ func (c *checker) shapeChain(call *ast.CallExpr, stack []ast.Node) {
 		c.shapeSelect(root, links, complete, stack)
 	case isFunc(fn, "Update"):
 		c.shapeUpdate(root, links, complete)
+		c.orDefaultInUpdate(links)
 	case isFunc(fn, "InsertInto"):
 		c.shapeInsert(root, links, complete)
+		c.orDefaultInUpdate(links)
 	case isFunc(fn, "Merge"):
 		c.shapeMerge(root, links, complete)
+		c.orDefaultInUpdate(links)
 	case isFunc(fn, "Case"):
 		c.shapeCase(root, links)
 	case isFunc(fn, "NewCTE"):
@@ -353,6 +356,42 @@ func (c *checker) shapeUpdate(root *ast.CallExpr, links []link, complete bool) {
 	}
 }
 
+// V027: ToOrDefault in a SET list (UPDATE, ON CONFLICT DO UPDATE, MERGE
+// WHEN ... THEN UPDATE) resets the column to its default when the option is
+// unset, where an absent field almost always means "leave it alone": ToIf does
+// that. Writing DEFAULT on purpose is ToDefault.
+func (c *checker) orDefaultInUpdate(links []link) {
+	for _, l := range links {
+		switch l.name {
+		case "Set", "DoUpdate", "DoUpdateWhere", "ThenUpdate":
+		default:
+			continue
+		}
+		for _, a := range l.call.Args {
+			ac, ok := ast.Unparen(a).(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+			if sel, ok := ast.Unparen(ac.Fun).(*ast.SelectorExpr); ok && sel.Sel.Name == "ToOrDefault" && c.callee(ac) != nil {
+				c.report(ac, "V027", "ToOrDefault in "+l.name+" resets "+types.ExprString(ast.Unparen(sel.X))+" to its default when the option is unset; use ToIf to leave the column alone (or ToDefault to reset it on purpose)")
+			}
+		}
+	}
+}
+
+// hasAssign reports whether any argument is a call of the named assignment
+// method (ToIf, ToOrDefault) on a column.
+func (c *checker) hasAssign(args []ast.Expr, method string) bool {
+	for _, a := range args {
+		if ac, ok := ast.Unparen(a).(*ast.CallExpr); ok {
+			if sel, ok := ast.Unparen(ac.Fun).(*ast.SelectorExpr); ok && sel.Sel.Name == method && c.callee(ac) != nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (c *checker) shapeInsert(root *ast.CallExpr, links []link, complete bool) {
 	rows := false
 	var rowKeys [][]string
@@ -387,6 +426,14 @@ func (c *checker) shapeInsert(root *ast.CallExpr, links []link, complete bool) {
 		c.report(fq[0].call, "V013", "INSERT takes either rows or FromQuery, not both")
 	case defaults && rows:
 		c.report(findLinks(links, "DefaultValues")[0].call, "V013", "DefaultValues cannot be combined with rows")
+	}
+	if len(rowKeys) > 1 {
+		for _, l := range findLinks(links, "Row") {
+			if c.hasAssign(l.call.Args, "ToIf") {
+				c.report(l.call, "V013", "ToIf can leave a column out of one row and not of another, and rows of one INSERT must assign the same columns: use ToOrDefault")
+				break
+			}
+		}
 	}
 	if rowKeysKnown && len(rowKeys) > 1 {
 		for _, k := range rowKeys[1:] {

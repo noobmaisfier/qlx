@@ -97,12 +97,12 @@ func (q InsertQuery) outNames() []string { return returningNames(q.returning) }
 func (q InsertQuery) With(ctes ...CTE) InsertQuery { q.ctes = app(q.ctes, ctes...); return q }
 
 // Row adds one row of assignments. Every row must assign the same columns.
-func (q InsertQuery) Row(as ...Assignment) InsertQuery { q.rows = app(q.rows, as); return q }
+func (q InsertQuery) Row(as ...Assignment) InsertQuery { q.rows = app(q.rows, live(as)); return q }
 
 // Values adds rows from generated insert types.
 func (q InsertQuery) Values(rows ...RowAssigner) InsertQuery {
 	for _, r := range rows {
-		q.rows = app(q.rows, r.Assignments())
+		q.rows = app(q.rows, live(r.Assignments()))
 	}
 	return q
 }
@@ -168,12 +168,12 @@ func (c ConflictBuilder) DoNothing() InsertQuery { return c.with(conflictClause{
 
 // DoUpdate renders DO UPDATE SET ...; use Col.Excluded() for the proposed row.
 func (c ConflictBuilder) DoUpdate(sets ...Assignment) InsertQuery {
-	return c.with(conflictClause{action: "update", sets: sets})
+	return c.with(conflictClause{action: "update", sets: live(sets)})
 }
 
 // DoUpdateWhere is DoUpdate with a WHERE condition.
 func (c ConflictBuilder) DoUpdateWhere(p Pred, sets ...Assignment) InsertQuery {
-	return c.with(conflictClause{action: "update", sets: sets, where: p})
+	return c.with(conflictClause{action: "update", sets: live(sets), where: p})
 }
 
 // DoSelect renders ON CONFLICT DO SELECT (PostgreSQL 19), which returns the
@@ -426,7 +426,7 @@ func (UpdateQuery) cteBody()             {}
 func (q UpdateQuery) outNames() []string { return returningNames(q.returning) }
 
 func (q UpdateQuery) With(ctes ...CTE) UpdateQuery     { q.ctes = app(q.ctes, ctes...); return q }
-func (q UpdateQuery) Set(as ...Assignment) UpdateQuery { q.sets = app(q.sets, as...); return q }
+func (q UpdateQuery) Set(as ...Assignment) UpdateQuery { q.sets = app(q.sets, live(as)...); return q }
 
 // SetPatch applies a generated patch: only the fields that are set become
 // assignments, so an empty patch is reported instead of updating nothing.

@@ -15,15 +15,15 @@ import (
 type dtoCreateUser struct {
 	Email string          `json:"email"`
 	Nick  qt.Null[string] `json:"nickname"`
-	Tier  *string         `json:"tier"` // column with a DEFAULT: absent must keep it
+	Tier  qt.Opt[string]  `json:"tier"` // column with a DEFAULT: absent must keep it
 }
 
 func (r dtoCreateUser) insert() q.InsertQuery {
-	as := []q.Assignment{Users.Email.To(r.Email), Users.Nickname.To(r.Nick)}
-	if r.Tier != nil {
-		as = append(as, Users.Tier.To(*r.Tier))
-	}
-	return q.InsertInto(Users).Row(as...).Returning(Users.ID, Users.Email, Users.Nickname)
+	return q.InsertInto(Users).Row(
+		Users.Email.To(r.Email),
+		Users.Nickname.To(r.Nick),
+		Users.Tier.ToIf(r.Tier), // absent: the column is left out and takes its DEFAULT
+	).Returning(Users.ID, Users.Email, Users.Nickname)
 }
 
 type dtoPatchUser struct {
@@ -32,14 +32,10 @@ type dtoPatchUser struct {
 }
 
 func (p dtoPatchUser) assignments() []q.Assignment {
-	var as []q.Assignment
-	if p.Email.Set {
-		as = append(as, Users.Email.To(p.Email.V))
+	return []q.Assignment{
+		Users.Email.ToIf(p.Email),
+		Users.Nickname.ToIf(p.Nickname),
 	}
-	if p.Nickname.Set {
-		as = append(as, Users.Nickname.To(p.Nickname.V))
-	}
-	return as
 }
 
 type dtoListQuery struct {
@@ -103,8 +99,7 @@ func TestDTOCreateStatement(t *testing.T) {
 	if err != nil || len(args) != 2 || args[1] != nil {
 		t.Errorf("args %v %v: an absent nickname is a NULL parameter", args, err)
 	}
-	pro := "pro"
-	st = renderDTO(t, dtoCreateUser{Email: "a@b.c", Nick: qt.Some("ada"), Tier: &pro}.insert())
+	st = renderDTO(t, dtoCreateUser{Email: "a@b.c", Nick: qt.Some("ada"), Tier: qt.Of("pro")}.insert())
 	if !strings.Contains(st.SQL, `"tier"`) {
 		t.Errorf("a sent tier is written: %s", st.SQL)
 	}

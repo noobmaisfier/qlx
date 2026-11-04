@@ -124,28 +124,28 @@ type PatchUser struct {
 }
 
 func (p PatchUser) Assignments() []q.Assignment {
-	var as []q.Assignment
-	if p.Email.Set {
-		as = append(as, Users.Email.To(p.Email.V))
+	return []q.Assignment{
+		Users.Email.ToIf(p.Email),
+		Users.Nickname.ToIf(p.Nickname),
 	}
-	if p.Nickname.Set {
-		as = append(as, Users.Nickname.To(p.Nickname.V))
-	}
-	return as
 }
 
 st := q.Update(Users).Set(p.Assignments()...).Where(Users.ID.Eq(id))
 ```
 
+`ToIf(opt)` assigns the option's value and **leaves the assignment out when the option is unset**: no `SET` entry in an `UPDATE`, no column in an `INSERT`. It replaces the `if p.Email.Set { ... }` block you would otherwise write for every field, and works the same in `Row`, `Set`, `DoUpdate` and MERGE `ThenUpdate`.
+
 | Body | SQL | Arguments |
 | --- | --- | --- |
 | `{"nickname":null}` | `UPDATE "public"."users" SET "nickname" = $1 WHERE ...` | `[NULL, id]` |
 | `{"email":"x@y.z","nickname":"ada"}` | `SET "email" = $1, "nickname" = $2 ...` | `[x@y.z, ada, id]` |
-| `{}` | not rendered: an `UPDATE` without `SET` is an error (`ErrShape`, and V012 in the analyzer) | |
+| `{}` | not rendered: every `ToIf` is left out, so the `UPDATE` has no `SET` and fails with `ErrShape` | |
 
 `omitzero` (Go 1.24 and later) with the `IsZero` method of `Opt` drops unset fields when you write the DTO back out. `omitempty` does not work on a struct: it would never omit.
 
-Decide what an empty body means for your API. Usually 400 (nothing to do) or 204. The render error for the empty `UPDATE` is not a user-facing message.
+Decide what an empty body means for your API. Usually 400 (nothing to do) or 204. The render error for the empty `UPDATE` is not a user-facing message: check the body first (for example a `Changed()` method on the DTO that tests `Set` on each field).
+
+Each combination of present columns is a different statement shape, and the shape cache keeps each one. With n optional columns there can be 2^n shapes: sixteen for a four-field PATCH, which is nothing; a table with thirty optional columns patched freely would not be. `qlx.DefaultShapes.OnThrash` tells you when the cache starts to evict.
 
 ### The generated patch
 
@@ -182,10 +182,10 @@ The generated insert type takes the required columns as constructor arguments, s
 | Column | Absent from the body should mean | DTO field |
 | --- | --- | --- |
 | nullable, no default | NULL | `qt.Null[T]` |
-| has a `DEFAULT` | keep the default | `*T`, or `qt.Opt[T]` |
+| has a `DEFAULT` | keep the default | `qt.Opt[T]`, written with `ToIf` |
 | NOT NULL, no default | an error | plain `T` with `validate:"required"` |
 
-`qt.Null[T]` cannot tell an absent key from `"x": null`: both give NULL (**tested**, `TestDTOCreateBodyNullVersusPointer`). For a nullable column without a default that is exactly right. For a column with a default it would write NULL over the default (or fail on NOT NULL), so use a pointer and write the column only when it is set.
+`qt.Null[T]` cannot tell an absent key from `"x": null`: both give NULL (**tested**, `TestDTOCreateBodyNullVersusPointer`). For a nullable column without a default that is exactly right. For a column with a default it would write NULL over the default (or fail on NOT NULL), so use a `qt.Opt[T]` and `ToIf`: an absent key leaves the column out of the `INSERT`, and PostgreSQL applies the default.
 
 **Tested** (`TestDTOCreateStatement`):
 
@@ -193,19 +193,35 @@ The generated insert type takes the required columns as constructor arguments, s
 type CreateUser struct {
 	Email string          `json:"email" validate:"required,email"`
 	Nick  qt.Null[string] `json:"nickname"` // nullable, no default
-	Tier  *string         `json:"tier"`     // has a DEFAULT: absent keeps it
+	Tier  qt.Opt[string]  `json:"tier"`     // has a DEFAULT: absent keeps it
 }
 
 func (r CreateUser) Insert() q.InsertQuery {
-	as := []q.Assignment{Users.Email.To(r.Email), Users.Nickname.To(r.Nick)}
-	if r.Tier != nil {
-		as = append(as, Users.Tier.To(*r.Tier))
-	}
-	return q.InsertInto(Users).Row(as...).Returning(Users.ID, Users.Email, Users.Nickname)
+	return q.InsertInto(Users).Row(
+		Users.Email.To(r.Email),
+		Users.Nickname.To(r.Nick),
+		Users.Tier.ToIf(r.Tier), // absent: the column is left out and takes its DEFAULT
+	).Returning(Users.ID, Users.Email, Users.Nickname)
 }
 ```
 
-With the generated insert type the same code is shorter (`NewUserInsert(r.Email).Nickname(r.Nick)`), and the compiler checks that the required columns are there.
+With the generated insert type the same code is shorter (`NewUserInsert(r.Email).Nickname(r.Nick)`), and the compiler checks that the required columns are there. Use `ToIf` when you write the `Row` yourself.
+
+### `ToIf`, `ToOrDefault` and `ToDefault`
+
+| Method | Option unset | Use it for |
+| --- | --- | --- |
+| `ToIf(opt)` | the assignment is left out (column omitted in an `INSERT`, untouched in an `UPDATE`) | `INSERT` and `UPDATE` bodies with optional fields |
+| `ToOrDefault(opt)` | writes the keyword `DEFAULT` | `INSERT`, in particular **multi-row** inserts: every row keeps the same columns |
+| `ToDefault()` | n/a: always writes `DEFAULT` | resetting a column on purpose |
+
+Three rules, enforced by tests and by the analyzer:
+
+- Do not `ToIf` a column that is NOT NULL without a default (`email` above): it can disappear and the statement fails (`ErrShape`; V008 reports it). Use `To`.
+- Rows of one multi-row `INSERT` must assign the same columns. Rows whose options differ do not render with `ToIf` (V013 reports it); use `ToOrDefault`.
+- `ToOrDefault` in a `SET` list resets an absent field to its default instead of leaving it alone. V027 reports it. In updates, use `ToIf`.
+
+`ToOrDefault` does not reduce the number of shapes (a value renders `$n`, `DEFAULT` renders the keyword in the same position); it makes multi-row inserts valid.
 
 Validation is about the request, the compiler is about the statement: both are needed. The compiler cannot know that an email must contain an `@`.
 
@@ -548,7 +564,8 @@ Cases worth a test per resource: absent / `null` / value for every nullable patc
 | `omitempty` on a `qt` struct field | the key is never omitted | `omitzero` |
 | `required` on `qt.Null`, `qt.Opt`, `qt.ID` | always passes | check `.Valid` or `IsSet()` |
 | binding a request into the generated patch or insert | mass assignment of every column | a DTO with an allow-list, converted |
-| `qt.Null` for a column with a `DEFAULT` | an absent key writes NULL over the default | `*T` or `qt.Opt[T]` |
+| `qt.Null` for a column with a `DEFAULT` | an absent key writes NULL over the default | `qt.Opt[T]` with `ToIf` |
+| `ToIf` on a required column, or `ToOrDefault` in a `SET` | the column disappears, or is reset to its default | `To` for required columns, `ToIf` in updates |
 | `qt.Opt` in a query-string struct | not filled (JSON methods only) | pointers, then `if` or `EqIf` |
 | accepting and ignoring a read-only field | the client believes it worked | leave it out of the DTO, strict decode |
 | `"infinity"` in a timestamp field | strict date parsers in clients fail | do not store infinities, or document them |

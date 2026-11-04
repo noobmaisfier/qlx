@@ -135,3 +135,23 @@ func helperFuncLit() func() q.Statement {
 		return q.Select(Users.ID).From(q.Func("", "f")) // want `V021 Func needs As`
 	}
 }
+
+// ---- ToIf and ToOrDefault ----
+
+func optionalAssignments() {
+	var tier qt.Opt[string]
+	var nick qt.Opt[qt.Null[string]]
+	use(q.InsertInto(Users).Row(Users.Email.To("a"), Users.Tier.ToIf(tier), Users.Nickname.ToIf(nick)))                                    // fine
+	use(q.InsertInto(Users).Row(Users.Email.To("a"), Users.Tier.ToOrDefault(tier)))                                                        // fine
+	use(q.InsertInto(Users).Row(Users.Email.ToIf(qt.Of("a")), Users.Tier.To("x")))                                                         // want `V008 INSERT INTO users sets required column email with ToIf`
+	use(q.InsertInto(Users).Row(Users.Email.ToOrDefault(qt.Of("a"))))                                                                      // want `V008 INSERT INTO users sets required column email with ToOrDefault`
+	use(q.InsertInto(Users).Row(Users.Email.To("a"), Users.Tier.ToIf(tier), Users.Tier.To("y")))                                           // want `V013 column Users.Tier is assigned twice in this row`
+	use(q.InsertInto(Users).Row(Users.Email.To("a"), Users.Tier.ToIf(tier)).Row(Users.Email.To("b"), Users.Tier.ToIf(tier)))               // want `V013 ToIf can leave a column out of one row`
+	use(q.InsertInto(Users).Row(Users.Email.To("a"), Users.Tier.ToOrDefault(tier)).Row(Users.Email.To("b"), Users.Tier.ToOrDefault(tier))) // fine
+	use(q.Update(Users).Set(Users.Tier.ToIf(tier), Users.Nickname.ToIf(nick)).Where(Users.ID.Eq(1)))                                       // fine
+	use(q.Update(Users).Set(Users.Tier.ToOrDefault(tier)).Where(Users.ID.Eq(1)))                                                           // want `V027 ToOrDefault in Set resets Users.Tier`
+	use(q.Update(Users).Set(Users.Tier.ToIf(tier), Users.Tier.To("z")).Where(Users.ID.Eq(1)))                                              // want `V013 column Users.Tier is assigned twice in this UPDATE`
+	use(q.Update(Users).Set(Orders.Status.ToIf(qt.Of("x"))).Where(Users.ID.Eq(1)))                                                         // want `V026 Set assigns Orders.Status` `V006`
+	use(q.InsertInto(Users).Row(Users.Email.To("a")).OnConflict(Users.Email).DoUpdate(Users.Tier.ToOrDefault(tier)))                       // want `V027 ToOrDefault in DoUpdate`
+	use(q.InsertInto(Users).Row(Users.Email.To("a")).OnConflict(Users.Email).DoUpdate(Users.Tier.ToIf(tier)))                              // fine
+}

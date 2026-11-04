@@ -716,6 +716,15 @@ ins := q.InsertInto(Users).Values(
 
 `DefaultValues()`, `OverridingSystemValue()` and `OverridingUserValue()` cover identity columns.
 
+Optional fields from a request body are written with `ToIf(opt)` instead of an `if` per field: an unset `qt.Opt` leaves the assignment out (the column is omitted from an `INSERT`, untouched in an `UPDATE`). `ToOrDefault(opt)` writes `DEFAULT` instead, which keeps the rows of a multi-row `INSERT` aligned; `ToDefault()` always does. Details and the rules around them are in [the DTO guide](dtos.md).
+
+```go
+q.InsertInto(Users).Row(
+    Users.Email.To(r.Email),
+    Users.Tier.ToIf(r.Tier), // r.Tier is a qt.Opt[string]: unset takes the column's DEFAULT
+)
+```
+
 ### 5.2 Upsert
 
 ```go
@@ -1469,6 +1478,7 @@ Analyzer codes (`go vet -vettool`, gopls, golangci-lint). Rule: an error *presen
 | V024 | `Refresh...Concurrently()` with `WithNoData()`; `SetConstraints` without a name |
 | V025 | `SearchOrder()` / `CycleMark()` on a CTE built without `SearchDepthFirst`/`SearchBreadthFirst` / `Cycle` |
 | V026 | conflict column or assignment (`Set`, `Row`, `DoUpdate`) that designates a column of a table other than the one written |
+| V027 | `ToOrDefault` in a `SET` list (`Set`, `DoUpdate`, `ThenUpdate`): an absent field would reset the column to its default, `ToIf` leaves it alone |
 
 An accepted finding is suppressed with a comment on the same line or the previous one: `//qlx:ignore <reason>`. With `-audit`, each suppression is itself listed (V011).
 
