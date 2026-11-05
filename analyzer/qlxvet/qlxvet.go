@@ -31,6 +31,7 @@
 //	V027 ToOrDefault in a SET list (an absent field would reset the column)
 //	V028 FOR UPDATE/SHARE together with DISTINCT, GROUP BY, HAVING, aggregates or window functions
 //	V029 SELECT DISTINCT ordered by a column that is not selected; DISTINCT ON not matching ORDER BY
+//	V030 ToNull() on a column whose Go type cannot hold NULL
 //	V018 result type that does not match the selected columns (count, names, Go types, nullability, order)
 //
 // A finding is suppressed by a comment on the same or the previous line:
@@ -236,6 +237,7 @@ func (c *checker) file(f *ast.File) {
 			c.versionGate(n)
 			c.shapeCall(n, stack)
 			c.mappingCheck(n)
+			c.nullAssign(n)
 			c.gapCall(n, stack)
 			if outermost(n, stack) {
 				// A chain inside another QLX call is reached by that

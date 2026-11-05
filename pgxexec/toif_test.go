@@ -2,6 +2,7 @@ package pgxexec_test
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"testing"
@@ -66,6 +67,40 @@ func TestToIfAgainstServer(t *testing.T) {
 		}
 		if r := upd(b.ID, qt.Of("max"), qt.Unset[qt.Null[string]]()); r.Tier != "max" || r.Nick.Valid {
 			t.Errorf("tier set, nickname untouched: %+v", r)
+		}
+	})
+}
+
+func TestToNullAgainstServer(t *testing.T) {
+	p := pool(t)
+	inRollbackTx(t, p, func(ctx context.Context, tx pgx.Tx) {
+		U := fx.Users
+		ins := render(t, q.InsertInto(U).Row(U.Email.To("null-a@x.io"), U.Nickname.To(qt.Some("nick")), U.Balance.To(50)).Returning(U.ID))
+		id, err := pgxexec.One[int64](ctx, tx, ins)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// NULL and an arithmetic expression in one SET
+		upd := render(t, q.Update(U).Set(U.Balance.ToX(U.Balance.Sub(5)), U.Nickname.ToNull()).Where(U.ID.Eq(id)).Returning(U.Balance, U.Nickname))
+		type res struct {
+			Balance int64           `db:"balance"`
+			Nick    qt.Null[string] `db:"nickname"`
+		}
+		r, err := pgxexec.One[res](ctx, tx, upd)
+		if err != nil || r.Balance != 45 || r.Nick.Valid {
+			t.Fatalf("%+v %v", r, err)
+		}
+		// an INSERT row with a NULL
+		ins2 := render(t, q.InsertInto(U).Row(U.Email.To("null-b@x.io"), U.Nickname.ToNull()).Returning(U.Nickname))
+		n, err := pgxexec.One[qt.Null[string]](ctx, tx, ins2)
+		if err != nil || n.Valid {
+			t.Fatalf("%+v %v", n, err)
+		}
+		// a NOT NULL column: the server refuses, and the analyzer says so first (V030)
+		//qlx:ignore deliberately invalid: the server must refuse it
+		bad := render(t, q.Update(U).Set(U.Email.ToNull()).Where(U.ID.Eq(id)))
+		if _, err := pgxexec.Exec(ctx, tx, bad); err == nil || !strings.Contains(err.Error(), "23502") {
+			t.Fatalf("want not_null_violation, got %v", err)
 		}
 	})
 }

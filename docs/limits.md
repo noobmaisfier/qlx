@@ -27,7 +27,7 @@ QLX moves as much as it can into the Go compiler, then into render time, then in
 
 ## What the analyzer reads, and what it leaves alone
 
-`go vet -vettool=qlxvet ./...` (the `analyzer` module) reports V001 to V029. It works on the source, so it follows two rules:
+`go vet -vettool=qlxvet ./...` (the `analyzer` module) reports V001 to V030. It works on the source, so it follows two rules:
 
 - A finding about something that is **present** (a column assigned twice, `Limit` and `FetchFirst` together, `Explain(stmt, IO)` without `Analyze`) holds for any chain and is always reported.
 - A finding about something **absent** (an UPDATE with no `Set`, an INSERT with no row) is reported only when the chain is handed straight to something: an argument, a composite literal, or a return from a function whose result is `qlx.Statement`. A builder stored in a variable, or returned as a builder type (a helper that returns `SelectQuery` or `TableFunc`), may be completed later by the caller, so it is left alone, exactly like V002.
@@ -40,7 +40,7 @@ V018 reads `client.One[R](ctx, stmt)` and the other `pgxexec` entry points (`All
 
 `pgxexec.VerifyRow[R](ctx, conn, stmt)` is the run-time counterpart for what the source does not decide: it prepares the statement on a real server and checks that every result column has a pgx scan plan for its destination, with the same name and count rules as the executor. Put it in a test next to each statement. It cannot see NULLs.
 
-V028 and V029 report what the server refuses and neither `Render` nor the compiler sees: a row lock (`FOR UPDATE`...) with `DISTINCT`, `GROUP BY`, `HAVING`, an aggregate or a window function; `SELECT DISTINCT` ordered by a column that is not selected, and `DISTINCT ON` whose expressions do not lead the `ORDER BY`. Both compare plain columns only, and say nothing when an expression or a whole table is in the list.
+V030 reports `ToNull()` on a column whose Go type cannot hold NULL (not a `qt.Null`, array, `bytea` or range). V028 and V029 report what the server refuses and neither `Render` nor the compiler sees: a row lock (`FOR UPDATE`...) with `DISTINCT`, `GROUP BY`, `HAVING`, an aggregate or a window function; `SELECT DISTINCT` ordered by a column that is not selected, and `DISTINCT ON` whose expressions do not lead the `ORDER BY`. Both compare plain columns only, and say nothing when an expression or a whole table is in the list.
 
 V019 to V027 close the shape rules that `Render` only reports at run time: window functions in WHERE/HAVING/ON/GROUP BY, named windows missing from `Windows`, table functions and JSON/XML tables without their naming, JSON path variables that are not passed, GRANT/REVOKE parts, REFRESH and SET CONSTRAINTS shape, `SearchOrder`/`CycleMark` without SEARCH/CYCLE (also through a variable assigned once), and columns of another table used as conflict target or assignment. They stay silent on statements held in reassigned variables, paths held in variables, and subqueries as write targets. An aliased table is followed when its name is a constant: `Users.As("u")`, written inline or held by a variable assigned once, is one table, so `Update(Users.As("v")).Where(Users.ID.Eq(1))` is reported (the original symbol is not in scope once the table is aliased). When an alias is in scope and a column comes from a parameter, a struct field or a variable assigned more than once, the analyzer cannot tell whether it is the same alias under another name and stays silent.
 

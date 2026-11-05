@@ -143,7 +143,7 @@ func (c *checker) assignKeys(args []ast.Expr) (keys []string, all bool) {
 			continue
 		}
 		switch sel.Sel.Name {
-		case "To", "ToX", "ToDefault", "ToIf", "ToOrDefault":
+		case "To", "ToX", "ToDefault", "ToNull", "ToIf", "ToOrDefault":
 			keys = append(keys, types.ExprString(ast.Unparen(sel.X)))
 		default:
 			all = false
@@ -261,6 +261,36 @@ func (c *checker) shapeSelect(root *ast.CallExpr, links []link, complete bool, s
 	c.groupCoverage(root, links)
 	c.lockConflicts(root, links)
 	c.distinctOrder(root, links)
+}
+
+// nonNullClasses are the Go types that cannot hold NULL when they are not
+// wrapped in qt.Null; arrays, bytea and ranges are not in the list because nil
+// or the Null flag is their NULL.
+var nonNullClasses = map[string]bool{
+	"bool": true, "int": true, "float": true, "string": true, "time": true, "id": true,
+	"date": true, "interval": true, "timetz": true, "json": true, "inet": true, "uuid": true,
+}
+
+// nullAssign is V030: ToNull() on a column whose Go type cannot hold NULL. The
+// server would answer 23502 (not_null_violation); the type of the column says
+// so now.
+func (c *checker) nullAssign(call *ast.CallExpr) {
+	sel, ok := ast.Unparen(call.Fun).(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "ToNull" || len(call.Args) != 0 || c.callee(call) == nil {
+		return
+	}
+	tv, ok := c.pass.TypesInfo.Types[sel.X]
+	if !ok {
+		return
+	}
+	v := valueType(tv.Type)
+	if v == nil {
+		return
+	}
+	if _, null := isNullType(v); null || !nonNullClasses[classOf(v)] {
+		return
+	}
+	c.report(call, "V030", types.ExprString(ast.Unparen(sel.X))+" is declared NOT NULL (its Go type is "+types.TypeString(v, func(p *types.Package) string { return p.Name() })+", which cannot hold NULL): ToNull() would be rejected by the server with 23502")
 }
 
 var lockClause = map[string]string{

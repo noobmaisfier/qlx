@@ -248,7 +248,7 @@ func exInsertDoNothing() q.Statement {
 // ex: update
 func exUpdate() q.Statement {
 	return q.Update(Users).
-		Set(Users.Balance.ToX(Users.Balance.Sub(5)), Users.Nickname.To(qt.None[string]())).
+		Set(Users.Balance.ToX(Users.Balance.Sub(5)), Users.Nickname.ToNull()).
 		Where(Users.ID.Eq(7)).
 		Returning(Users.Balance)
 }

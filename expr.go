@@ -85,6 +85,10 @@ type defaultNode struct{}
 
 func (defaultNode) render(b *builder) { b.write("DEFAULT") }
 
+type nullNode struct{}
+
+func (nullNode) render(b *builder) { b.write("NULL") }
+
 type falseNode struct{}
 
 func (falseNode) render(b *builder) { b.write("FALSE") }
@@ -534,6 +538,14 @@ func (c colOps[T]) columnRef() colRef           { return c.ref }
 func (c colOps[T]) To(v T) Assignment           { return Assignment{c.ref, argNode{v}, false} }
 func (c colOps[T]) ToX(o Operand[T]) Assignment { return Assignment{c.ref, o.exprNode(), false} }
 func (c colOps[T]) ToDefault() Assignment       { return Assignment{c.ref, defaultNode{}, false} }
+
+// ToNull assigns NULL: `SET nickname = NULL`, or a NULL in an INSERT row. It
+// is the short form of To(qt.None[T]()) and also covers the nullable columns
+// that are not a qt.Null: an array, a bytea, a range. Go cannot reserve a
+// method for some type arguments, so ToNull compiles on a NOT NULL column too;
+// the server then answers 23502 at run time, and the analyzer reports it
+// beforehand (V030).
+func (c colOps[T]) ToNull() Assignment { return Assignment{c.ref, nullNode{}, false} }
 
 // ToIf assigns the value of an option and leaves the assignment out when the
 // option is unset: no column in an INSERT (the column takes its DEFAULT), no

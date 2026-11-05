@@ -180,7 +180,7 @@ _, err = client.Exec(ctx,
 ```go
 _, err := client.Exec(ctx,
     q.Update(Users).
-        Set(Users.Balance.ToX(Users.Balance.Sub(5)), Users.Nickname.To(qt.None[string]())).
+        Set(Users.Balance.ToX(Users.Balance.Sub(5)), Users.Nickname.ToNull()).
         Where(Users.ID.Eq(7)).
         Returning(Users.Balance))
 
@@ -196,17 +196,23 @@ and `All` is the explicit opt-in for a whole-table write.
 ### Partial updates
 
 `To(v)` binds a value, `ToX(expr)` assigns an expression, `ToDefault()` writes
-`DEFAULT`, and `ToIf(opt)` leaves the assignment out when the option is unset:
+`DEFAULT`, `ToNull()` writes `NULL`, and `ToIf(opt)` leaves the assignment out
+when the option is unset:
 
 ```go
 q.Update(Users).
     Set(
         Users.Balance.ToX(Users.Balance.Sub(5)), // balance = balance - $1
-        Users.Nickname.To(qt.None[string]()),    // nickname = NULL
+        Users.Nickname.ToNull(),                 // nickname = NULL
         Users.Tier.ToIf(req.Tier),               // req.Tier is qt.Opt[string]; unset leaves it untouched
     ).
     Where(Users.ID.Eq(7))
 ```
+
+`ToNull()` is the short form of `To(qt.None[T]())`, and also covers nullable
+columns that are not a `qt.Null` (arrays, `bytea`, ranges). Go cannot reserve a
+method for some column types, so it compiles on a `NOT NULL` column too: the
+server answers 23502, and the analyzer reports it first (V030).
 
 A generated patch is the same idea, collected in one struct. Only the fields
 you set are written:
@@ -359,9 +365,10 @@ go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest
 go vet -vettool="$(go env GOPATH)/bin/qlxvet" -targets=16,17,18,19 ./...
 ```
 
-The analyzer reports V001–V029: a column outside `FROM`, `UPDATE` without
+The analyzer reports V001–V030: a column outside `FROM`, `UPDATE` without
 `WHERE`, a bare column next to `GroupBy`, an aggregate in `WHERE`, a feature
-newer than your targets. For mapping, V018 compares `R` with the selected
+newer than your targets, `ToNull()` on a `NOT NULL` column. For mapping, V018
+compares `R` with the selected
 columns: count, order, field or alias names, Go types, `qt.Null` where the
 column can be NULL, and the optional side of an outer join. That is what turns a
 wrong struct, a missing alias or a swapped field into a `go vet` finding before
@@ -389,7 +396,7 @@ Statements become OpenTelemetry spans and a duration histogram, labelled by the
 | Tier | Catches |
 | --- | --- |
 | **Go compiler** | wrong operand types, nullability, `LIKE` on a number, `SUM` over text, an aggregate in `WHERE`, an insert missing a required column |
-| **Analyzer** (`go vet`, gopls) | a column outside `FROM`, `UPDATE` without `WHERE`, a row type that does not match the selected columns, a PostgreSQL feature newer than your targets (V001–V029) |
+| **Analyzer** (`go vet`, gopls) | a column outside `FROM`, `UPDATE` without `WHERE`, a row type that does not match the selected columns, a PostgreSQL feature newer than your targets, `ToNull()` on a `NOT NULL` column (V001–V030) |
 | **Render time** | scope, grouping, shape and version rules on statements built dynamically (`ErrScope`, `ErrShape`, `ErrUnsupportedByServer`) |
 | **The server** | what only PostgreSQL knows: `PREPARE` in tests (`qlx prepare`), `VerifyRow`, `VerifySchema` |
 

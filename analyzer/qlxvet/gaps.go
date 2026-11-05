@@ -536,7 +536,7 @@ func (c *checker) foreignTargets(root *ast.CallExpr, links []link) {
 				continue
 			}
 			switch sel.Sel.Name {
-			case "To", "ToX", "ToDefault", "ToIf", "ToOrDefault":
+			case "To", "ToX", "ToDefault", "ToNull", "ToIf", "ToOrDefault":
 				if t := colTable(sel.X); t != nil && t != tbl && c.comparable(tbl, t) {
 					c.report(a, "V026", what+" assigns "+types.ExprString(sel.X)+", a column of "+t.Name()+" while the statement writes to "+tbl.Name())
 				}

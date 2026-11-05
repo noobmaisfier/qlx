@@ -417,7 +417,7 @@ q.InsertInto(Users).Row(
 
 {{ex:update}}
 
-To set a nullable field to `NULL`: `Nickname.To(qt.None[string]())`. An `UPDATE` without `Where` or `All()` does not render:
+To set a nullable field to `NULL`: `Users.Nickname.ToNull()`, the short form of `Users.Nickname.To(qt.None[string]())`; it also covers the nullable columns that are not a `qt.Null` (arrays, `bytea`, ranges). Go cannot reserve a method for some column types, so `ToNull()` compiles on a `NOT NULL` column as well: the server refuses it (23502) and the analyzer reports it first (V030). An `UPDATE` without `Where` or `All()` does not render:
 
 ```go
 q.Update(Orders).Set(Orders.Status.To("void")).All() // all rows, stated explicitly
@@ -1047,6 +1047,7 @@ Analyzer codes (`go vet -vettool`, gopls, golangci-lint). Rule: an error *presen
 | V027 | `ToOrDefault` in a `SET` list (`Set`, `DoUpdate`, `ThenUpdate`): an absent field would reset the column to its default, `ToIf` leaves it alone |
 | V028 | row lock (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) on a query with `Distinct`, `GroupBy`, `Having`, an aggregate or a window function: PostgreSQL rejects it |
 | V029 | `Distinct` with an `OrderBy` column that is not selected; `DistinctOn` whose expressions do not start the `OrderBy` |
+| V030 | `ToNull()` on a column whose Go type cannot hold `NULL` (the server answers 23502) |
 
 An accepted finding is suppressed with a comment on the same line or the previous one: `//qlx:ignore <reason>`. With `-audit`, each suppression is itself listed (V011).
 

@@ -3,7 +3,7 @@
 `qlxvet` is the `go/analysis` pass for QLX. It catches SQL mistakes that the Go
 type system cannot see, before the program runs and without a database.
 
-It reports 29 stable codes, V001 to V029. A finding names the rule, the
+It reports 30 stable codes, V001 to V030. A finding names the rule, the
 statement and the column or clause involved; a valid query stays silent.
 
 ## Install
@@ -57,6 +57,7 @@ go vet -vettool="$(go env GOPATH)/bin/qlxvet" \
 | V027 | `ToOrDefault` in a `SET` list, which resets an absent field |
 | V028 | a row lock with `DISTINCT`, `GROUP BY`, `HAVING`, an aggregate or a window |
 | V029 | `SELECT DISTINCT` ordering, or `DISTINCT ON` not matching the leading `ORDER BY` |
+| V030 | `ToNull()` on a column whose Go type cannot hold `NULL` (the server answers 23502) |
 
 V018 also follows exported helpers whose whole body is `return <Select chain>`,
 including helpers in another package: the defining package exports the selected

@@ -143,3 +143,13 @@ func distinctOrder() {
 	use(q.Select(Users.Email).From(Users).DistinctOn(Users.Email).OrderBy(Users.ID.Asc()))                    // want `V029 DISTINCT ON expressions must match the leading ORDER BY expressions`
 	use(q.Select(Users.Email).From(Users).DistinctOn(Users.Email))                                            // fine: no ORDER BY
 }
+
+// ---- NULL assignments ----
+
+func nulls() {
+	use(q.Update(Users).Set(Users.Nickname.ToNull()).Where(Users.ID.Eq(1)))                                     // fine: nullable column
+	use(q.Update(Users).Set(Users.Email.ToNull()).Where(Users.ID.Eq(1)))                                        // want `V030 Users.Email is declared NOT NULL`
+	use(q.InsertInto(Users).Row(Users.Email.To("a"), Users.Balance.ToNull()))                                   // want `V030 Users.Balance is declared NOT NULL`
+	use(q.Update(Users).Set(Users.Nickname.ToNull(), Users.Tier.ToNull()).Where(Users.ID.Eq(1)))                // want `V030 Users.Tier is declared NOT NULL`
+	use(q.InsertInto(Users).Row(Users.Email.To("a")).OnConflict(Users.Email).DoUpdate(Users.Nickname.ToNull())) // fine
+}

@@ -763,19 +763,19 @@ Arguments : `[ada@example.com]`
 
 ```go
 q.Update(Users).
-Set(Users.Balance.ToX(Users.Balance.Sub(5)), Users.Nickname.To(qt.None[string]())).
+Set(Users.Balance.ToX(Users.Balance.Sub(5)), Users.Nickname.ToNull()).
 Where(Users.ID.Eq(7)).
 Returning(Users.Balance)
 ```
 
 ```sql
-UPDATE "public"."users" SET "balance" = "users"."balance" - $1, "nickname" = $2 WHERE "users"."id" = $3 RETURNING "users"."balance"
+UPDATE "public"."users" SET "balance" = "users"."balance" - $1, "nickname" = NULL WHERE "users"."id" = $2 RETURNING "users"."balance"
 ```
 
-Arguments : `[5 <nil> 7]`
+Arguments : `[5 7]`
 
 
-Mettre un champ nullable à `NULL` : `Nickname.To(qt.None[string]())`. Un `UPDATE` sans `Where` ni `All()` ne se rend pas :
+Mettre un champ nullable à `NULL` : `Users.Nickname.ToNull()`, la forme courte de `Users.Nickname.To(qt.None[string]())` ; elle couvre aussi les colonnes nullables qui ne sont pas un `qt.Null` (tableaux, `bytea`, plages). Go ne permet pas de réserver une méthode à certains types de colonnes : `ToNull()` compile donc aussi sur une colonne `NOT NULL`, le serveur la refuse (23502) et l'analyseur la signale avant (V030). Un `UPDATE` sans `Where` ni `All()` ne se rend pas :
 
 ```go
 q.Update(Orders).Set(Orders.Status.To("void")).All() // toutes les lignes, dit explicitement
@@ -1498,6 +1498,7 @@ Codes de l'analyseur (`go vet -vettool`, gopls, golangci-lint). Règle : une err
 | V027 | `ToOrDefault` dans une liste `SET` (`Set`, `DoUpdate`, `ThenUpdate`) : un champ absent remettrait la colonne à son défaut, `ToIf` la laisse intacte |
 | V028 | verrou de lignes (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) sur une requête avec `Distinct`, `GroupBy`, `Having`, un agrégat ou une fonction de fenêtre : PostgreSQL le refuse |
 | V029 | `Distinct` avec un `OrderBy` sur une colonne non sélectionnée ; `DistinctOn` dont les expressions ne commencent pas le `OrderBy` |
+| V030 | `ToNull()` sur une colonne dont le type Go ne peut pas contenir `NULL` (le serveur répond 23502) |
 
 Un constat accepté se supprime avec un commentaire sur la même ligne ou la précédente : `//qlx:ignore <raison>`. Avec `-audit`, chaque suppression est elle-même listée (V011).
 
