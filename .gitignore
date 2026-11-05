@@ -1,0 +1,8 @@
+# Build outputs (never commit binaries)
+/qlx
+/qlxvet
+/analyzer/qlxvet
+/analyzer/cmd/qlxvet/qlxvet
+/cmd/qlx/qlx
+*.exe
+*.test
