@@ -65,7 +65,7 @@ var Analyzer = &analysis.Analyzer{
 	Name:      "qlxvet",
 	Doc:       "reports QLX misuse the type system cannot see (see package documentation)",
 	Run:       run,
-	FactTypes: []analysis.Fact{(*TableFact)(nil), (*VersionFact)(nil), (*RowFact)(nil)},
+	FactTypes: []analysis.Fact{(*TableFact)(nil), (*VersionFact)(nil), (*RowFact)(nil), (*SelectFact)(nil)},
 }
 
 func init() {
@@ -106,6 +106,7 @@ func run(pass *analysis.Pass) (any, error) {
 	for _, f := range pass.Files {
 		c.collectIgnores(f)
 	}
+	c.exportSelectFacts()
 	for _, f := range pass.Files {
 		c.file(f)
 	}

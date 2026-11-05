@@ -8,6 +8,7 @@ import (
 	. "github.com/noobmaisfier/qlx/fixture"
 	"github.com/noobmaisfier/qlx/qt"
 	"testdata/src/pgxexec"
+	"testdata/src/repo"
 )
 
 // Positional rows, written the way `qlx rows` generates them.
@@ -251,4 +252,17 @@ func helpers() {
 	pgxexec.One[UserRow](nil, nil, oneColumn())                                        // want `V018 UserRow scans 2 columns \(its ScanTargets\) but the query selects 1`
 	pgxexec.One[q.Tuple2[int64, string]](nil, nil, twoColumns().Where(Users.ID.Eq(2))) // fine
 	pgxexec.One[UserRow](nil, nil, withBranch(true))                                   // two returns: not followed, silent
+}
+
+// A helper of another package that returns a Select chain is followed through
+// a fact: what the caller adds after it does not change the selected columns.
+func crossPackage() {
+	pgxexec.One[UserRow](nil, nil, repo.ActiveUsers())                       // fine
+	pgxexec.One[UserRow](nil, nil, repo.ActiveUsers().Where(Users.ID.Eq(1))) // fine
+	pgxexec.One[UserRow](nil, nil, repo.ByTier("pro"))                       // fine
+	pgxexec.One[TwoInts](nil, nil, repo.ActiveUsers())                       // want `V018 column 2 \(Users.Email\) into TwoInts.ID: string column` `V018 column id \(position 1\)`
+	pgxexec.One[UserRow](nil, nil, repo.Repo{}.Nicknames())                  // want `V018 column 2 \(Users.Nickname\) into UserRow.Email: the column can be NULL`
+	pgxexec.One[q.Tuple2[string, int64]](nil, nil, repo.LeftTotal())         // want `V018 column 2 \(Orders.Total\) into qlx.Tuple2\[string, int64\].V2: the column comes from the optional side of an outer join`
+	pgxexec.One[UserRow](nil, nil, repo.Dynamic(true))                       // silent: several statements
+	pgxexec.One[UserRow](nil, nil, repo.Open(Users.ID))                      // silent: columns come from the caller
 }

@@ -9,5 +9,5 @@ import (
 )
 
 func TestAnalyzer(t *testing.T) {
-	analysistest.Run(t, analysistest.TestData(), qlxvet.Analyzer, "./src/app", "./src/app2", "./src/shape", "./src/mapping", "./src/gaps", "./src/gm/use")
+	analysistest.Run(t, analysistest.TestData(), qlxvet.Analyzer, "./src/app", "./src/app2", "./src/shape", "./src/mapping", "./src/gaps", "./src/repo", "./src/gm/use")
 }

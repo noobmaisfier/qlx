@@ -41,10 +41,33 @@ func isPgxexec(path string) bool {
 	return path == qlxPath+"/pgxexec" || strings.HasSuffix(path, "/pgxexec")
 }
 
+// colDesc describes the Go type of a selected column in terms that survive
+// serialisation, so a Select returned by a helper of another package can be
+// compared with a result type through a fact.
+type colDesc struct {
+	Full       string // the whole type, qualified by import path
+	Inner      string // the type inside qt.Null[...], or Full
+	InnerShort string // Inner qualified by package name, for messages
+	Class      string // classOf(inner)
+	Null       bool   // the type is qt.Null[...] (the column can be NULL)
+}
+
+func describe(t types.Type) *colDesc {
+	if t == nil {
+		return nil
+	}
+	short := func(p *types.Package) string { return p.Name() }
+	xc, null := isNullType(t)
+	return &colDesc{
+		Full: types.TypeString(t, nil), Inner: types.TypeString(xc, nil), InnerShort: types.TypeString(xc, short),
+		Class: classOf(xc), Null: null,
+	}
+}
+
 type item struct {
-	typ  types.Type // Go type of the value, nil when unknown
-	name string     // lower-cased output column name, "" when unknown
-	text string     // source text, for messages
+	d    *colDesc // the Go type of the value, nil when unknown
+	name string   // lower-cased output column name, "" when unknown
+	text string   // source text, for messages
 	// outer: a plain column of the optional side of an outer join, which
 	// the type says is NOT NULL but a row without a match makes NULL.
 	outer bool
@@ -88,24 +111,15 @@ func (c *checker) mappingCheck(call *ast.CallExpr) {
 	if r == nil || hasTypeParam(r) {
 		return
 	}
-	var root *ast.CallExpr
-	var links []link
+	var items []item
 	for _, a := range call.Args {
-		if rt, ls, ok := c.selectRoot(a, 0); ok {
-			root, links = rt, ls
+		if its, ok := c.selectItems(a, 0); ok {
+			items = its
 			break
 		}
 	}
-	if root == nil || spread(root) || len(root.Args) == 0 {
+	if len(items) == 0 {
 		return
-	}
-	outer := c.outerTables(links)
-	items := make([]item, len(root.Args))
-	for i, a := range root.Args {
-		items[i] = c.itemOf(a)
-		if t := c.columnTable(a); t != nil && outer[t] {
-			items[i].outer = true
-		}
 	}
 	c.mapResult(call, r, items)
 }
@@ -198,11 +212,14 @@ func hasTypeParam(t types.Type) bool {
 	return false
 }
 
-// selectRoot resolves e to the root call of a Select chain: written out, or
-// wrapped in Tagged/Register, or held by a package-level variable.
-func (c *checker) selectRoot(e ast.Expr, depth int) (*ast.CallExpr, []link, bool) {
+// selectItems resolves e to the selected items of a Select: written out,
+// wrapped in Tagged or Register, held in a variable, returned by a helper of
+// this package (whose whole body is `return <Select chain>`), or returned by an
+// exported helper of another package that exported a SelectFact. Anything else
+// is unknown, and unknown stays silent.
+func (c *checker) selectItems(e ast.Expr, depth int) ([]item, bool) {
 	if depth > 4 {
-		return nil, nil, false
+		return nil, false
 	}
 	switch x := ast.Unparen(e).(type) {
 	case *ast.CallExpr:
@@ -210,15 +227,21 @@ func (c *checker) selectRoot(e ast.Expr, depth int) (*ast.CallExpr, []link, bool
 		fn := c.callee(root)
 		switch {
 		case isFunc(fn, "Select"):
-			return root, links, true
+			return c.itemsOf(root, links)
 		case isFunc(fn, "Tagged") && len(root.Args) == 2, isFunc(fn, "Register") && len(root.Args) == 2:
-			return c.selectRoot(root.Args[1], depth+1)
+			return c.selectItems(root.Args[1], depth+1)
 		case fn == nil:
-			// A helper of this package that is one `return <Select chain>`:
-			// activeUsers().Where(...) selects what the helper selects.
+			// A helper that is one `return <Select chain>`: activeUsers().Where(...)
+			// selects what the helper selects.
 			if lf := c.localFunc(root); lf != nil {
 				if ret := c.helperReturn(lf); ret != nil {
-					return c.selectRoot(ret, depth+1)
+					return c.selectItems(ret, depth+1)
+				}
+			}
+			if hf := c.anyFunc(root); hf != nil && hf.Pkg() != c.pass.Pkg {
+				var sf SelectFact
+				if c.pass.ImportObjectFact(hf.Origin(), &sf) {
+					return sf.items(), true
 				}
 			}
 		}
@@ -226,14 +249,47 @@ func (c *checker) selectRoot(e ast.Expr, depth int) (*ast.CallExpr, []link, bool
 		if id := identOf(x); id != nil {
 			obj := c.pass.TypesInfo.Uses[id]
 			if init := c.pkgVarInit(obj); init != nil && !c.selReassigned(obj) {
-				return c.selectRoot(init, depth+1)
+				return c.selectItems(init, depth+1)
 			}
 			if init := c.selectVarInit(obj); init != nil {
-				return c.selectRoot(init, depth+1)
+				return c.selectItems(init, depth+1)
 			}
 		}
 	}
-	return nil, nil, false
+	return nil, false
+}
+
+// itemsOf describes the items of a Select root call, or reports false when the
+// list is not known (a spread argument, no argument).
+func (c *checker) itemsOf(root *ast.CallExpr, links []link) ([]item, bool) {
+	if spread(root) || len(root.Args) == 0 {
+		return nil, false
+	}
+	outer := c.outerTables(links)
+	items := make([]item, len(root.Args))
+	for i, a := range root.Args {
+		items[i] = c.itemOf(a)
+		if t := c.columnTable(a); t != nil && outer[t] {
+			items[i].outer = true
+		}
+	}
+	return items, true
+}
+
+// anyFunc resolves the function or method a call names, in any package.
+func (c *checker) anyFunc(call *ast.CallExpr) *types.Func {
+	var id *ast.Ident
+	switch f := ast.Unparen(call.Fun).(type) {
+	case *ast.Ident:
+		id = f
+	case *ast.SelectorExpr:
+		id = f.Sel
+	}
+	if id == nil {
+		return nil
+	}
+	fn, _ := c.pass.TypesInfo.Uses[id].(*types.Func)
+	return fn
 }
 
 // selectVarInit returns the initializer of a local variable that holds a
@@ -460,7 +516,7 @@ func (c *checker) itemOf(a ast.Expr) item {
 	a = ast.Unparen(a)
 	it := item{text: types.ExprString(a)}
 	if tv, ok := c.pass.TypesInfo.Types[a]; ok {
-		it.typ = valueType(tv.Type)
+		it.d = describe(valueType(tv.Type))
 	}
 	switch x := a.(type) {
 	case *ast.CallExpr:
@@ -707,15 +763,15 @@ func classOf(t types.Type) string {
 
 // mismatch explains why a column of Go type x cannot be read into y, or "".
 func mismatch(it item, y types.Type) string {
-	x := it.typ
-	if x == nil || y == nil {
+	d := it.d
+	if d == nil || y == nil {
 		return ""
 	}
-	xc, xNull := isNullType(x)
+	xNull := d.Null
 	if it.outer && !xNull {
 		xNull = true
 	}
-	if types.Identical(x, y) && !it.outer {
+	if d.Full == types.TypeString(y, nil) && !it.outer {
 		return ""
 	}
 	yt, yNullable := y, false
@@ -728,15 +784,15 @@ func mismatch(it item, y types.Type) string {
 	if xNull && !yNullable {
 		if _, basic := yt.Underlying().(*types.Basic); basic {
 			if it.outer {
-				return "the column comes from the optional side of an outer join, so it can be NULL, but the field cannot hold it; wrap it with q.Nullable and read it into qt.Null[" + types.TypeString(xc, nil) + "] or a pointer"
+				return "the column comes from the optional side of an outer join, so it can be NULL, but the field cannot hold it; wrap it with q.Nullable and read it into qt.Null[" + d.Inner + "] or a pointer"
 			}
-			return "the column can be NULL but the field cannot hold it; use qt.Null[" + types.TypeString(xc, nil) + "] or a pointer"
+			return "the column can be NULL but the field cannot hold it; use qt.Null[" + d.Inner + "] or a pointer"
 		}
 	}
-	a, b := classOf(xc), classOf(yt)
+	a, b := d.Class, classOf(yt)
 	short := func(p *types.Package) string { return p.Name() }
-	if a == "id" && b == "id" && !types.Identical(xc, yt) {
-		return "an id of " + types.TypeString(xc, short) + " is read into " + types.TypeString(yt, short) + ", the id of another table"
+	if a == "id" && b == "id" && d.Inner != types.TypeString(yt, nil) {
+		return "an id of " + d.InnerShort + " is read into " + types.TypeString(yt, short) + ", the id of another table"
 	}
 	if a == "" || b == "" || a == b {
 		return ""
@@ -745,7 +801,7 @@ func mismatch(it item, y types.Type) string {
 		return "" // the integer behind the id
 	}
 	if (a == "id" || a == "int") && b == "string" {
-		return "an integer column is read into a string field, which gives its decimal text (\"196\"), not an opaque id or a label; read it into " + types.TypeString(xc, short) + " (an id: convert with String() at the edge), or cast it in the query if the text is what you want"
+		return "an integer column is read into a string field, which gives its decimal text (\"196\"), not an opaque id or a label; read it into " + d.InnerShort + " (an id: convert with String() at the edge), or cast it in the query if the text is what you want"
 	}
 	num := func(c string) bool { return c == "int" || c == "float" }
 	// Types that carry their own wire format (dates, intervals, ranges, inet,
@@ -782,7 +838,7 @@ func mismatch(it item, y types.Type) string {
 	case b == "bytes" || b == "slice" && (a == "string" || a == "bytes"):
 		return "" // text and bytea scan into byte slices and arrays alike
 	}
-	return a + " column (" + types.TypeString(xc, nil) + ") cannot be read into a " + b + " field (" + types.TypeString(yt, nil) + ")"
+	return a + " column (" + d.Inner + ") cannot be read into a " + b + " field (" + types.TypeString(yt, nil) + ")"
 }
 
 // funcOf resolves the function or method an identifier of a call names.

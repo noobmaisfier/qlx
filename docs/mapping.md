@@ -220,7 +220,7 @@ sel := q.Select(Users.Email,
 
 ### 9.1 How the analyzer does it
 
-V018 reads the call (`pgxexec.One/All/Maybe/Each`, the `*Scan` forms, `PipeAll`/`PipeOne`, `NewStatic0..4`), finds the `Select` (written out, wrapped in `Tagged` or `Register`, held by a package-level variable or by a local variable that is assigned once and only extended with `sel = sel.Where(...)`-style calls, or returned by a helper of the same package whose whole body is `return <Select chain>`), and compares the list of items with `R`:
+V018 reads the call (`pgxexec.One/All/Maybe/Each`, the `*Scan` forms, `PipeAll`/`PipeOne`, `NewStatic0..4`), finds the `Select` (written out, wrapped in `Tagged` or `Register`, held by a package-level variable or by a local variable that is assigned once and only extended with `sel = sel.Where(...)`-style calls, or returned by a helper whose whole body is `return <Select chain>`, in this package or, if the helper is exported, in another one: the analyzer exports the selected columns as a fact), and compares the list of items with `R`:
 
 - `R` with `ScanTargets`: by position. Count, Go class of each field against the column, and the names against the field names to catch a permutation. The `ScanTargets` body (`return []any{&r.A, &r.B}`) is exported as a fact, so generated rows and `TupleN` work across packages.
 - another struct: by name, with the rules of section 3.
@@ -299,7 +299,7 @@ func TestRowTypes(t *testing.T) {
 
 Said plainly, so you know where the test with real rows is the only protection:
 
-- Statements built in loops or from parameters, a variable that is reassigned to another query, and a helper from another package are invisible to the analyzer; `VerifyRow` still sees them if you call it.
+- Statements built in loops or from parameters, a variable that is reassigned to another query, and a helper (of this package or another) that builds its Select in several statements or from the caller's column list are invisible to the analyzer; `VerifyRow` still sees them if you call it.
 - Same-typed columns in a swapped order, in a statement the analyzer cannot see.
 - NULLs produced by outer joins or expressions, for `VerifyRow`.
 - JSON keys of a JSON-aggregated child against the child's `json` tags.

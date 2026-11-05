@@ -48,6 +48,82 @@ var (
 	reUntil = regexp.MustCompile(`Removed in PostgreSQL (\d+)`)
 )
 
+// SelectFact is exported for every exported function or method whose whole
+// body is `return <Select chain>`: the selected items, so a result type read
+// from the helper in another package is checked like one read from a Select
+// written out (V018).
+type SelectFact struct{ Items []ItemFact }
+
+// ItemFact is one selected item of a SelectFact.
+type ItemFact struct {
+	Text, Name string
+	Known      bool // the Go type of the item is known
+	Desc       colDesc
+	Outer      bool
+}
+
+func (*SelectFact) AFact() {}
+func (f *SelectFact) String() string {
+	names := make([]string, len(f.Items))
+	for i, it := range f.Items {
+		names[i] = it.Name
+		if it.Name == "" {
+			names[i] = "?"
+		}
+	}
+	return "select " + strings.Join(names, ",")
+}
+
+func (f *SelectFact) items() []item {
+	out := make([]item, len(f.Items))
+	for i, it := range f.Items {
+		out[i] = item{text: it.Text, name: it.Name, outer: it.Outer}
+		if it.Known {
+			d := it.Desc
+			out[i].d = &d
+		}
+	}
+	return out
+}
+
+func factOf(items []item) *SelectFact {
+	f := &SelectFact{Items: make([]ItemFact, len(items))}
+	for i, it := range items {
+		f.Items[i] = ItemFact{Text: it.text, Name: it.name, Outer: it.outer}
+		if it.d != nil {
+			f.Items[i].Known, f.Items[i].Desc = true, *it.d
+		}
+	}
+	return f
+}
+
+// exportSelectFacts exports a SelectFact for each exported function or method of
+// the package that returns a Select chain and nothing else.
+func (c *checker) exportSelectFacts() {
+	for _, f := range c.pass.Files {
+		for _, d := range f.Decls {
+			fd, ok := d.(*ast.FuncDecl)
+			if !ok || fd.Body == nil || !fd.Name.IsExported() {
+				continue
+			}
+			fn, ok := c.pass.TypesInfo.Defs[fd.Name].(*types.Func)
+			if !ok {
+				continue
+			}
+			if sig := fn.Type().(*types.Signature); sig.TypeParams().Len() > 0 || sig.RecvTypeParams().Len() > 0 {
+				continue
+			}
+			ret := c.helperReturn(fn)
+			if ret == nil {
+				continue
+			}
+			if items, ok := c.selectItems(ret, 0); ok {
+				c.pass.ExportObjectFact(fn, factOf(items))
+			}
+		}
+	}
+}
+
 func exportFacts(pass *analysis.Pass) {
 	for _, f := range pass.Files {
 		for _, d := range f.Decls {
