@@ -1032,7 +1032,7 @@ Analyzer codes (`go vet -vettool`, gopls, golangci-lint). Rule: an error *presen
 | V015 | `EXPLAIN` option that requires `Analyze` (`Wal`, `IO`, `SerializeText`...) or excludes it (`GenericPlan`) |
 | V016 | `ForUpdate().Of(t)` with a table absent from `FROM`/`JOIN` |
 | V017 | `SearchDepthFirst`/`SearchBreadthFirst`/`Cycle` on a non-recursive CTE |
-| V018 | result type that does not match the `Select`: number of columns, field names, Go types, `NULL` in a non-nullable field, field order |
+| V018 | result type that does not match the `Select`: number of columns, field names, Go types, `NULL` in a non-nullable field, field order, two columns with the same name read by name, an integer or id column read into a `string`, an id of another table |
 | V019 | window function in `Where`, `Having`, `On` or `GroupBy` (PostgreSQL forbids it: filter in a subquery or a CTE) |
 | V020 | named window used by `Over(w.Spec())` / `w.Extend()` but absent from the query's `Windows(...)` |
 | V021 | `Func` without `As`, `JSONTable`/`XMLTable` without a column or with an empty alias |
@@ -1042,6 +1042,8 @@ Analyzer codes (`go vet -vettool`, gopls, golangci-lint). Rule: an error *presen
 | V025 | `SearchOrder()` / `CycleMark()` on a CTE built without `SearchDepthFirst`/`SearchBreadthFirst` / `Cycle` |
 | V026 | conflict column or assignment (`Set`, `Row`, `DoUpdate`) that designates a column of a table other than the one written |
 | V027 | `ToOrDefault` in a `SET` list (`Set`, `DoUpdate`, `ThenUpdate`): an absent field would reset the column to its default, `ToIf` leaves it alone |
+| V028 | row lock (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) on a query with `Distinct`, `GroupBy`, `Having`, an aggregate or a window function: PostgreSQL rejects it |
+| V029 | `Distinct` with an `OrderBy` column that is not selected; `DistinctOn` whose expressions do not start the `OrderBy` |
 
 An accepted finding is suppressed with a comment on the same line or the previous one: `//qlx:ignore <reason>`. With `-audit`, each suppression is itself listed (V011).
 

@@ -19,6 +19,7 @@ package qlxvet
 import (
 	"go/ast"
 	"go/constant"
+	"go/token"
 	"go/types"
 	"reflect"
 	"strconv"
@@ -223,12 +224,123 @@ func (c *checker) selectRoot(e ast.Expr, depth int) (*ast.CallExpr, []link, bool
 		}
 	case *ast.Ident, *ast.SelectorExpr:
 		if id := identOf(x); id != nil {
-			if init := c.pkgVarInit(c.pass.TypesInfo.Uses[id]); init != nil {
+			obj := c.pass.TypesInfo.Uses[id]
+			if init := c.pkgVarInit(obj); init != nil && !c.selReassigned(obj) {
+				return c.selectRoot(init, depth+1)
+			}
+			if init := c.selectVarInit(obj); init != nil {
 				return c.selectRoot(init, depth+1)
 			}
 		}
 	}
 	return nil, nil, false
+}
+
+// selectVarInit returns the initializer of a local variable that holds a
+// Select: `sel := q.Select(...)...`. The variable may be extended with
+// `sel = sel.Where(...)`, `sel = sel.OrderBy(...)`, `sel = sel.LeftJoin(...).On(...)`
+// and so on: no builder method changes the selected items, so the columns are
+// those of the initializer. Any other assignment (another query, an address
+// taken, a set operation) makes the variable unknown, and unknown stays silent.
+func (c *checker) selectVarInit(obj types.Object) ast.Expr {
+	if obj == nil {
+		return nil
+	}
+	c.indexSelectVars()
+	if c.selBad[obj] {
+		return nil
+	}
+	return c.selInit[obj]
+}
+
+func (c *checker) selReassigned(obj types.Object) bool {
+	c.indexSelectVars()
+	return c.selBad[obj]
+}
+
+var typeChangingMethods = map[string]bool{
+	"Union": true, "UnionAll": true, "Intersect": true, "IntersectAll": true, "Except": true, "ExceptAll": true,
+}
+
+// extendsSelf reports whether e is a method chain that starts at the variable
+// obj and uses no set operation: `sel.Where(a).OrderBy(b)`.
+func (c *checker) extendsSelf(e ast.Expr, obj types.Object) bool {
+	for {
+		call, ok := ast.Unparen(e).(*ast.CallExpr)
+		if !ok {
+			return false
+		}
+		sel, ok := ast.Unparen(call.Fun).(*ast.SelectorExpr)
+		if !ok || typeChangingMethods[sel.Sel.Name] {
+			return false
+		}
+		if id, ok := ast.Unparen(sel.X).(*ast.Ident); ok {
+			return c.pass.TypesInfo.Uses[id] == obj
+		}
+		e = sel.X
+	}
+}
+
+func (c *checker) indexSelectVars() {
+	if c.selInit != nil {
+		return
+	}
+	c.selInit = map[types.Object]ast.Expr{}
+	c.selBad = map[types.Object]bool{}
+	for _, f := range c.pass.Files {
+		ast.Inspect(f, func(n ast.Node) bool {
+			switch n := n.(type) {
+			case *ast.ValueSpec:
+				if len(n.Names) == len(n.Values) {
+					for i, id := range n.Names {
+						if o := c.pass.TypesInfo.Defs[id]; o != nil {
+							c.selInit[o] = n.Values[i]
+						}
+					}
+				}
+			case *ast.AssignStmt:
+				for i, l := range n.Lhs {
+					id, ok := l.(*ast.Ident)
+					if !ok {
+						continue
+					}
+					if n.Tok == token.DEFINE {
+						if o := c.pass.TypesInfo.Defs[id]; o != nil {
+							if len(n.Lhs) == len(n.Rhs) {
+								c.selInit[o] = n.Rhs[i]
+							}
+							continue
+						}
+					}
+					o := c.pass.TypesInfo.Uses[id]
+					if o == nil {
+						continue
+					}
+					if n.Tok == token.ASSIGN && len(n.Lhs) == len(n.Rhs) && c.extendsSelf(n.Rhs[i], o) {
+						continue
+					}
+					c.selBad[o] = true
+				}
+			case *ast.RangeStmt:
+				for _, e := range []ast.Expr{n.Key, n.Value} {
+					if id, ok := e.(*ast.Ident); ok {
+						if o := c.pass.TypesInfo.Uses[id]; o != nil {
+							c.selBad[o] = true
+						}
+					}
+				}
+			case *ast.UnaryExpr:
+				if n.Op == token.AND {
+					if id, ok := ast.Unparen(n.X).(*ast.Ident); ok {
+						if o := c.pass.TypesInfo.Uses[id]; o != nil {
+							c.selBad[o] = true
+						}
+					}
+				}
+			}
+			return true
+		})
+	}
 }
 
 // localFunc resolves the function or method a call names when it is declared
@@ -453,11 +565,17 @@ func (c *checker) mapResult(call *ast.CallExpr, r types.Type, items []item) {
 	}
 	used := map[string]bool{}
 	allNamed := true
+	seen := map[string]bool{}
 	for _, it := range items {
 		if it.name == "" {
 			allNamed = false
 			continue
 		}
+		if seen[it.name] {
+			c.report(call, "V018", "two columns of the query are called "+strconv.Quote(it.name)+" and "+name+" is read by name: both would go into one field; give one an alias with .As(...)")
+			continue
+		}
+		seen[it.name] = true
 		f, ok := byName[it.name]
 		if !ok {
 			c.report(call, "V018", name+" has no field for column "+strconv.Quote(it.name)+" (tag a field `db:\""+it.name+"\"`)")
@@ -545,6 +663,8 @@ func classOf(t types.Type) string {
 		switch pkg, name := n.Obj().Pkg().Path(), n.Obj().Name(); {
 		case pkg == "time" && name == "Time", pkg == qtPath && name == "Timestamptz":
 			return "time"
+		case pkg == qtPath && name == "ID":
+			return "id"
 		case pkg == qtPath && name == "Date":
 			return "date"
 		case pkg == qtPath && name == "Interval":
@@ -614,8 +734,18 @@ func mismatch(it item, y types.Type) string {
 		}
 	}
 	a, b := classOf(xc), classOf(yt)
+	short := func(p *types.Package) string { return p.Name() }
+	if a == "id" && b == "id" && !types.Identical(xc, yt) {
+		return "an id of " + types.TypeString(xc, short) + " is read into " + types.TypeString(yt, short) + ", the id of another table"
+	}
 	if a == "" || b == "" || a == b {
 		return ""
+	}
+	if a == "id" && b == "int" {
+		return "" // the integer behind the id
+	}
+	if (a == "id" || a == "int") && b == "string" {
+		return "an integer column is read into a string field, which gives its decimal text (\"196\"), not an opaque id or a label; read it into " + types.TypeString(xc, short) + " (an id: convert with String() at the edge), or cast it in the query if the text is what you want"
 	}
 	num := func(c string) bool { return c == "int" || c == "float" }
 	// Types that carry their own wire format (dates, intervals, ranges, inet,

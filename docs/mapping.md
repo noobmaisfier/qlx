@@ -60,7 +60,7 @@ rows, err := pgxexec.All[UserRow](ctx, db, stmt)
   pgxexec: dup: two result columns are called id, and both would be read into one field (give one an alias with .As("..."))
   ```
 
-  Give one an alias: `Orders.ID.As("order_id")`. (An earlier version of the library read the second `id` over the first without a word; the check was added with this page.)
+  Give one an alias: `Orders.ID.As("order_id")`. (An earlier version of the library read the second `id` over the first without a word.) The analyzer reports it in the source too (V018: `two columns of the query are called "id"`).
 - **Unexported fields are ignored; `db:"-"` ignores an exported field.** An embedded anonymous struct without a `db` tag has its fields flattened. **Tested** (`embedded struct is flattened`). With a `db` tag it is a field like any other.
 - **A computed column needs an alias.** Without one it is called `count`, `sum`, `coalesce` or `?column?`. Write `.As("total")`.
 - **A struct with a single column is also tried as a value.** If its plan fails, a single-column result is scanned into the struct itself, so a typo on a one-field struct gives a pgx error ("cannot scan int8 ... into *T") instead of the clearer "has no field for column". **Tested** (`go field name is not snake_case`). With two or more columns you always get the clear message.
@@ -119,7 +119,7 @@ The full table is in the guide (section 10.10). The rules that matter:
 
 - **NULL.** A nullable column goes into `qt.Null[T]`, a pointer, a slice or an `sql.Scanner`. A plain `int64` fails on the row that holds a NULL: `cannot scan NULL into *int64`. The generated row types already use `qt.Null[T]` for nullable columns.
 - **Aggregates are typed for you.** `q.Max(Users.Balance)` is an `AggExpr[qt.Null[int64]]`, because an aggregate over zero rows is NULL. `q.CountAll()` is not nullable. Use the same type in your struct.
-- **Integers read into a string field give the decimal text.** pgx converts. **Tested** (`integer id read into a string field`): an `id` column read into a `string` field gives `"196"`. This matters for hashids: never read an id column into a `string` field and call the result a hashid. Read it into the typed id (`db.UserID`, a `qt.ID`), and convert at the edge (see `docs/dtos.md`, section 4). Neither the analyzer nor `VerifyRow` flags it today, since a text-like field may legitimately hold a uuid or a range.
+- **Integers read into a string field give the decimal text.** pgx converts. **Tested** (`integer id read into a string field`): an `id` column read into a `string` field gives `"196"`. This matters for hashids: never read an id column into a `string` field and call the result a hashid. Read it into the typed id (`db.UserID`, a `qt.ID`), and convert at the edge (see `docs/dtos.md`, section 4). The analyzer reports it (V018: `an integer column is read into a string field`), for integer and `qt.ID` columns; `VerifyRow` does not, since at run time a text-like field may legitimately hold a uuid or a range. A column of one table's `qt.ID` read into another table's `qt.ID` is reported as well.
 - **The pgx read plan can exist and the value can still fail**: an `int8` too large for an `int16`, a non-integer `float8` into an `int64`. No static check sees values.
 
 ## 7. Joins
@@ -220,7 +220,7 @@ sel := q.Select(Users.Email,
 
 ### 9.1 How the analyzer does it
 
-V018 reads the call (`pgxexec.One/All/Maybe/Each`, the `*Scan` forms, `PipeAll`/`PipeOne`, `NewStatic0..4`), finds the `Select` (written out, wrapped in `Tagged` or `Register`, a package-level variable, or returned by a helper of the same package whose whole body is `return <Select chain>`), and compares the list of items with `R`:
+V018 reads the call (`pgxexec.One/All/Maybe/Each`, the `*Scan` forms, `PipeAll`/`PipeOne`, `NewStatic0..4`), finds the `Select` (written out, wrapped in `Tagged` or `Register`, held by a package-level variable or by a local variable that is assigned once and only extended with `sel = sel.Where(...)`-style calls, or returned by a helper of the same package whose whole body is `return <Select chain>`), and compares the list of items with `R`:
 
 - `R` with `ScanTargets`: by position. Count, Go class of each field against the column, and the names against the field names to catch a permutation. The `ScanTargets` body (`return []any{&r.A, &r.B}`) is exported as a fact, so generated rows and `TupleN` work across packages.
 - another struct: by name, with the rules of section 3.
@@ -299,9 +299,8 @@ func TestRowTypes(t *testing.T) {
 
 Said plainly, so you know where the test with real rows is the only protection:
 
-- Statements built in loops, in other packages or from parameters are invisible to the analyzer; `VerifyRow` still sees them if you call it.
+- Statements built in loops or from parameters, a variable that is reassigned to another query, and a helper from another package are invisible to the analyzer; `VerifyRow` still sees them if you call it.
 - Same-typed columns in a swapped order, in a statement the analyzer cannot see.
 - NULLs produced by outer joins or expressions, for `VerifyRow`.
-- An id column read into a string field (section 6).
 - JSON keys of a JSON-aggregated child against the child's `json` tags.
 - Values: overflow, precision loss, non-integer into integer.

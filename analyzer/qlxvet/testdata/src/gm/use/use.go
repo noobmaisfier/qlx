@@ -24,7 +24,7 @@ type ByName struct {
 func methods(c *pgxexec.Client) {
 	c.One[UserRow](nil, q.Select(Users.ID, Users.Email).From(Users))                             // fine
 	c.One[UserRow](nil, q.Select(Users.ID).From(Users))                                          // want `V018 UserRow scans 2 columns \(its ScanTargets\) but the query selects 1`
-	c.One[UserRow](nil, q.Select(Users.Email, Users.ID).From(Users))                             // want `V018 column 1 \(Users.Email\) into UserRow.ID` `V018 column email \(position 1\) matches field UserRow.Email`
+	c.One[UserRow](nil, q.Select(Users.Email, Users.ID).From(Users))                             // want `V018 column 1 \(Users.Email\) into UserRow.ID` `V018 column 2 \(Users.ID\) into UserRow.Email: an integer column is read into a string field` `V018 column email \(position 1\) matches field UserRow.Email`
 	c.All[UserRow](nil, q.Select(Users.ID).From(Users))                                          // want `V018 UserRow scans 2 columns`
 	c.Maybe[ByName](nil, q.Select(Users.ID, Users.Tier).From(Users))                             // want `V018 ByName has no field for column "tier"` `V018 field ByName.Email has no column`
 	c.Each[ByName](nil, q.Select(Users.ID, Users.Tier).From(Users))                              // want `V018 ByName has no field for column "tier"` `V018 field ByName.Email has no column`

@@ -1036,7 +1036,7 @@ Codes de l'analyseur (`go vet -vettool`, gopls, golangci-lint). Règle : une err
 | V015 | option `EXPLAIN` qui exige `Analyze` (`Wal`, `IO`, `SerializeText`...) ou l'exclut (`GenericPlan`) |
 | V016 | `ForUpdate().Of(t)` avec une table absente de `FROM`/`JOIN` |
 | V017 | `SearchDepthFirst`/`SearchBreadthFirst`/`Cycle` sur une CTE non récursive |
-| V018 | type de résultat qui ne correspond pas au `Select` : nombre de colonnes, noms de champs, types Go, `NULL` dans un champ non nullable, ordre des champs |
+| V018 | type de résultat qui ne correspond pas au `Select` : nombre de colonnes, noms de champs, types Go, `NULL` dans un champ non nullable, ordre des champs, deux colonnes de même nom lues par nom, une colonne entière ou id lue dans un `string`, un id d'une autre table |
 | V019 | fonction de fenêtre dans `Where`, `Having`, `On` ou `GroupBy` (PostgreSQL l'interdit : filtrer dans une sous-requête ou une CTE) |
 | V020 | fenêtre nommée utilisée par `Over(w.Spec())` / `w.Extend()` mais absente de `Windows(...)` de la requête |
 | V021 | `Func` sans `As`, `JSONTable`/`XMLTable` sans colonne ou avec un alias vide |
@@ -1046,6 +1046,8 @@ Codes de l'analyseur (`go vet -vettool`, gopls, golangci-lint). Règle : une err
 | V025 | `SearchOrder()` / `CycleMark()` sur une CTE construite sans `SearchDepthFirst`/`SearchBreadthFirst` / `Cycle` |
 | V026 | colonne de conflit ou affectation (`Set`, `Row`, `DoUpdate`) qui désigne une colonne d'une autre table que celle écrite |
 | V027 | `ToOrDefault` dans une liste `SET` (`Set`, `DoUpdate`, `ThenUpdate`) : un champ absent remettrait la colonne à son défaut, `ToIf` la laisse intacte |
+| V028 | verrou de lignes (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) sur une requête avec `Distinct`, `GroupBy`, `Having`, un agrégat ou une fonction de fenêtre : PostgreSQL le refuse |
+| V029 | `Distinct` avec un `OrderBy` sur une colonne non sélectionnée ; `DistinctOn` dont les expressions ne commencent pas le `OrderBy` |
 
 Un constat accepté se supprime avec un commentaire sur la même ligne ou la précédente : `//qlx:ignore <raison>`. Avec `-audit`, chaque suppression est elle-même listée (V011).
 

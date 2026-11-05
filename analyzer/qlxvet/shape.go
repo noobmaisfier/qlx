@@ -259,6 +259,140 @@ func (c *checker) shapeSelect(root *ast.CallExpr, links []link, complete bool, s
 	}
 	c.lockScope(links, stack)
 	c.groupCoverage(root, links)
+	c.lockConflicts(root, links)
+	c.distinctOrder(root, links)
+}
+
+var lockClause = map[string]string{
+	"ForUpdate": "FOR UPDATE", "ForNoKeyUpdate": "FOR NO KEY UPDATE",
+	"ForShare": "FOR SHARE", "ForKeyShare": "FOR KEY SHARE",
+}
+
+// lockConflicts is V028: PostgreSQL refuses a row-locking clause on a query
+// that does not return rows of a table one to one: DISTINCT, GROUP BY, HAVING,
+// aggregates and window functions in the select list. Both parts are visible in
+// the chain, so it is reported wherever it is written.
+func (c *checker) lockConflicts(root *ast.CallExpr, links []link) {
+	var lock link
+	for _, l := range links {
+		if _, ok := lockClause[l.name]; ok {
+			lock = l
+			break
+		}
+	}
+	if lock.call == nil {
+		return
+	}
+	with := ""
+	switch {
+	case hasLink(links, "Distinct", "DistinctOn"):
+		with = "DISTINCT clause"
+	case hasLink(links, "GroupBy", "GroupByAll"):
+		with = "GROUP BY clause"
+	case hasLink(links, "Having"):
+		with = "HAVING clause"
+	case !spread(root):
+		for _, a := range root.Args {
+			r, ls := chain(unparenCall(a))
+			if r == nil {
+				continue
+			}
+			switch {
+			case hasLink(ls, "Over"):
+				with = "window functions"
+			case aggregates[funcName(c, r)]:
+				with = "aggregate functions"
+			}
+			if with != "" {
+				break
+			}
+		}
+	}
+	if with != "" {
+		c.report(lock.call, "V028", lockClause[lock.name]+" is not allowed with "+with+": the server rejects it; lock the rows with a query of their own, or select from a locked subquery")
+	}
+}
+
+func unparenCall(e ast.Expr) *ast.CallExpr {
+	if call, ok := ast.Unparen(e).(*ast.CallExpr); ok {
+		return call
+	}
+	return &ast.CallExpr{}
+}
+
+var orderSuffix = map[string]bool{"Asc": true, "Desc": true, "NullsFirst": true, "NullsLast": true}
+
+// plainColumn resolves `Users.Email`, `Users.Email.As("e")` or
+// `Users.Email.Desc().NullsFirst()` to the table variable and column it names.
+func (c *checker) plainColumn(e ast.Expr) (types.Object, string, bool) {
+	for {
+		e = ast.Unparen(e)
+		if call, ok := e.(*ast.CallExpr); ok {
+			sel, ok := ast.Unparen(call.Fun).(*ast.SelectorExpr)
+			if !ok || !(orderSuffix[sel.Sel.Name] || sel.Sel.Name == "As") {
+				return nil, "", false
+			}
+			e = sel.X
+			continue
+		}
+		break
+	}
+	sel, ok := e.(*ast.SelectorExpr)
+	if !ok {
+		return nil, "", false
+	}
+	if t := c.tableVar(sel.X); t != nil && c.isFieldSel(sel) {
+		return t, sel.Sel.Name, true
+	}
+	return nil, "", false
+}
+
+// distinctOrder is V029: SELECT DISTINCT needs its ORDER BY expressions in the
+// select list, and DISTINCT ON needs them to start with the DISTINCT ON
+// expressions. Only plain columns are compared; anything else is unknown.
+func (c *checker) distinctOrder(root *ast.CallExpr, links []link) {
+	var order []ast.Expr
+	for _, l := range links {
+		if l.name == "OrderBy" {
+			order = append(order, l.call.Args...)
+		}
+	}
+	if len(order) == 0 || spread(root) {
+		return
+	}
+	type key struct {
+		t types.Object
+		n string
+	}
+	if d := findLinks(links, "Distinct"); len(d) > 0 && !hasLink(links, "DistinctOn") {
+		in := map[key]bool{}
+		for _, a := range root.Args {
+			t, n, ok := c.plainColumn(a)
+			if !ok {
+				return // an expression or a whole table: the list is not fully known
+			}
+			in[key{t, n}] = true
+		}
+		for _, o := range order {
+			if t, n, ok := c.plainColumn(o); ok && !in[key{t, n}] {
+				c.report(o, "V029", "SELECT DISTINCT needs its ORDER BY expressions in the select list, and "+types.ExprString(ast.Unparen(o))+" is not selected: select it, or order in an outer query")
+			}
+		}
+		return
+	}
+	if on := findLinks(links, "DistinctOn"); len(on) > 0 {
+		set := map[key]bool{}
+		for _, a := range on[0].call.Args {
+			t, n, ok := c.plainColumn(a)
+			if !ok {
+				return
+			}
+			set[key{t, n}] = true
+		}
+		if t, n, ok := c.plainColumn(order[0]); ok && !set[key{t, n}] {
+			c.report(order[0], "V029", "DISTINCT ON expressions must match the leading ORDER BY expressions, and the first ORDER BY term "+types.ExprString(ast.Unparen(order[0]))+" is not one of them")
+		}
+	}
 }
 
 // V016: FOR UPDATE OF t where t is not one of the query's tables.

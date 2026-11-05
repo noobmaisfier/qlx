@@ -29,6 +29,8 @@
 //	V025 SearchOrder/CycleMark on a CTE built without SEARCH/CYCLE
 //	V026 conflict column or assignment naming a column of another table
 //	V027 ToOrDefault in a SET list (an absent field would reset the column)
+//	V028 FOR UPDATE/SHARE together with DISTINCT, GROUP BY, HAVING, aggregates or window functions
+//	V029 SELECT DISTINCT ordered by a column that is not selected; DISTINCT ON not matching ORDER BY
 //	V018 result type that does not match the selected columns (count, names, Go types, nullability, order)
 //
 // A finding is suppressed by a comment on the same or the previous line:
@@ -85,6 +87,8 @@ type checker struct {
 	reported   map[string]bool
 	varInits   map[types.Object]ast.Expr // package-level variable initializers (V018)
 	assigns    map[types.Object]ast.Expr // single-assignment variable initializers (V025)
+	selInit    map[types.Object]ast.Expr // variable initializers, for the Select a variable holds (V018)
+	selBad     map[types.Object]bool     // variables reassigned to something else, or whose address is taken
 	reassigned map[types.Object]bool
 	aliases    map[aliasKey]types.Object // one object per (table variable, alias literal)
 	funcDecls  map[types.Object]*ast.FuncDecl

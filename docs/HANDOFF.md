@@ -10,7 +10,7 @@ The review found that the code is sound and the defects were in the release chai
 4. `cd bench && go test -run TestBudgets` (allocation budgets only; see the bench package comment for what is and is not time-bounded).
 5. `scripts/sql2go.sh` for the optional parser (needs cgo and a C compiler).
 
-Two tools check code: `qlx vet` (V001-V005, standard library only) and the analyzer via `go vet -vettool` (V001-V027, needs x/tools).
+Two tools check code: `qlx vet` (V001-V005, standard library only) and the analyzer via `go vet -vettool` (V001-V029, needs x/tools).
 
 
 Written on a machine with Go 1.24 and PostgreSQL 16 only; section 0 records the
@@ -409,7 +409,7 @@ Adopted:
   `OnErrorSetNull` 19, `CopyJSON` 19). No VACUUM/ANALYZE option needs a gate.
 - `qlxvet.go`, `qlxvet_test.go`, `testdata/src/gaps/gaps.go`,
   `docs/limits.md`, the V019-V026 table in the guide template, and the README /
-  HANDOFF counters (V001-V027).
+  HANDOFF counters (V001-V029).
 - `analyzer/go.mod`: explicit `example.com/qlx v0.0.0` plus the
   `x/mod`/`x/sync` indirects, so `go test` works from the committed `go.sum`
   without network access.

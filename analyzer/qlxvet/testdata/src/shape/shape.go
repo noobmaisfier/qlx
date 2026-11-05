@@ -120,3 +120,26 @@ func lateralVar() {
 	last := q.Lateral(q.Select(Orders.ID).From(Orders).Where(Orders.UserID.EqX(Users.ID)).Limit(1), "last")
 	use(last)
 }
+
+// ---- row locks and DISTINCT ----
+
+func locks() {
+	use(q.Select(Users.ID).From(Users).ForUpdate())                                                           // fine
+	use(q.Select(Users.Email).From(Users).Distinct().ForUpdate())                                             // want `V028 FOR UPDATE is not allowed with DISTINCT clause`
+	use(q.Select(Users.Email).From(Users).GroupBy(Users.Email).ForShare())                                    // want `V028 FOR SHARE is not allowed with GROUP BY clause`
+	use(q.Select(Users.Email).From(Users).GroupBy(Users.Email).Having(q.CountAll().Gt(1)).ForNoKeyUpdate())   // want `V028 FOR NO KEY UPDATE is not allowed with GROUP BY clause`
+	use(q.Select(q.CountAll()).From(Users).ForUpdate())                                                       // want `V028 FOR UPDATE is not allowed with aggregate functions`
+	use(q.Select(Users.ID, q.RowNumber().Over(q.Window().OrderBy(Users.ID.Asc()))).From(Users).ForKeyShare()) // want `V028 FOR KEY SHARE is not allowed with window functions`
+	use(q.Select(Users.ID).From(Users).Where(Users.ID.In(1, 2)).ForUpdate().SkipLocked())                     // fine
+}
+
+func distinctOrder() {
+	use(q.Select(Users.Email).From(Users).Distinct().OrderBy(Users.Email.Asc()))                              // fine
+	use(q.Select(Users.Email).From(Users).Distinct().OrderBy(Users.ID.Asc()))                                 // want `V029 SELECT DISTINCT needs its ORDER BY expressions in the select list, and Users.ID.Asc\(\) is not selected`
+	use(q.Select(Users.Email, Users.ID).From(Users).Distinct().OrderBy(Users.ID.Desc()))                      // fine
+	use(q.Select(Users.Email.As("e")).From(Users).Distinct().OrderBy(Users.Email.Asc()))                      // fine: the expression is selected, whatever its alias
+	use(q.Select(q.CountAll()).From(Users).Distinct().OrderBy(Users.ID.Asc()))                                // fine: not a list of plain columns, unknown
+	use(q.Select(Users.Email).From(Users).DistinctOn(Users.Email).OrderBy(Users.Email.Asc(), Users.ID.Asc())) // fine
+	use(q.Select(Users.Email).From(Users).DistinctOn(Users.Email).OrderBy(Users.ID.Asc()))                    // want `V029 DISTINCT ON expressions must match the leading ORDER BY expressions`
+	use(q.Select(Users.Email).From(Users).DistinctOn(Users.Email))                                            // fine: no ORDER BY
+}
