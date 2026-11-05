@@ -5,7 +5,7 @@ go 1.27
 replace github.com/noobmaisfier/qlx => ../
 
 require (
-	github.com/noobmaisfier/qlx v0.7.1
+	github.com/noobmaisfier/qlx v0.9.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/metric v1.38.0
 	go.opentelemetry.io/otel/sdk v1.38.0
