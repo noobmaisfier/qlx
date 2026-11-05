@@ -9,7 +9,7 @@ columns cannot receive a plain value, and a required `INSERT` column cannot be
 forgotten. The analyzer catches the SQL mistakes the Go compiler cannot, and a
 real `PREPARE` checks the rest in tests.
 
-> **Status: pre-release.** Current release: `v0.9.0`. The core, generator,
+> **Status: pre-release.** Current release: `v0.9.1`. The core, generator,
 > executor and analyzer are verified on PostgreSQL 16, 17, 18 and 19. See
 > [Verification](#verification) for what has been run.
 
@@ -416,8 +416,8 @@ regression case.
 
 The root module has no third-party dependencies. Anything that needs one lives
 in its own module, so your `go.mod` only gains what you import. Each module is
-tagged separately (`v0.9.0`, `analyzer/v0.9.0`, `pgxexec/v0.9.0`,
-`otelqlx/v0.9.0`).
+tagged separately (`v0.9.1`, `analyzer/v0.9.1`, `pgxexec/v0.9.1`,
+`otelqlx/v0.9.1`).
 
 ## Types in custom structs
 
