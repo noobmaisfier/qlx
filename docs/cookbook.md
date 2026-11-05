@@ -2,7 +2,7 @@
 
 Recipes by SQL feature. Every snippet uses the fixture schema (`users`, `orders`) and the dot-imported generated package; `q` is the `qlx` package, `pgxexec` runs statements. The matching SQL is in the comment. The full list of syntax forms is in [sql-to-go.md](sql-to-go.md).
 
-## Write queries naturally: the static path is automatic
+## Write queries naturally: normal mode caches automatically
 
 ```go
 users, err := client.All[UserRow](ctx,

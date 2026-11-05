@@ -13,7 +13,7 @@ Ce guide va de zéro à une application complète (une version anglaise existe :
 5. Écrire : `INSERT`, upsert, `UPDATE`, `DELETE`, `MERGE`
 6. Nullabilité, options et patchs
 7. Exécuter et lire les résultats
-8. Performance : chemin automatique et statements statiques
+8. Performance : mode normal et mode statique
 9. Transactions, pipelines, COPY, LISTEN
 10. Types : dates, IDs opaques, JSON, tableaux, plages, enums, numeric
 11. Fonctions et opérateurs PostgreSQL
@@ -978,9 +978,12 @@ Les erreurs du moteur de requêtes se testent avec `errors.Is` : `qlx.ErrUnsuppo
 
 ---
 
-## 8. Performance : chemin automatique et statements statiques
+## 8. Performance : mode normal et mode statique
 
-### 8.1 Le chemin automatique
+### 8.1 Le mode normal
+
+QLX a deux modes : le **mode normal**, par défaut, et le **mode statique**, pour
+les chemins les plus chauds.
 
 Vous n'avez rien à faire. La première fois qu'une *forme* de requête passe (même structure, valeurs différentes), elle est rendue et validée ; ensuite, un hachage de la forme retrouve le SQL et seules les valeurs sont collectées. Environ 1 à 4 µs et 11 à 32 allocations pour une requête de taille courante, contre 7 µs et 70 pour un rendu complet.
 
@@ -990,7 +993,7 @@ client.Shapes.Stats()   // Hits, Misses, Evictions, Size
 
 Pour garder le nombre de formes borné : passez les listes avec `col.Any(slice)` (une forme pour toute longueur). Varier la structure elle-même est permis et correct : un rapport construit par l'utilisateur ou un ensemble de colonnes dynamique est rendu une fois par forme, puis réutilisé. Quand `Evictions` grimpe, augmentez le plafond pour ce client (`Shapes: qlx.NewShapeCache(n)`) ou rendez une fois les formes les plus chaudes avec `client.Render`.
 
-### 8.2 Les statements statiques
+### 8.2 Le mode statique
 
 Pour les chemins les plus chauds, rendez une fois et liez par appel (60 à 70 ns, 1 allocation) :
 

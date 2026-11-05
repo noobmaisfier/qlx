@@ -13,7 +13,7 @@ This guide goes from zero to a complete application. It does not replace the ref
 5. Writing: `INSERT`, upsert, `UPDATE`, `DELETE`, `MERGE`
 6. Nullability, options and patches
 7. Running queries and reading results
-8. Performance: automatic path and static statements
+8. Performance: normal mode and static mode
 9. Transactions, pipelines, COPY, LISTEN
 10. Mappings and types: dates, opaque IDs, JSON, arrays, ranges, enums, numeric
 11. PostgreSQL functions and operators
@@ -568,9 +568,12 @@ Query engine errors are tested with `errors.Is`: `qlx.ErrUnsupportedByServer`, `
 
 ---
 
-## 8. Performance: automatic path and static statements
+## 8. Performance: normal mode and static mode
 
-### 8.1 The automatic path
+### 8.1 Normal mode
+
+QLX has two modes: **normal mode**, the default, and **static mode**, for the
+hottest paths.
 
 You have nothing to do. The first time a query *shape* goes through (same structure, different values), it is rendered and validated; after that, a hash of the shape finds the SQL and only the values are collected. About 1 to 4 µs and 11 to 32 allocations for a typical-size query, versus 7 µs and 70 for a full render.
 
@@ -580,7 +583,7 @@ client.Shapes.Stats()   // Hits, Misses, Evictions, Size
 
 To keep the number of shapes bounded: pass lists with `col.Any(slice)` (one shape for any length). Varying the structure itself is allowed and correct: a user-built report or a dynamic column set renders once per distinct shape, then reuses it. When `Evictions` keeps growing, raise the ceiling for that client (`Shapes: qlx.NewShapeCache(n)`) or render the hottest shapes once with `client.Render`.
 
-### 8.2 Static statements
+### 8.2 Static mode
 
 For the hottest paths, render once and bind per call (60 to 70 ns, 1 allocation):
 
