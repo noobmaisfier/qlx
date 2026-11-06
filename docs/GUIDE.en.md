@@ -304,6 +304,8 @@ SELECT "users"."email" FROM "public"."users" WHERE "users"."id" = ANY($1)
 Arguments: `[[4 8 15 16 23 42]]`
 
 
+On a nullable column, a `None` in the list means NULL: `Users.Nickname.In(qt.Some("a"), qt.None[string]())` renders `("nickname" = ANY($1) OR "nickname" IS NULL)`, because SQL's own `= ANY` with a NULL element never matches a NULL row. `NotAll` does the opposite: a `None` adds `AND "nickname" IS NOT NULL`. Without a `None`, the usual SQL rules apply (a NULL row is neither in nor not in the list).
+
 ### 4.3 Dynamic conditions
 
 Two tools: an ordinary Go `if`, and the optional predicates `EqIf(qt.Opt[T])`, which disappear when the value is absent.
@@ -1080,6 +1082,16 @@ n, err := pgxexec.CopyIn(ctx, client.Pool,
 
 This is the fastest way to load many rows. `CopyQueryOut` and `CopyTableOut` cover `COPY ... TO`.
 
+`COPY` cannot take parameters, so `CopyQueryOut(...)` and `CopyIn(...).Where(...)` refuse a statement with arguments (`ErrParams`). `.InlineArgs()` writes the arguments into the SQL as literals instead, and is accepted only for values whose text is made from the typed value alone: integers, bools, floats, `time.Time`, uuids, bytes, NULL, slices of those, and strings of printable ASCII without a quote or a backslash. Any other value, and a parameter bound later with `Bind`, is an `ErrParams` error: the string is refused, never escaped.
+
+```go
+st, _ := client.Render(q.CopyQueryOut(
+    q.Select(Orders.ID, Orders.Total).From(Orders).Where(Orders.Status.Eq("paid"), Orders.CreatedAt.Gte(since)),
+).InlineArgs().With(q.WithFormat(q.CopyCSV)))
+```
+
+Each distinct value is a distinct statement, which is fine for `COPY` and the reason this is not the default.
+
 ### 9.3b Bulk `INSERT`
 
 When you need `ON CONFLICT` or `RETURNING`, which `COPY` cannot do, `InsertMany` splits the rows into statements that respect the protocol's limit of 65,535 parameters:
@@ -1662,7 +1674,6 @@ A `deleted_at timestamptz` field: `Update(...).Set(T.DeletedAt.ToX(q.Now()))` in
 - No DDL: the schema lives in your SQL migrations.
 - No pointers for NULL: `qt.Null[T]`.
 - No constructs the server rejects: `XMLTABLE` with a namespace `DEFAULT`, `XMLSERIALIZE ... bytea`, etc. have no builder.
-- `In` with a nullable element, parameterized `COPY (query)`: see [limits](limits.md).
 
 ---
 

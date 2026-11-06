@@ -378,11 +378,42 @@ func (e Expr[T]) Desc() OrderTerm       { return OrderTerm{n: e.n, desc: true} }
 
 // In renders "= ANY($1)" with one array parameter, so the statement shape
 // does not change with the number of values.
+//
+// For a nullable element type (qt.Null[T]) a None element means NULL and is
+// matched with IS NULL: In(Some("a"), None) is (col = ANY($1) OR col IS NULL).
+// SQL's own "= NULL" never matches, so passing the NULL inside the array would
+// silently find nothing.
 func (e Expr[T]) In(vs ...T) Pred {
 	if len(vs) == 0 {
 		return Pred{falseNode{}}
 	}
+	if keep, ok := splitNullElems(vs); ok {
+		isNull := Pred{isNullNode{n: e.n}}
+		if len(keep) == 0 {
+			return isNull
+		}
+		return Or(Pred{anyNode{l: e.n, arr: keep}}, isNull)
+	}
 	return Pred{anyNode{l: e.n, arr: vs}}
+}
+
+// splitNullElems separates the NULL elements of a slice of nullable values
+// (qt.Null[T], or any type that binds as an argument and can bind as nil).
+// ok is false when there is nothing to separate: the elements are not of a
+// nullable type, or none is NULL.
+func splitNullElems[T any](vs []T) (keep []T, ok bool) {
+	if _, nullable := any(vs[0]).(argValuer); !nullable {
+		return nil, false
+	}
+	nulls := 0
+	for _, v := range vs {
+		if normalizeArg(v) == nil {
+			nulls++
+		} else {
+			keep = append(keep, v)
+		}
+	}
+	return keep, nulls > 0
 }
 
 // Any is In for a slice you already hold: = ANY($1) with the slice as the one
@@ -392,9 +423,21 @@ func (e Expr[T]) Any(vs []T) Pred { return e.In(vs...) }
 // NotAll renders "<> ALL($1)": true when the value differs from every element.
 // An empty slice is TRUE, not an absent predicate: "differs from every one of
 // none" holds, and the statement shape stays explicit.
+//
+// For a nullable element type a None element means NULL: the value must also
+// not be NULL. NotAll([]qt.Null[string]{Some("a"), None}) is
+// (col <> ALL($1) AND col IS NOT NULL); with SQL's own rules a NULL inside the
+// list would make the predicate never true.
 func (e Expr[T]) NotAll(vs []T) Pred {
 	if len(vs) == 0 {
 		return Pred{trueNode{}}
+	}
+	if keep, ok := splitNullElems(vs); ok {
+		notNull := Pred{isNullNode{n: e.n, not: true}}
+		if len(keep) == 0 {
+			return notNull
+		}
+		return And(Pred{notAllNode{l: e.n, arr: keep}}, notNull)
 	}
 	return Pred{notAllNode{l: e.n, arr: vs}}
 }

@@ -60,6 +60,8 @@ type builder struct {
 	// This is how a statement finds its cached rendering without rendering.
 	hash   bool
 	h1, h2 uint64
+	// inline > 0: arguments are written into the text as literals (COPY).
+	inline int
 }
 
 func newBuilder(d Dialect) *builder {
@@ -115,6 +117,15 @@ func normalizeArg(v any) any {
 }
 
 func (b *builder) arg(v any) {
+	if b.inline > 0 {
+		lit, err := inlineLiteral(v)
+		if err != nil {
+			b.fail(err)
+			return
+		}
+		b.write(lit)
+		return
+	}
 	b.slots = append(b.slots, slot{value: normalizeArg(v)})
 	if b.hash {
 		b.mixByte('$')
@@ -126,6 +137,10 @@ func (b *builder) arg(v any) {
 }
 
 func (b *builder) param(id int) {
+	if b.inline > 0 {
+		b.fail(fmt.Errorf("%w: a parameter bound later cannot be written as a literal", ErrParams))
+		return
+	}
 	if b.hash {
 		pos := 0
 		for i, sl := range b.slots {

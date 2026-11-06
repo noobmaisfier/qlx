@@ -251,6 +251,8 @@ Une liste déjà en main se passe avec `col.Any(slice)` : un seul paramètre tab
 
 {{ex:where-any-slice}}
 
+Sur une colonne nullable, un `None` dans la liste veut dire NULL : `Users.Nickname.In(qt.Some("a"), qt.None[string]())` rend `("nickname" = ANY($1) OR "nickname" IS NULL)`, parce que le `= ANY` de SQL avec un élément NULL ne trouve jamais une ligne NULL. `NotAll` fait l'inverse : un `None` ajoute `AND "nickname" IS NOT NULL`. Sans `None`, les règles habituelles de SQL s'appliquent (une ligne NULL n'est ni dans la liste ni hors de la liste).
+
 ### 4.3 Conditions dynamiques
 
 Deux outils : un `if` Go ordinaire, et les prédicats optionnels `EqIf(qt.Opt[T])` qui disparaissent quand la valeur est absente.
@@ -677,6 +679,16 @@ n, err := pgxexec.CopyIn(ctx, client.Pool,
 ```
 
 C'est le chemin le plus rapide pour charger beaucoup de lignes. `CopyQueryOut` et `CopyTableOut` couvrent `COPY ... TO`.
+
+`COPY` n'accepte pas de paramètres : `CopyQueryOut(...)` et `CopyIn(...).Where(...)` refusent une instruction qui en porte (`ErrParams`). `.InlineArgs()` écrit à la place les arguments dans le SQL, comme littéraux, et n'accepte que les valeurs dont le texte est fabriqué par le type seul : entiers, booléens, flottants, `time.Time`, uuid, octets, NULL, tranches de ces types, et chaînes en ASCII imprimable sans apostrophe ni antislash. Toute autre valeur, et tout paramètre lié plus tard avec `Bind`, donne une erreur `ErrParams` : la chaîne est refusée, jamais échappée.
+
+```go
+st, _ := client.Render(q.CopyQueryOut(
+    q.Select(Orders.ID, Orders.Total).From(Orders).Where(Orders.Status.Eq("paid"), Orders.CreatedAt.Gte(since)),
+).InlineArgs().With(q.WithFormat(q.CopyCSV)))
+```
+
+Chaque valeur distincte est une instruction distincte : acceptable pour `COPY`, et c'est pourquoi ce n'est pas le comportement par défaut.
 
 ### 9.3b `INSERT` en lots
 
@@ -1206,7 +1218,6 @@ Un champ `deleted_at timestamptz` : `Update(...).Set(T.DeletedAt.ToX(q.Now()))` 
 - Pas de DDL : le schéma vit dans vos migrations SQL.
 - Pas de pointeurs pour NULL : `qt.Null[T]`.
 - Pas de constructions que le serveur refuse : `XMLTABLE` avec `DEFAULT` d'espace de noms, `XMLSERIALIZE ... bytea`, etc. n'ont pas de builder.
-- `In` avec élément nullable, `COPY (query)` paramétré : voir [limits](limits.md).
 
 ---
 

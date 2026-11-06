@@ -190,6 +190,8 @@ type CopyFromStdin struct {
 	cols  []ColumnRef
 	opts  []CopyOption
 	where Pred
+	// inline writes the arguments of the WHERE as literals (see InlineArgs).
+	inline bool
 }
 
 func CopyIn(t Table, cols ...ColumnRef) CopyFromStdin {
@@ -202,6 +204,12 @@ func (c CopyFromStdin) With(opts ...CopyOption) CopyFromStdin {
 
 // Where filters incoming rows (system columns are not allowed since PostgreSQL 19).
 func (c CopyFromStdin) Where(p Pred) CopyFromStdin { c.where = p; return c }
+
+// InlineArgs writes the arguments of Where into the SQL as literals, since
+// COPY cannot take parameters. Only integers, bools, floats, times, uuids,
+// bytes, NULL, slices of those and plain ASCII strings are accepted; any
+// other value is an ErrParams error. See inline.go for the exact rules.
+func (c CopyFromStdin) InlineArgs() CopyFromStdin { c.inline = true; return c }
 
 func (c CopyFromStdin) render(b *builder) {
 	b.pushScope(c.t.key())
@@ -217,7 +225,7 @@ func (c CopyFromStdin) render(b *builder) {
 	renderCopyOptions(b, c.opts, true)
 	if c.where.valid() {
 		b.write(" WHERE ")
-		b.noParams("COPY FROM ... WHERE", func() { c.where.n.render(b) })
+		b.noParams(c.inline, "COPY FROM ... WHERE", func() { c.where.n.render(b) })
 	}
 }
 
@@ -227,6 +235,8 @@ type CopyOut struct {
 	t    *TableRef
 	cols []ColumnRef
 	opts []CopyOption
+	// inline writes the arguments of the query as literals (see InlineArgs).
+	inline bool
 }
 
 // CopyQueryOut copies the result of a query out.
@@ -241,11 +251,17 @@ func CopyTableOut(t Table, cols ...ColumnRef) CopyOut {
 
 func (c CopyOut) With(opts ...CopyOption) CopyOut { c.opts = app(c.opts, opts...); return c }
 
+// InlineArgs writes the arguments of the query into the SQL as literals,
+// since COPY cannot take parameters. Only integers, bools, floats, times,
+// uuids, bytes, NULL, slices of those and plain ASCII strings are accepted;
+// any other value is an ErrParams error. See inline.go for the exact rules.
+func (c CopyOut) InlineArgs() CopyOut { c.inline = true; return c }
+
 func (c CopyOut) render(b *builder) {
 	b.write("COPY ")
 	if c.q != nil {
 		b.write("(")
-		b.noParams("COPY (query)", func() { c.q.render(b) })
+		b.noParams(c.inline, "COPY (query)", func() { c.q.render(b) })
 		b.write(")")
 	} else {
 		c.t.renderFrom(b)
@@ -654,11 +670,18 @@ func WaitForLSN(lsn string, timeoutMillis int64, noThrow bool) Command {
 // noParams renders f and fails if it bound any parameter. The server accepts
 // $n placeholders in few utility statements; COPY is not one of them, so a
 // parameterized COPY would only fail at run time with a confusing message.
-func (b *builder) noParams(what string, f func()) {
+// With inline set (InlineArgs) the arguments are written as literals instead.
+func (b *builder) noParams(inline bool, what string, f func()) {
+	if inline {
+		b.inline++
+		f()
+		b.inline--
+		return
+	}
 	before := len(b.slots)
 	f()
 	if len(b.slots) != before {
-		b.fail(fmt.Errorf("%w: %s cannot take parameters; filter on columns without runtime values or use a cursor", ErrParams, what))
+		b.fail(fmt.Errorf("%w: %s cannot take parameters; filter on columns without runtime values, use InlineArgs, or use a cursor", ErrParams, what))
 	}
 }
 

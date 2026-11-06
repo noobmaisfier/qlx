@@ -683,8 +683,7 @@ GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 ## Known limits
 
 - No raw SQL escape hatch, by design.
-- `In` with a nullable element type is not supported.
-- `COPY (query)` and `COPY ... WHERE` cannot take parameters.
+- `COPY (query)` and `COPY ... WHERE` cannot take parameters (the server refuses them): `.InlineArgs()` writes plain values as literals (integers, bools, floats, times, uuids, bytes, NULL and printable-ASCII strings without quote or backslash); anything else is refused, never escaped.
 - No DDL builders; migrations stay SQL.
 - PostgreSQL 19 support is verified on a release candidate.
 - PostGIS wrappers follow the committed ledger; the remaining functions need a
