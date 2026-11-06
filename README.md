@@ -123,6 +123,44 @@ ORDER BY "users"."created_at" DESC LIMIT $3 OFFSET $4
 To render without a database (CLI tools, migrations), use
 `q.SQL(q.Dialect{Version: q.PG18}, q.Select(Users.ID).From(Users))`.
 
+For deep pages, a keyset avoids the growing cost of `OFFSET`: `KeyAsc` /
+`KeyDesc` carry the last row's values, `After` builds the predicate and
+`KeyOrder` the matching `ORDER BY`:
+
+```go
+keys := []q.Key{
+    q.KeyDesc(Users.CreatedAt, last.CreatedAt),
+    q.KeyAsc(Users.ID, last.ID),
+}
+users, err := client.All[UserRow](ctx,
+    q.Select(Users.ID, Users.Email).From(Users).
+        Where(q.After(keys...)).
+        OrderBy(q.KeyOrder(keys...)...).
+        Limit(20))
+```
+
+When all keys go the same way, `After` renders one row comparison
+`(a, b) > ($1, $2)`; mixed directions render the equivalent expansion. For the
+first page, pass no keys (or use `q.If`): `After()` is then an absent predicate.
+
+A sort string from a URL must never reach the SQL. `NewSorts` maps names to
+columns and rejects anything else with `ErrSort`:
+
+```go
+var userSorts = q.NewSorts(map[string]q.Orderable{
+    "email":   Users.Email,
+    "created": Users.CreatedAt,
+}).Default(Users.CreatedAt.Desc()).Tiebreak(Users.ID.Asc())
+
+order, err := userSorts.Parse(r.URL.Query().Get("sort")) // "-created,email"
+if err != nil { /* 400 */ }
+users, err := client.All[UserRow](ctx,
+    q.Select(Users.ID, Users.Email).From(Users).OrderBy(order...))
+```
+
+`-` sorts descending, `+` is accepted as ascending, and the tiebreak is always
+appended last.
+
 ### Joins and aggregates
 
 ```go
@@ -174,6 +212,23 @@ _, err = client.Exec(ctx,
         DoUpdate(Users.Balance.ToX(Users.Balance.Add(10))).
         Returning(Users.ID))
 ```
+
+For many rows with `ON CONFLICT` or `RETURNING`, `InsertMany` splits them
+under PostgreSQL's 65,535-parameter limit and runs the chunks in one
+transaction on a pool or connection:
+
+```go
+n, err := pgxexec.InsertMany(ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).OnConflict(Users.Email).DoNothing(),
+    rows, pgxexec.BulkOptions{}) // rows is a []q.RowAssigner
+
+ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).Returning(Users.ID), rows, pgxexec.BulkOptions{})
+```
+
+With a `pgx.Tx`, the chunks join your transaction; `MaxParams` lowers the
+budget when `ToX` values carry arguments of their own. The splitting alone is
+`InsertQuery.Chunks(rows, maxParams)`.
 
 ### UPDATE and DELETE
 

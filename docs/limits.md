@@ -16,6 +16,7 @@ QLX moves as much as it can into the Go compiler, then into render time, then in
 | Discarded builder, ignored render error, duplicate or late `Register` | analyzer (V001, V003–V005) |
 | A statement missing a required part (UPDATE without `Set`, INSERT without a row, MERGE without `Using`/`On`/`When`, `DoUpdate` without assignments, `CASE` without `When`, empty `Truncate`) | render time (`ErrShape`), and the analyzer (V012) |
 | Contradictory or duplicated parts (a column assigned twice, `Limit` with `FetchFirst`, `WithTies` without `FetchFirst`/`OrderBy`, rows with different columns, `INSERT ... SELECT` or set operands of different width) | render time (`ErrShape`), and the analyzer (V013) |
+| Sort string outside the allowlist, empty, repeated or too long | `Sorts.Parse` (`ErrSort`), before any SQL is built |
 | Column selected next to a `GroupBy` that never mentions its table | render time, and the analyzer (V014) |
 | `EXPLAIN` options that need `Analyze` (`Wal`, `IO`, `SerializeText/Binary`) or exclude it (`GenericPlan`) | render time, and the analyzer (V015) |
 | `FOR UPDATE OF` a table that is not in the query | render time (`ErrScope`), and the analyzer (V016) |

@@ -19,6 +19,9 @@ var (
 	// ErrShape is returned for statements that are structurally invalid
 	// (no rows, missing required column, UPDATE without WHERE, and so on).
 	ErrShape = errors.New("qlx: invalid statement shape")
+	// ErrSort is returned by Sorts.Parse for a sort string that is not
+	// in the allowlist or is malformed.
+	ErrSort = errors.New("qlx: invalid sort")
 	// ErrParams is returned when bound parameters do not match the statement.
 	ErrParams = errors.New("qlx: parameter binding mismatch")
 )

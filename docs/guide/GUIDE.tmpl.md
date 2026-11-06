@@ -679,6 +679,21 @@ n, err := pgxexec.CopyIn(ctx, client.Pool,
 
 C'est le chemin le plus rapide pour charger beaucoup de lignes. `CopyQueryOut` et `CopyTableOut` couvrent `COPY ... TO`.
 
+### 9.3b `INSERT` en lots
+
+Quand il faut `ON CONFLICT` ou `RETURNING`, que `COPY` ne sait pas faire, `InsertMany` découpe les lignes en instructions qui respectent la limite de 65 535 paramètres du protocole :
+
+```go
+n, err := pgxexec.InsertMany(ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).OnConflict(Users.Email).DoNothing(),
+    rows, pgxexec.BulkOptions{})   // rows is a []q.RowAssigner: the generated insert types
+
+ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).Returning(Users.ID), rows, pgxexec.BulkOptions{})
+```
+
+Avec un pool ou une connexion et plus d'une instruction, tout s'exécute dans une transaction : un échec ne laisse rien. Avec un `pgx.Tx`, les instructions rejoignent la vôtre. Une ligne coûte un paramètre par colonne ; abaissez `MaxParams` si des `ToX` portent des arguments. Le découpage seul est `InsertQuery.Chunks(rows, maxParams)`. La dernière instruction, plus courte, est une forme de plus dans le cache.
+
 ### 9.4 `LISTEN` / `NOTIFY`
 
 ```go
@@ -1110,6 +1125,41 @@ func nextPage(afterID int64, size int64) q.Statement {
 
 Contrairement à `Offset`, le coût ne grandit pas avec la profondeur, et la forme est la même pour toutes les pages.
 
+Avec une clé composée (ici le plus récent d'abord, l'identifiant départageant), `KeyAsc` / `KeyDesc` portent la valeur de la dernière ligne vue, `After` produit le prédicat et `KeyOrder` l'`ORDER BY` correspondant :
+
+```go
+func page(last *Cursor, size int64) q.Statement {
+    var keys []q.Key
+    if last != nil {
+        keys = []q.Key{q.KeyDesc(Orders.CreatedAt, last.CreatedAt), q.KeyAsc(Orders.ID, last.ID)}
+    }
+    order := q.KeyOrder(q.KeyDesc(Orders.CreatedAt, time.Time{}), q.KeyAsc(Orders.ID, 0))
+    return q.Select(Orders.ID, Orders.Total).From(Orders).
+        Where(q.After(keys...)).
+        OrderBy(order...).
+        Limit(size)
+}
+```
+
+`KeyOrder` ignore les valeurs : passez-lui des zéros quand il n'y a pas encore de curseur. Sans clé (première page), `After()` est un prédicat absent. Quand toutes les clés vont dans le même sens, `After` rend une comparaison de lignes `(a, b) > ($1, $2)` que PostgreSQL résout par un seul parcours d'index ; en sens mixtes il rend l'expansion équivalente `a < $1 OR (a = $2 AND b > $3)`. Les colonnes de clé doivent être `NOT NULL` et, ensemble, uniques (terminez par la clé primaire) : un `NULL` ne se compare jamais, et deux lignes de même clé seraient sautées ou répétées à la frontière d'une page.
+
+### 13.1b Tri choisi par le client
+
+Une chaîne de tri venue d'une URL ne doit jamais atteindre le SQL. `NewSorts` déclare la liste blanche ; un nom inconnu, un doublon ou trop de clés donne une erreur `ErrSort` (à renvoyer en 400) :
+
+```go
+var orderSorts = q.NewSorts(map[string]q.Orderable{
+    "total":   Orders.Total,
+    "created": Orders.CreatedAt,
+}).Default(Orders.CreatedAt.Desc()).Tiebreak(Orders.ID.Asc())
+
+order, err := orderSorts.Parse(r.URL.Query().Get("sort")) // "-total,created"
+if err != nil { /* 400 */ }
+sel = sel.OrderBy(order...)
+```
+
+`-` devant un nom trie en décroissant. Le départage est toujours ajouté en dernier, ce qui rend l'ordre total. Le nombre de formes de requête reste borné par la liste blanche.
+
 ### 13.2 Compteur atomique
 
 {{ex:upsert}}
@@ -1169,6 +1219,7 @@ Un champ `deleted_at timestamptz` : `Update(...).Set(T.DeletedAt.ToX(q.Now()))` 
 | `ErrUnsupportedByServer` | construction plus récente que la cible ou le serveur | éviter l'usage, ou monter `targets` |
 | `ErrShape` « UPDATE has no WHERE » | `Update`/`Delete` sans condition | `Where(...)` ou `All()` |
 | `ErrShape` colonne obligatoire | `INSERT` sans une colonne `NOT NULL` sans défaut | la renseigner ; utiliser `NewXInsert` |
+| `ErrSort` | nom absent de la liste blanche, élément vide, doublon ou trop de clés | renvoyer 400 ; corriger la map `NewSorts` ou la chaîne de tri |
 | `qt.ErrIDKey` | `SetIDKey` non appelé | `qt.MustSetIDKey` au démarrage |
 | `qt.ErrBadID` | texte d'ID faux ou d'une autre table | rejeter la requête (400) |
 | `qt.ErrIDRange` | entier hors de 0..2^48−1 | n'arrive pas avec une identité normale |
@@ -1186,6 +1237,7 @@ Un champ `deleted_at timestamptz` : `Update(...).Set(T.DeletedAt.ToX(q.Now()))` 
 qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
 Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (côté expression)
+q.After q.KeyAsc q.KeyDesc q.KeyOrder   q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks
 .To(v)  .ToX(expr)  .Excluded()  .Returning(...)  .All()  .SetPatch(p)
 q.And q.Or q.Not    q.Exists q.InSelect q.Scalar q.Lateral  q.Union q.Except
 q.CountAll q.Count q.SumBig q.Avg q.Max q.StringAgg         .Filter .Distinct .OrderBy .Over

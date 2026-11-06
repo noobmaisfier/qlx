@@ -34,6 +34,33 @@ sel = sel.Where(Users.Email.NotLike("%@spam.test")) // AND email NOT LIKE $2
 
 Builders are immutable: always assign the result (the analyzer flags a discarded one, V001). `Eq`, `Gt`, `Between`, `NotBetween`, `BetweenSymmetric`, `In`, `Like`, `ILike`, `SimilarTo`, `LikeEscape`, `IsNull`, `IsDistinctFrom` exist; `EqIf(qt.Opt)` skips the predicate for an absent optional filter, and `NeIf`, `InIf`, `IsNullIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf` and the text searches (`ContainsIf`, `ContainsFoldIf`, `HasPrefixIf`, `LikeIf`, `ILikeIf`) do the same. `qlx.When(opt, func(v T) Pred)` covers any other predicate.
 
+## Keyset pagination and client-chosen sort
+
+```go
+keys := []q.Key{q.KeyDesc(Orders.CreatedAt, last.CreatedAt), q.KeyAsc(Orders.ID, last.ID)}
+q.Select(Orders.ID, Orders.Total).From(Orders).
+    Where(q.After(keys...)).                        // (created_at, id) < ($1, $2)
+    OrderBy(q.KeyOrder(keys...)...).
+    Limit(20)
+```
+
+`After()` with no key is an absent predicate: the first page needs no special case. Key columns must be `NOT NULL` and unique together, ending with the primary key; when all directions are equal PostgreSQL sees one row comparison and can use one index range scan. `KeyOrder` ignores the values, so zeros are fine for the first page.
+
+A sort string from the client goes through an allowlist, never into the SQL:
+
+```go
+var orderSorts = q.NewSorts(map[string]q.Orderable{
+    "total":   Orders.Total,
+    "created": Orders.CreatedAt,
+}).Default(Orders.CreatedAt.Desc()).Tiebreak(Orders.ID.Asc())
+
+order, err := orderSorts.Parse(r.URL.Query().Get("sort")) // "-total,created"
+if err != nil { /* 400: errors.Is(err, q.ErrSort) */ }
+sel = sel.OrderBy(order...)
+```
+
+An unknown name, an empty item, a repeat or more than three keys (`Max`) is an `ErrSort`. The tiebreak is always appended last, and the allowlist bounds the number of statement shapes.
+
 ## Joins
 
 ```go
@@ -91,6 +118,17 @@ q.InsertInto(Orders).
 ```
 
 Leaving out a required column (`NOT NULL` without default) fails at render time and in the analyzer (V008). `RETURNING OLD/NEW` is `Column.Old()` / `Column.New()` on PostgreSQL 18; `ON CONFLICT DO SELECT` is `DoSelect()` on 19.
+
+For many rows with `ON CONFLICT` or `RETURNING`, `InsertMany` splits under the 65,535-parameter limit; on a pool or connection the chunks share one transaction, on a `pgx.Tx` they join it:
+
+```go
+n, err := pgxexec.InsertMany(ctx, client.Pool, client.Dialect,
+    q.InsertInto(Orders).OnConflict(Orders.ID).DoNothing(), rows, pgxexec.BulkOptions{})
+ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
+    q.InsertInto(Orders).Returning(Orders.ID), rows, pgxexec.BulkOptions{})
+```
+
+`rows` is a `[]q.RowAssigner` (the generated insert types). Lower `MaxParams` when `ToX` values carry arguments; `InsertQuery.Chunks` performs the split alone.
 
 ## UPDATE and DELETE
 

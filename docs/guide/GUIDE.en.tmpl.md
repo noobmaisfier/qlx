@@ -675,6 +675,21 @@ n, err := pgxexec.CopyIn(ctx, client.Pool,
 
 This is the fastest way to load many rows. `CopyQueryOut` and `CopyTableOut` cover `COPY ... TO`.
 
+### 9.3b Bulk `INSERT`
+
+When you need `ON CONFLICT` or `RETURNING`, which `COPY` cannot do, `InsertMany` splits the rows into statements that respect the protocol's limit of 65,535 parameters:
+
+```go
+n, err := pgxexec.InsertMany(ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).OnConflict(Users.Email).DoNothing(),
+    rows, pgxexec.BulkOptions{})   // rows is a []q.RowAssigner: the generated insert types
+
+ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).Returning(Users.ID), rows, pgxexec.BulkOptions{})
+```
+
+With a pool or a connection and more than one statement, everything runs in one transaction: a failure leaves nothing behind. With a `pgx.Tx`, the statements join yours. A row costs one parameter per column; lower `MaxParams` if `ToX` values carry arguments of their own. The splitting alone is `InsertQuery.Chunks(rows, maxParams)`. The last, shorter statement is one more shape in the cache.
+
 ### 9.4 `LISTEN` / `NOTIFY`
 
 ```go
@@ -1106,6 +1121,41 @@ func nextPage(afterID int64, size int64) q.Statement {
 
 Unlike `Offset`, the cost does not grow with depth, and the shape is the same for every page.
 
+With a composite key (newest first here, the id breaking ties), `KeyAsc` / `KeyDesc` carry the value of the last row seen, `After` builds the predicate and `KeyOrder` the matching `ORDER BY`:
+
+```go
+func page(last *Cursor, size int64) q.Statement {
+    var keys []q.Key
+    if last != nil {
+        keys = []q.Key{q.KeyDesc(Orders.CreatedAt, last.CreatedAt), q.KeyAsc(Orders.ID, last.ID)}
+    }
+    order := q.KeyOrder(q.KeyDesc(Orders.CreatedAt, time.Time{}), q.KeyAsc(Orders.ID, 0))
+    return q.Select(Orders.ID, Orders.Total).From(Orders).
+        Where(q.After(keys...)).
+        OrderBy(order...).
+        Limit(size)
+}
+```
+
+`KeyOrder` ignores the values: pass zeros when there is no cursor yet. With no key (the first page) `After()` is an absent predicate. When every key goes the same way, `After` renders a row comparison `(a, b) > ($1, $2)` that PostgreSQL answers with one index range scan; with mixed directions it renders the equivalent expansion `a < $1 OR (a = $2 AND b > $3)`. Key columns must be `NOT NULL` and, together, unique (end with the primary key): a `NULL` never compares, and two rows with the same key would be skipped or repeated at a page boundary.
+
+### 13.1b Client-chosen sort
+
+A sort string that comes from a URL must never reach the SQL. `NewSorts` declares the allowlist; an unknown name, a repeat or too many keys gives an `ErrSort` error (answer 400):
+
+```go
+var orderSorts = q.NewSorts(map[string]q.Orderable{
+    "total":   Orders.Total,
+    "created": Orders.CreatedAt,
+}).Default(Orders.CreatedAt.Desc()).Tiebreak(Orders.ID.Asc())
+
+order, err := orderSorts.Parse(r.URL.Query().Get("sort")) // "-total,created"
+if err != nil { /* 400 */ }
+sel = sel.OrderBy(order...)
+```
+
+A `-` before a name sorts descending. The tiebreak is always appended last, which makes the order total. The number of statement shapes stays bounded by the allowlist.
+
 ### 13.2 Atomic counter
 
 {{ex:upsert}}
@@ -1165,6 +1215,7 @@ A `deleted_at timestamptz` field: `Update(...).Set(T.DeletedAt.ToX(q.Now()))` in
 | `ErrUnsupportedByServer` | construct newer than the target or the server | avoid its use, or raise `targets` |
 | `ErrShape` "UPDATE has no WHERE" | `Update`/`Delete` without a condition | `Where(...)` or `All()` |
 | `ErrShape` required column | `INSERT` without a `NOT NULL` column that has no default | set it; use `NewXInsert` |
+| `ErrSort` | name outside the allowlist, empty item, repeat or too many keys | return 400; fix the `NewSorts` map or the sort string |
 | `qt.ErrIDKey` | `SetIDKey` not called | `qt.MustSetIDKey` at startup |
 | `qt.ErrBadID` | ID text is wrong or belongs to another table | reject the request (400) |
 | `qt.ErrIDRange` | integer outside 0..2^48−1 | does not happen with a normal identity |
@@ -1182,6 +1233,7 @@ A `deleted_at timestamptz` field: `Update(...).Set(T.DeletedAt.ToX(q.Now()))` in
 qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
 Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (expression side)
+q.After q.KeyAsc q.KeyDesc q.KeyOrder   q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks
 .To(v)  .ToX(expr)  .Excluded()  .Returning(...)  .All()  .SetPatch(p)
 q.And q.Or q.Not    q.Exists q.InSelect q.Scalar q.Lateral  q.Union q.Except
 q.CountAll q.Count q.SumBig q.Avg q.Max q.StringAgg         .Filter .Distinct .OrderBy .Over
