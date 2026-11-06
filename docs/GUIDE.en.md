@@ -1085,9 +1085,15 @@ This is the fastest way to load many rows. `CopyQueryOut` and `CopyTableOut` cov
 `COPY` cannot take parameters, so `CopyQueryOut(...)` and `CopyIn(...).Where(...)` refuse a statement with arguments (`ErrParams`). `.InlineArgs()` writes the arguments into the SQL as literals instead, and is accepted only for values whose text is made from the typed value alone: integers, bools, floats, `time.Time`, uuids, bytes, NULL, slices of those, and strings of printable ASCII without a quote or a backslash. Any other value, and a parameter bound later with `Bind`, is an `ErrParams` error: the string is refused, never escaped.
 
 ```go
-st, _ := client.Render(q.CopyQueryOut(
-    q.Select(Orders.ID, Orders.Total).From(Orders).Where(Orders.Status.Eq("paid"), Orders.CreatedAt.Gte(since)),
-).InlineArgs().With(q.WithFormat(q.CopyCSV)))
+copyOut := q.CopyQueryOut(
+    q.Select(
+        Orders.ID, Orders.Total,
+    ).
+        From(Orders).
+        Where(Orders.Status.Eq("paid"), Orders.CreatedAt.Gte(since))).
+    InlineArgs().With(q.WithFormat(q.CopyCSV))
+
+st, _ := client.Render(copyOut)
 ```
 
 Each distinct value is a distinct statement, which is fine for `COPY` and the reason this is not the default.

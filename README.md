@@ -70,7 +70,9 @@ type UserOrders struct {
 }
 
 rows, err := client.All[UserOrders](ctx,
-    q.Select(Users.ID, Users.Email, q.Count(Orders.ID).As("orders")).
+    q.Select(
+        Users.ID, Users.Email, q.Count(Orders.ID).As("orders"),
+    ).
         From(Users).
         LeftJoin(Orders).On(Orders.UserID.EqX(Users.ID)).
         Where(Users.Tier.Eq("pro"), Users.Nickname.IsNotNull()).
@@ -106,7 +108,9 @@ full tour.
 
 ```go
 users, err := client.All[UserRow](ctx,
-    q.Select(Users.ID, Users.Email).
+    q.Select(
+        Users.ID, Users.Email,
+    ).
         From(Users).
         Where(Users.Tier.In("pro", "enterprise"), Users.Nickname.IsNotNull()).
         OrderBy(Users.CreatedAt.Desc()).
@@ -125,7 +129,10 @@ NULL are matched too:
 
 ```go
 users, err := client.All[UserRow](ctx,
-    q.Select(Users.ID, Users.Email).From(Users).
+    q.Select(
+        Users.ID, Users.Email,
+    ).
+        From(Users).
         Where(Users.Nickname.In(qt.Some("ada"), qt.None[string]())))
 ```
 
@@ -151,7 +158,10 @@ if last != nil {
     after = q.After(byDate.After(last.CreatedAt), byID.After(last.ID))
 }
 users, err := client.All[UserRow](ctx,
-    q.Select(Users.ID, Users.Email).From(Users).
+    q.Select(
+        Users.ID, Users.Email,
+    ).
+        From(Users).
         Where(after).
         OrderBy(q.KeyOrder(byDate, byID)...).
         Limit(20))
@@ -173,7 +183,11 @@ var userSorts = q.NewSorts(map[string]q.Orderable{
 order, err := userSorts.Parse(r.URL.Query().Get("sort")) // "-created,email"
 if err != nil { /* 400 */ }
 users, err := client.All[UserRow](ctx,
-    q.Select(Users.ID, Users.Email).From(Users).OrderBy(order...))
+    q.Select(
+        Users.ID, Users.Email,
+    ).
+        From(Users).
+        OrderBy(order...))
 ```
 
 `-` sorts descending, `+` is accepted as ascending, and the tiebreak is always
@@ -255,10 +269,15 @@ as is (`q.CopyIn(...)` with `pgxexec.CopyIn`); with them, `.InlineArgs()`
 writes the values into the SQL as literals:
 
 ```go
-st, _ := client.Render(q.CopyQueryOut(
-    q.Select(Orders.ID, Orders.Total).From(Orders).
+copyOut := q.CopyQueryOut(
+    q.Select(
+        Orders.ID, Orders.Total,
+    ).
+        From(Orders).
         Where(Orders.Status.Eq("paid"))).
-    InlineArgs().With(q.WithFormat(q.CopyCSV)))
+    InlineArgs().With(q.WithFormat(q.CopyCSV))
+
+st, _ := client.Render(copyOut)
 
 // run it with pgx's own COPY plumbing:
 conn := client.Pool.Acquire(ctx)
@@ -350,7 +369,10 @@ filter := struct {
 }
 
 users, err := client.All[UserRow](ctx,
-    q.Select(Users.ID, Users.Email).From(Users).
+    q.Select(
+        Users.ID, Users.Email,
+    ).
+        From(Users).
         Where(
             Users.Tier.EqIf(filter.Tier),
             Users.Balance.BetweenIf(filter.Min, filter.Max),

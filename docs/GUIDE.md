@@ -1089,9 +1089,15 @@ C'est le chemin le plus rapide pour charger beaucoup de lignes. `CopyQueryOut` e
 `COPY` n'accepte pas de paramètres : `CopyQueryOut(...)` et `CopyIn(...).Where(...)` refusent une instruction qui en porte (`ErrParams`). `.InlineArgs()` écrit à la place les arguments dans le SQL, comme littéraux, et n'accepte que les valeurs dont le texte est fabriqué par le type seul : entiers, booléens, flottants, `time.Time`, uuid, octets, NULL, tranches de ces types, et chaînes en ASCII imprimable sans apostrophe ni antislash. Toute autre valeur, et tout paramètre lié plus tard avec `Bind`, donne une erreur `ErrParams` : la chaîne est refusée, jamais échappée.
 
 ```go
-st, _ := client.Render(q.CopyQueryOut(
-    q.Select(Orders.ID, Orders.Total).From(Orders).Where(Orders.Status.Eq("paid"), Orders.CreatedAt.Gte(since)),
-).InlineArgs().With(q.WithFormat(q.CopyCSV)))
+copyOut := q.CopyQueryOut(
+    q.Select(
+        Orders.ID, Orders.Total,
+    ).
+        From(Orders).
+        Where(Orders.Status.Eq("paid"), Orders.CreatedAt.Gte(since))).
+    InlineArgs().With(q.WithFormat(q.CopyCSV))
+
+st, _ := client.Render(copyOut)
 ```
 
 Chaque valeur distincte est une instruction distincte : acceptable pour `COPY`, et c'est pourquoi ce n'est pas le comportement par défaut.
