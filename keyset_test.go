@@ -12,23 +12,25 @@ import (
 
 func TestKeysetRender(t *testing.T) {
 	day := time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
-	page := func(keys ...q.Key) q.Statement {
-		return q.Select(Users.ID).From(Users).Where(q.After(keys...)).OrderBy(q.KeyOrder(keys...)...).Limit(50)
+	byDate, byDateDesc, byID, byIDDesc := q.KeyAsc(Users.CreatedAt), q.KeyDesc(Users.CreatedAt), q.KeyAsc(Users.ID), q.KeyDesc(Users.ID)
+	page := func(order []q.KeyDef, keys ...q.Key) q.Statement {
+		return q.Select(Users.ID).From(Users).Where(q.After(keys...)).OrderBy(q.KeyOrder(order...)...).Limit(50)
 	}
+	ord := func(ks ...q.KeyDef) []q.KeyDef { return ks }
 	cases := []struct {
 		name, sql string
 		st        q.Statement
 		args      int
 	}{
-		{"first page, no key", `SELECT "users"."id" FROM "public"."users" LIMIT $1`, page(), 1},
-		{"one key", `WHERE "users"."id" > $1 ORDER BY "users"."id" LIMIT $2`, page(q.KeyAsc(Users.ID, 7)), 2},
-		{"one key desc", `WHERE "users"."id" < $1 ORDER BY "users"."id" DESC`, page(q.KeyDesc(Users.ID, 7)), 2},
+		{"first page, no key", `FROM "public"."users" ORDER BY "users"."id" LIMIT $1`, page(ord(byID)), 1},
+		{"one key", `WHERE "users"."id" > $1 ORDER BY "users"."id" LIMIT $2`, page(ord(byID), byID.After(7)), 2},
+		{"one key desc", `WHERE "users"."id" < $1 ORDER BY "users"."id" DESC`, page(ord(byIDDesc), byIDDesc.After(7)), 2},
 		{"same direction: row comparison", `WHERE ("users"."created_at", "users"."id") > ($1, $2) ORDER BY "users"."created_at", "users"."id"`,
-			page(q.KeyAsc(Users.CreatedAt, day), q.KeyAsc(Users.ID, 7)), 3},
+			page(ord(byDate, byID), byDate.After(day), byID.After(7)), 3},
 		{"same direction desc", `WHERE ("users"."created_at", "users"."id") < ($1, $2) ORDER BY "users"."created_at" DESC, "users"."id" DESC`,
-			page(q.KeyDesc(Users.CreatedAt, day), q.KeyDesc(Users.ID, 7)), 3},
+			page(ord(byDateDesc, byIDDesc), byDateDesc.After(day), byIDDesc.After(7)), 3},
 		{"mixed directions: expansion", `WHERE "users"."created_at" < $1 OR ("users"."created_at" = $2 AND "users"."id" > $3) ORDER BY "users"."created_at" DESC, "users"."id"`,
-			page(q.KeyDesc(Users.CreatedAt, day), q.KeyAsc(Users.ID, 7)), 4},
+			page(ord(byDateDesc, byID), byDateDesc.After(day), byID.After(7)), 4},
 	}
 	for _, c := range cases {
 		st, args := renderIf(t, c.st)

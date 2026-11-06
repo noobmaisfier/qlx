@@ -1572,23 +1572,23 @@ func nextPage(afterID int64, size int64) q.Statement {
 
 Contrairement à `Offset`, le coût ne grandit pas avec la profondeur, et la forme est la même pour toutes les pages.
 
-Avec une clé composée (ici le plus récent d'abord, l'identifiant départageant), `KeyAsc` / `KeyDesc` portent la valeur de la dernière ligne vue, `After` produit le prédicat et `KeyOrder` l'`ORDER BY` correspondant :
+Avec une clé composée (ici le plus récent d'abord, l'identifiant départageant), `KeyAsc` / `KeyDesc` déclarent la clé sans valeur, `KeyOrder` en tire l'`ORDER BY`, et `.After(v)` lui ajoute, typée comme la colonne, la valeur de la dernière ligne vue ; `q.After` produit le prédicat :
 
 ```go
 func page(last *Cursor, size int64) q.Statement {
-    var keys []q.Key
+    byDate, byID := q.KeyDesc(Orders.CreatedAt), q.KeyAsc(Orders.ID) // declared without a value
+    var after q.Pred                                                  // absent on the first page
     if last != nil {
-        keys = []q.Key{q.KeyDesc(Orders.CreatedAt, last.CreatedAt), q.KeyAsc(Orders.ID, last.ID)}
+        after = q.After(byDate.After(last.CreatedAt), byID.After(last.ID))
     }
-    order := q.KeyOrder(q.KeyDesc(Orders.CreatedAt, time.Time{}), q.KeyAsc(Orders.ID, 0))
     return q.Select(Orders.ID, Orders.Total).From(Orders).
-        Where(q.After(keys...)).
-        OrderBy(order...).
+        Where(after).
+        OrderBy(q.KeyOrder(byDate, byID)...).
         Limit(size)
 }
 ```
 
-`KeyOrder` ignore les valeurs : passez-lui des zéros quand il n'y a pas encore de curseur. Sans clé (première page), `After()` est un prédicat absent. Quand toutes les clés vont dans le même sens, `After` rend une comparaison de lignes `(a, b) > ($1, $2)` que PostgreSQL résout par un seul parcours d'index ; en sens mixtes il rend l'expansion équivalente `a < $1 OR (a = $2 AND b > $3)`. Les colonnes de clé doivent être `NOT NULL` et, ensemble, uniques (terminez par la clé primaire) : un `NULL` ne se compare jamais, et deux lignes de même clé seraient sautées ou répétées à la frontière d'une page.
+Sans clé (première page), `q.After()` est un prédicat absent. Quand toutes les clés vont dans le même sens, `After` rend une comparaison de lignes `(a, b) > ($1, $2)` que PostgreSQL résout par un seul parcours d'index ; en sens mixtes il rend l'expansion équivalente `a < $1 OR (a = $2 AND b > $3)`. Les colonnes de clé doivent être `NOT NULL` et, ensemble, uniques (terminez par la clé primaire) : un `NULL` ne se compare jamais, et deux lignes de même clé seraient sautées ou répétées à la frontière d'une page.
 
 ### 13.1b Tri choisi par le client
 
@@ -1697,7 +1697,7 @@ Un champ `deleted_at timestamptz` : `Update(...).Set(T.DeletedAt.ToX(q.Now()))` 
 qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
 Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (côté expression)
-q.After q.KeyAsc q.KeyDesc q.KeyOrder   q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks
+q.After q.KeyAsc q.KeyDesc q.KeyOrder .After(v)  q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks
 .To(v)  .ToX(expr)  .Excluded()  .Returning(...)  .All()  .SetPatch(p)
 q.And q.Or q.Not    q.Exists q.InSelect q.Scalar q.Lateral  q.Union q.Except
 q.CountAll q.Count q.SumBig q.Avg q.Max q.StringAgg         .Filter .Distinct .OrderBy .Over

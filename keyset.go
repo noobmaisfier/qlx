@@ -6,39 +6,63 @@ package qlx
 // given by one or more key columns. Unlike OFFSET the cost does not grow with
 // the depth of the page, and a row inserted meanwhile cannot shift the pages.
 //
-//	last := cursor // the key values of the last row of the previous page
-//	keys := []qlx.Key{qlx.KeyDesc(Orders.CreatedAt, last.CreatedAt), qlx.KeyAsc(Orders.ID, last.ID)}
+//	byDate, byID := qlx.KeyDesc(Orders.CreatedAt), qlx.KeyAsc(Orders.ID)
+//	var after qlx.Pred // absent on the first page
+//	if last != nil {   // the last row of the previous page
+//		after = qlx.After(byDate.After(last.CreatedAt), byID.After(last.ID))
+//	}
 //	sel := qlx.Select(Orders.ID, Orders.Total).From(Orders).
-//		Where(qlx.After(keys...)).
-//		OrderBy(qlx.KeyOrder(keys...)...).
+//		Where(after).
+//		OrderBy(qlx.KeyOrder(byDate, byID)...).
 //		Limit(50)
 //
-// For the first page, build the predicate with If(hasCursor, After(...)), or
-// pass no keys: After() with no key is an absent predicate.
+// The keys are declared once, without a value: that is what the order needs.
+// The value, typed like the column, is added with After when there is a
+// cursor. After() with no key is an absent predicate.
 //
 // The key columns must be NOT NULL and, together, unique (end with the
 // primary key): a NULL never compares true, and two rows with the same key
 // would be skipped or repeated at a page boundary.
 
-// Key is one column of a keyset order with the value of the last row seen.
+// KeyCol is a key column and its direction, declared once and without a
+// value: it gives the ORDER BY of every page. Its After method adds the value
+// of the last row seen, typed like the column, and gives the Key that After
+// needs.
+type KeyCol[T any] struct {
+	n    node
+	desc bool
+}
+
+// KeyAsc declares a key ordered ascending.
+func KeyAsc[T any](e Operand[T]) KeyCol[T] { return KeyCol[T]{n: e.exprNode()} }
+
+// KeyDesc declares a key ordered descending.
+func KeyDesc[T any](e Operand[T]) KeyCol[T] { return KeyCol[T]{n: e.exprNode(), desc: true} }
+
+// After pairs the key with its value in the last row of the previous page.
+func (k KeyCol[T]) After(v T) Key { return Key{n: k.n, v: v, desc: k.desc} }
+
+func (k KeyCol[T]) keyDef() (node, bool) { return k.n, k.desc }
+
+// Key is a key column with the value of the last row seen.
 type Key struct {
 	n    node
 	v    any
 	desc bool
 }
 
-// KeyAsc is a key ordered ascending; after is its value in the last row of
-// the previous page.
-func KeyAsc[T any](e Operand[T], after T) Key { return Key{n: e.exprNode(), v: after} }
+func (k Key) keyDef() (node, bool) { return k.n, k.desc }
 
-// KeyDesc is a key ordered descending.
-func KeyDesc[T any](e Operand[T], after T) Key { return Key{n: e.exprNode(), v: after, desc: true} }
+// KeyDef is a KeyCol or a Key: what KeyOrder needs is the column and the
+// direction, which both carry.
+type KeyDef interface{ keyDef() (node, bool) }
 
 // KeyOrder returns the ORDER BY terms of the keys, in order.
-func KeyOrder(keys ...Key) []OrderTerm {
+func KeyOrder(keys ...KeyDef) []OrderTerm {
 	out := make([]OrderTerm, len(keys))
 	for i, k := range keys {
-		out[i] = OrderTerm{n: k.n, desc: k.desc}
+		n, desc := k.keyDef()
+		out[i] = OrderTerm{n: n, desc: desc}
 	}
 	return out
 }

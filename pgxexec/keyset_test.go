@@ -55,9 +55,9 @@ func TestKeysetWalkAgainstServer(t *testing.T) {
 		for _, size := range []int64{1, 7, 10, 53, 100} {
 			var got []idBal
 			var keys []q.Key
+			byBal, byID := q.KeyDesc(U.Balance), q.KeyAsc(U.ID)
 			for pages := 0; pages < 200; pages++ {
-				st := render(t, q.Select(U.ID, U.Balance).From(U).Where(mine, q.After(keys...)).OrderBy(q.KeyOrder(
-					q.KeyDesc(U.Balance, 0), q.KeyAsc(U.ID, 0))...).Limit(size))
+				st := render(t, q.Select(U.ID, U.Balance).From(U).Where(mine, q.After(keys...)).OrderBy(q.KeyOrder(byBal, byID)...).Limit(size))
 				rows, err := pgxexec.All[idBal](ctx, tx, st)
 				if err != nil {
 					t.Fatal(err)
@@ -67,7 +67,7 @@ func TestKeysetWalkAgainstServer(t *testing.T) {
 				}
 				got = append(got, rows...)
 				last := rows[len(rows)-1]
-				keys = []q.Key{q.KeyDesc(U.Balance, last.Balance), q.KeyAsc(U.ID, last.ID)}
+				keys = []q.Key{byBal.After(last.Balance), byID.After(last.ID)}
 			}
 			if !slices.Equal(got, full) {
 				t.Fatalf("size %d: walk differs from the full query (%d vs %d rows)", size, len(got), len(full))
@@ -76,9 +76,10 @@ func TestKeysetWalkAgainstServer(t *testing.T) {
 		// same direction: the row comparison form
 		var got []int64
 		var keys []q.Key
+		upBal, upID := q.KeyAsc(U.Balance), q.KeyAsc(U.ID)
 		for range 100 {
 			rows, err := pgxexec.All[idBal](ctx, tx, render(t, q.Select(U.ID, U.Balance).From(U).Where(mine, q.After(keys...)).
-				OrderBy(q.KeyOrder(q.KeyAsc(U.Balance, 0), q.KeyAsc(U.ID, 0))...).Limit(8)))
+				OrderBy(q.KeyOrder(upBal, upID)...).Limit(8)))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -89,7 +90,7 @@ func TestKeysetWalkAgainstServer(t *testing.T) {
 				got = append(got, r.ID)
 			}
 			last := rows[len(rows)-1]
-			keys = []q.Key{q.KeyAsc(U.Balance, last.Balance), q.KeyAsc(U.ID, last.ID)}
+			keys = []q.Key{upBal.After(last.Balance), upID.After(last.ID)}
 		}
 		want, _ := pgxexec.All[int64](ctx, tx, render(t, q.Select(U.ID).From(U).Where(mine).OrderBy(U.Balance.Asc(), U.ID.Asc())))
 		if !slices.Equal(got, want) {

@@ -1568,23 +1568,23 @@ func nextPage(afterID int64, size int64) q.Statement {
 
 Unlike `Offset`, the cost does not grow with depth, and the shape is the same for every page.
 
-With a composite key (newest first here, the id breaking ties), `KeyAsc` / `KeyDesc` carry the value of the last row seen, `After` builds the predicate and `KeyOrder` the matching `ORDER BY`:
+With a composite key (newest first here, the id breaking ties), `KeyAsc` / `KeyDesc` declare the key without a value, `KeyOrder` gives the `ORDER BY`, and `.After(v)` adds the value of the last row seen, typed like the column; `q.After` builds the predicate:
 
 ```go
 func page(last *Cursor, size int64) q.Statement {
-    var keys []q.Key
+    byDate, byID := q.KeyDesc(Orders.CreatedAt), q.KeyAsc(Orders.ID) // declared without a value
+    var after q.Pred                                                  // absent on the first page
     if last != nil {
-        keys = []q.Key{q.KeyDesc(Orders.CreatedAt, last.CreatedAt), q.KeyAsc(Orders.ID, last.ID)}
+        after = q.After(byDate.After(last.CreatedAt), byID.After(last.ID))
     }
-    order := q.KeyOrder(q.KeyDesc(Orders.CreatedAt, time.Time{}), q.KeyAsc(Orders.ID, 0))
     return q.Select(Orders.ID, Orders.Total).From(Orders).
-        Where(q.After(keys...)).
-        OrderBy(order...).
+        Where(after).
+        OrderBy(q.KeyOrder(byDate, byID)...).
         Limit(size)
 }
 ```
 
-`KeyOrder` ignores the values: pass zeros when there is no cursor yet. With no key (the first page) `After()` is an absent predicate. When every key goes the same way, `After` renders a row comparison `(a, b) > ($1, $2)` that PostgreSQL answers with one index range scan; with mixed directions it renders the equivalent expansion `a < $1 OR (a = $2 AND b > $3)`. Key columns must be `NOT NULL` and, together, unique (end with the primary key): a `NULL` never compares, and two rows with the same key would be skipped or repeated at a page boundary.
+With no key (the first page) `q.After()` is an absent predicate. When every key goes the same way, `After` renders a row comparison `(a, b) > ($1, $2)` that PostgreSQL answers with one index range scan; with mixed directions it renders the equivalent expansion `a < $1 OR (a = $2 AND b > $3)`. Key columns must be `NOT NULL` and, together, unique (end with the primary key): a `NULL` never compares, and two rows with the same key would be skipped or repeated at a page boundary.
 
 ### 13.1b Client-chosen sort
 
@@ -1693,7 +1693,7 @@ A `deleted_at timestamptz` field: `Update(...).Set(T.DeletedAt.ToX(q.Now()))` in
 qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
 Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (expression side)
-q.After q.KeyAsc q.KeyDesc q.KeyOrder   q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks
+q.After q.KeyAsc q.KeyDesc q.KeyOrder .After(v)  q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks
 .To(v)  .ToX(expr)  .Excluded()  .Returning(...)  .All()  .SetPatch(p)
 q.And q.Or q.Not    q.Exists q.InSelect q.Scalar q.Lateral  q.Union q.Except
 q.CountAll q.Count q.SumBig q.Avg q.Max q.StringAgg         .Filter .Distinct .OrderBy .Over

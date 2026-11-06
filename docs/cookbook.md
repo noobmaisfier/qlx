@@ -37,14 +37,18 @@ Builders are immutable: always assign the result (the analyzer flags a discarded
 ## Keyset pagination and client-chosen sort
 
 ```go
-keys := []q.Key{q.KeyDesc(Orders.CreatedAt, last.CreatedAt), q.KeyAsc(Orders.ID, last.ID)}
+byDate, byID := q.KeyDesc(Orders.CreatedAt), q.KeyAsc(Orders.ID) // declared without a value
+var after q.Pred                                                  // absent on the first page
+if last != nil {
+    after = q.After(byDate.After(last.CreatedAt), byID.After(last.ID))
+}
 q.Select(Orders.ID, Orders.Total).From(Orders).
-    Where(q.After(keys...)).                        // (created_at, id) < ($1, $2)
-    OrderBy(q.KeyOrder(keys...)...).
+    Where(after).                                   // (created_at, id) < ($1, $2)
+    OrderBy(q.KeyOrder(byDate, byID)...).
     Limit(20)
 ```
 
-`After()` with no key is an absent predicate: the first page needs no special case. Key columns must be `NOT NULL` and unique together, ending with the primary key; when all directions are equal PostgreSQL sees one row comparison and can use one index range scan. `KeyOrder` ignores the values, so zeros are fine for the first page.
+`.After(v)` types the value like the column. With no key the predicate is absent, so the first page needs no special case. Key columns must be `NOT NULL` and unique together, ending with the primary key; when all directions are equal PostgreSQL sees one row comparison and can use one index range scan.
 
 A sort string from the client goes through an allowlist, never into the SQL:
 

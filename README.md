@@ -124,24 +124,25 @@ To render without a database (CLI tools, migrations), use
 `q.SQL(q.Dialect{Version: q.PG18}, q.Select(Users.ID).From(Users))`.
 
 For deep pages, a keyset avoids the growing cost of `OFFSET`: `KeyAsc` /
-`KeyDesc` carry the last row's values, `After` builds the predicate and
-`KeyOrder` the matching `ORDER BY`:
+`KeyDesc` declare the key, `KeyOrder` gives the matching `ORDER BY`, and
+`.After(v)` adds the last row's value, typed like the column:
 
 ```go
-keys := []q.Key{
-    q.KeyDesc(Users.CreatedAt, last.CreatedAt),
-    q.KeyAsc(Users.ID, last.ID),
+byDate, byID := q.KeyDesc(Users.CreatedAt), q.KeyAsc(Users.ID)
+var after q.Pred // absent on the first page
+if last != nil {
+    after = q.After(byDate.After(last.CreatedAt), byID.After(last.ID))
 }
 users, err := client.All[UserRow](ctx,
     q.Select(Users.ID, Users.Email).From(Users).
-        Where(q.After(keys...)).
-        OrderBy(q.KeyOrder(keys...)...).
+        Where(after).
+        OrderBy(q.KeyOrder(byDate, byID)...).
         Limit(20))
 ```
 
 When all keys go the same way, `After` renders one row comparison
-`(a, b) > ($1, $2)`; mixed directions render the equivalent expansion. For the
-first page, pass no keys (or use `q.If`): `After()` is then an absent predicate.
+`(a, b) > ($1, $2)`; mixed directions render the equivalent expansion. With no
+key the predicate is absent, so the first page needs no special case.
 
 A sort string from a URL must never reach the SQL. `NewSorts` maps names to
 columns and rejects anything else with `ErrSort`:
