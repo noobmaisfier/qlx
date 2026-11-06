@@ -120,6 +120,23 @@ WHERE "users"."tier" IN ($1, $2) AND "users"."nickname" IS NOT NULL
 ORDER BY "users"."created_at" DESC LIMIT $3 OFFSET $4
 ```
 
+On a nullable column, a `None` in the list means NULL, so the rows that hold
+NULL are matched too:
+
+```go
+users, err := client.All[UserRow](ctx,
+    q.Select(Users.ID, Users.Email).From(Users).
+        Where(Users.Nickname.In(qt.Some("ada"), qt.None[string]())))
+```
+
+```sql
+SELECT "users"."id", "users"."email" FROM "public"."users"
+WHERE "users"."nickname" = ANY($1) OR "users"."nickname" IS NULL
+```
+
+The array `$1` holds only the non-NULL values; `NotAll` does the same with
+`<> ALL($1) AND "nickname" IS NOT NULL`.
+
 To render without a database (CLI tools, migrations), use
 `q.SQL(q.Dialect{Version: q.PG18}, q.Select(Users.ID).From(Users))`.
 
@@ -230,6 +247,35 @@ ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
 With a `pgx.Tx`, the chunks join your transaction; `MaxParams` lowers the
 budget when `ToX` values carry arguments of their own. The splitting alone is
 `InsertQuery.Chunks(rows, maxParams)`.
+
+### COPY without parameters
+
+`COPY` cannot take `$n` parameters. Without arguments the statement renders
+as is (`q.CopyIn(...)` with `pgxexec.CopyIn`); with them, `.InlineArgs()`
+writes the values into the SQL as literals:
+
+```go
+st, _ := client.Render(q.CopyQueryOut(
+    q.Select(Orders.ID, Orders.Total).From(Orders).
+        Where(Orders.Status.Eq("paid"))).
+    InlineArgs().With(q.WithFormat(q.CopyCSV)))
+
+// run it with pgx's own COPY plumbing:
+conn := client.Pool.Acquire(ctx)
+defer conn.Release()
+var out bytes.Buffer
+conn.Conn().PgConn().CopyTo(ctx, &out, st.SQL)
+```
+
+```sql
+COPY (SELECT "orders"."id", "orders"."total" FROM "public"."orders"
+WHERE "orders"."status" = 'paid') TO STDOUT (FORMAT csv)
+```
+
+Only plain values are accepted (integers, bools, floats, times, uuids, bytes,
+NULL and printable-ASCII strings without quote or backslash); anything else,
+including a string like `x' OR '1'='1`, is refused with `ErrParams` instead of
+escaped. See [docs/GUIDE.en.md](docs/GUIDE.en.md) §9.3.
 
 ### UPDATE and DELETE
 
