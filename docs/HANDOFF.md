@@ -1,5 +1,9 @@
 # Handoff: what to run, what is unverified
 
+> **Historical log.** This file records the state at each dated checkpoint. It
+> is not the current status; see the [README](../README.md) and its
+> [verification section](../README.md#verification).
+
 ## Release checklist (from the 27 October review)
 
 The review found that the code is sound and the defects were in the release chain. Before sending a tree:

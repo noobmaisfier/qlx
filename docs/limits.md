@@ -74,7 +74,7 @@ A Go type is a smaller set than a PostgreSQL type. Where the two differ, QLX pic
 | array with a NULL element (`int4[]`, `inet[]`) | `[]int32`, `[]netip.Addr` | the read fails on that row | config `array_nulls: true` generates `[]qt.Null[T]` |
 | array of two or more dimensions | `[]T` | refused with an error naming the shape (it used to be flattened silently) | read into `pgtype.Array[T]` or `[][]T` |
 | array whose lower bound is not 1 | `[]T` | refused | same |
-| `uuid` | `[16]byte` | represented; has no text form | in the simple protocol use `string` for the column (see below) |
+| `uuid` | `uuid.UUID` | represented; has a text form | config `uuid: bytes` generates `[16]byte`, which has no text form: in the simple protocol use `string` for the column (see below) |
 | `"char"` with the high bit set | `qt.Char` | pgx cannot read the text form of such a byte | use the binary protocol, or cast to `int` in the query |
 | `time` `24:00:00` | `qt.TimeOfDay` | represented as 24h | `time.Time` cannot hold it |
 | `float8` into a `float32` field | n/a | the value is converted by pgx and may overflow to infinity | declare the field `float64` unless the column is `float4` |

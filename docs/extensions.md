@@ -43,7 +43,7 @@ QLX_RELEASE=1 go test ./cmd/pgcat           # the majors check becomes an error
 On a server with the extension installed, on each major:
 
 ```bash
-QLX_PG_HOST=… QLX_PG_PORT=… QLX_PG_VERSION=18 PGPASSWORD=… \
+QLX_PG_HOST=… PGPORT=… QLX_PG_VERSION=18 PGPASSWORD=… \
   go test -run TestServerAcceptsEveryWrapper ./pgcat/ext/<name>
 (cd pgxexec && QLX_TEST_DSN=… go test -run <Pack>Extension .)
 ```

@@ -12,7 +12,7 @@ Decisions D1–D8 are in the plan. This log adds the implementation decisions th
 | D9e | JSONB columns are `qt.JSONB[T]`; `qt.JSON[T]` is a deprecated alias | the SQL type is jsonb; json is the rare case |
 | D9f | Generated wrappers are split into area packages `pgcat/<area>` with a flat `pg` facade | one package of ~20k symbols is unusable in gopls; areas are importable alone |
 | D9g | Nullability is `qt.Null[T]` only; pointer mode is rejected | one representation, one set of rules (S1 encoding C) |
-| D9h | The analyzer is a separate module on `go/analysis`; `qlx vet` (stdlib only) stays as the zero-dependency subset | `x/tools` must not enter the core module |
+| D9h | The analyzer is a separate module on `go/analysis`. `qlx vet` currently runs the stdlib-only subset; the planned direction is a single `qlx vet` front-end delegating to `qlxvet` (V001–V030), with the subset kept only as an explicit fast fallback if needed | `x/tools` must not enter the core module; the split is a dependency constraint, not a product split |
 | D9i | Generic methods (Go 1.27) are used where a type parameter belongs to the call, not the receiver: `Expr.Cast[To]`, `TimeExpr.AtTimeZone[To]`, `Client.All[R]` | read left to right; package-level forms remain for operands that are not an `Expr` |
 | D9j | The grammar ledger has one mapping file for all pinned versions | a production present in any pinned version must be mapped; stale entries fail |
 | D9k | Strings are never SQL. Read-side helpers (`QueryName`, `Pretty`, `DescribeSQL`) take rendered SQL and are allow-listed in the API audit test | keeps "no API accepts SQL text" testable |

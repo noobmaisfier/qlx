@@ -141,7 +141,7 @@ The function may run more than once on a serialization failure or deadlock: keep
 
 ## Row-level security tenants
 
-`q.SetConfig("app.tenant", id, true)` is `set_config` with bound values, so the tenant id is never spliced into SQL.
+`q.SetConfig("app.tenant", tenant, true)` is `set_config` with bound values, so the tenant id is never spliced into SQL. `tenant` is a Go `string`; convert a `qt.ID` explicitly and make the RLS policy expect the same form.
 
 ## Plan advice (PostgreSQL 19)
 
@@ -212,10 +212,10 @@ ids: string
 ```
 
 ```go
-qt.MustSetIDKey(secret)                  // once at startup: 16+ random bytes, kept stable
+qt.MustSetIDKey(secret)                    // once at startup: 16+ random bytes, kept stable
 
-p, _ := c.One[blog.Post](ctx, query)   // p.ID is blog.PostID, p.AuthorID is blog.AuthorID
-b, _ := json.Marshal(p)                  // {"id":"7mQp3VxK9cE","author_id":"Ck4RtYw2nHa",...}
+p, _ := client.One[blog.Post](ctx, query)  // p.ID is blog.PostID, p.AuthorID is blog.AuthorID
+b, _ := json.Marshal(p)                    // {"id":"7mQp3VxK9cE","author_id":"Ck4RtYw2nHa",...}
 
 id, err := qt.ParseID[blog.PostsIDSpace](r.PathValue("id"))   // typo or forged string: qt.ErrBadID
 Posts.ID.Eq(id)                          // the database still compares integers

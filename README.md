@@ -196,8 +196,9 @@ and `All` is the explicit opt-in for a whole-table write.
 ### Partial updates
 
 `To(v)` binds a value, `ToX(expr)` assigns an expression, `ToDefault()` writes
-`DEFAULT`, `ToNull()` writes `NULL`, and `ToIf(opt)` leaves the assignment out
-when the option is unset:
+`DEFAULT`, `ToNull()` writes `NULL`, `ToIf(opt)` leaves the assignment out when
+the option is unset, and `ToOrDefault(opt)` writes `DEFAULT` when the option is
+unset (in an `UPDATE`, use `ToIf`: V027):
 
 ```go
 q.Update(Users).
@@ -352,27 +353,29 @@ to HTTP belongs to the application.
 
 ### Analyzer
 
-`qlx vet` runs the checks with no configuration and no extra install:
+`qlx vet` runs the checks that need only the standard library, V001–V005, with
+no configuration and no extra install:
 
 ```bash
 qlx vet ./...
 ```
 
-In CI, or inside gopls and golangci-lint, use the standard `go/analysis` pass:
+In CI, or inside gopls and golangci-lint, use the full `go/analysis` pass:
 
 ```bash
 go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest
 go vet -vettool="$(go env GOPATH)/bin/qlxvet" -targets=16,17,18,19 ./...
 ```
 
-The analyzer reports V001–V030: a column outside `FROM`, `UPDATE` without
+The full analyzer reports V001–V030: a column outside `FROM`, `UPDATE` without
 `WHERE`, a bare column next to `GroupBy`, an aggregate in `WHERE`, a feature
 newer than your targets, `ToNull()` on a `NOT NULL` column. For mapping, V018
 compares `R` with the selected
 columns: count, order, field or alias names, Go types, `qt.Null` where the
 column can be NULL, and the optional side of an outer join. That is what turns a
 wrong struct, a missing alias or a swapped field into a `go vet` finding before
-the query runs.
+the query runs. A single `qlx vet` front-end that delegates to `qlxvet` is
+planned; until then, the two commands above have the coverage stated here.
 
 A suppression needs a reason: `//qlx:ignore <reason>`. See
 [analyzer/README.md](analyzer/README.md).
@@ -415,9 +418,9 @@ regression case.
 | `github.com/noobmaisfier/qlx/bench` | comparisons and allocation budgets | [bench](bench/README.md) |
 
 The root module has no third-party dependencies. Anything that needs one lives
-in its own module, so your `go.mod` only gains what you import. Each module is
-tagged separately (`v0.9.1`, `analyzer/v0.9.1`, `pgxexec/v0.9.1`,
-`otelqlx/v0.9.1`).
+in its own module, so your `go.mod` only gains what you import. The published
+modules are tagged separately (`v0.9.1`, `analyzer/v0.9.1`, `pgxexec/v0.9.1`,
+`otelqlx/v0.9.1`); `bench` is internal and is not released.
 
 ## Types in custom structs
 
@@ -575,22 +578,22 @@ QLX targets PostgreSQL **16, 17, 18 and 19**. The catalog ledger holds 3,488
 functions and 805 operators; the generated package wraps 1,862 of those
 functions and 793 operators with typed signatures, plus the pgvector, PostGIS,
 pg_trgm, hstore, ltree and citext packs. What is not wrapped is documented in
-[docs/extensions.md](docs/extensions.md); a feature newer than your `-targets`
-is caught by V009 and by the renderer.
+[docs/pgcat/README.md](docs/pgcat/README.md#not-wrapped); a feature newer than
+your `-targets` is caught by V009 and by the renderer.
 
 ## Verification
 
 | Check | Result |
 | --- | --- |
-| Full test suite against real servers | passes on PostgreSQL 16.15, 17.11, 18.4 and 19rc1 (and with `-race` on 18) |
+| Full test suite against real servers | passes on PostgreSQL 16.15, 17.11, 18.6 and 19rc1 (and with `-race` on 18) |
 | Every generated wrapper prepared | 3,721 / 3,761 / 3,845 / 3,892 cases on 16 / 17 / 18 / 19, 0 errors |
 | Differential fuzz vs `PREPARE` | 100,000 well-typed random queries per major, 0 rejected |
 | Analyzer | real `analysistest`, including Go 1.27 generic methods |
 | Executor | integration suite green on all four majors |
 
-Not yet observed: the first GitHub Actions run. PostgreSQL 19 is verified on a
-release candidate; re-pinning on GA is tracked in
-[docs/watchlist.md](docs/watchlist.md).
+GitHub Actions is green on the same PostgreSQL 16–19 matrix, including the
+v0.9.1 release. PostgreSQL 19 is verified on a release candidate; re-pinning on
+GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 
 ## Documentation
 

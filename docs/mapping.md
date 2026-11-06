@@ -97,7 +97,7 @@ t, err := pgxexec.One[q.Tuple2[int64, string]](ctx, db, stmt) // t.V1, t.V2
 
 A tuple is a position-mode struct that someone already wrote for you, named `V1..V8`. It is fine for one query, two or three columns, no name worth giving: `INSERT ... RETURNING id, created_at`, `SELECT count(*), max(x)`. It is not a safer type than a `//qlx:row` struct: the compiler does not tie either to the query, and both are checked the same way (V018, `VerifyRow`). Past three or four columns, or as soon as the result crosses a function boundary, `t.V3` tells the reader nothing: write the struct.
 
-Do not remove them. They are the only reflection-free `R` that needs no generated code, the analyzer and `VerifyRow` treat them like any position type, and the `RETURNING` examples in the README use them.
+Do not remove them. They are the only reflection-free `R` that needs no generated code, and the analyzer and `VerifyRow` treat them like any position type.
 
 **Tested** (`tuple and scalar`): a tuple over the wrong number of columns fails on the first run, with a pgx message, `number of field descriptions must equal number of destinations, got 1 and 2`.
 
@@ -115,7 +115,7 @@ pgxexec: result type int64 is not a struct, so the query must select exactly one
 
 ## 6. What a column can be read into
 
-The full table is in the guide (section 10.10). The rules that matter:
+The full table is in the guide (section 10). The rules that matter:
 
 - **NULL.** A nullable column goes into `qt.Null[T]`, a pointer, a slice or an `sql.Scanner`. A plain `int64` fails on the row that holds a NULL: `cannot scan NULL into *int64`. The generated row types already use `qt.Null[T]` for nullable columns.
 - **Aggregates are typed for you.** `q.Max(Users.Balance)` is an `AggExpr[qt.Null[int64]]`, because an aggregate over zero rows is NULL. `q.CountAll()` is not nullable. Use the same type in your struct.

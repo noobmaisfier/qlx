@@ -12,7 +12,7 @@ import (
 // ID is the id of a row, kept as an integer in the database and shown as a
 // short opaque string everywhere else: JSON, URLs, logs, fmt.
 //
-//	var id users.ID            // = qt.ID[users.IDSpace]
+//	var id db.UserID           // = qt.ID[db.UsersIDSpace]
 //	b, _ := json.Marshal(id)   // "7mQp3VxK9cE"
 //
 // The generator (qlx.yaml: `ids: string`) types every single-column integer
