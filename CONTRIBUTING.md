@@ -52,6 +52,14 @@ go test ./...                      # tests that need a server skip themselves
 scripts/with_pg.sh go test ./...   # the same, against a throwaway cluster
 ```
 
+The internal modules (`pgxexec`, `otelqlx`, `analyzer`, `bench`) are separate
+Go modules. For local development that links them to the root module, create a
+workspace (these files are gitignored):
+
+```bash
+go work init . && go work use ./pgxexec ./analyzer ./otelqlx ./bench
+```
+
 `scripts/with_pg.sh` starts a cluster on a unix socket, loads
 `fixture/schema.sql`, exports the `QLX_PG_*` variables, runs your command and
 tears the cluster down. Set `PGBIN` if your binaries are not under
