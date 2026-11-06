@@ -674,8 +674,8 @@ func WaitForLSN(lsn string, timeoutMillis int64, noThrow bool) Command {
 func (b *builder) noParams(inline bool, what string, f func()) {
 	if inline {
 		b.inline++
+		defer func() { b.inline-- }()
 		f()
-		b.inline--
 		return
 	}
 	before := len(b.slots)

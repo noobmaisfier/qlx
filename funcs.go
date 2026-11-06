@@ -103,24 +103,10 @@ func (e Expr[T]) IsNotDistinctFrom(v T) Pred {
 	return Pred{cmpNode{l: e.n, op: "IS NOT DISTINCT FROM", r: argNode{v}}}
 }
 
-type notInNode struct {
-	l   node
-	arr any
-}
-
-func (n notInNode) render(b *builder) {
-	wrapIfCompound(b, n.l)
-	b.write(" <> ALL(")
-	b.arg(n.arr)
-	b.write(")")
-}
-
 // NotIn renders "<> ALL($1)" with one array parameter. An empty list is TRUE.
+// For a nullable element type a None element means NULL, matched with IS NOT NULL.
 func (e Expr[T]) NotIn(vs ...T) Pred {
-	if len(vs) == 0 {
-		return True
-	}
-	return Pred{notInNode{l: e.n, arr: vs}}
+	return e.NotAll(vs)
 }
 
 // ---------------------------------------------------------------------------

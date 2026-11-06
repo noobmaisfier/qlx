@@ -405,15 +405,25 @@ func splitNullElems[T any](vs []T) (keep []T, ok bool) {
 	if _, nullable := any(vs[0]).(argValuer); !nullable {
 		return nil, false
 	}
-	nulls := 0
+	// First pass: check whether any element is NULL; if none are, avoid
+	// allocating the keep slice at all.
+	hasNull := false
 	for _, v := range vs {
 		if normalizeArg(v) == nil {
-			nulls++
-		} else {
+			hasNull = true
+			break
+		}
+	}
+	if !hasNull {
+		return nil, false
+	}
+	// Second pass: collect the non-NULL elements.
+	for _, v := range vs {
+		if normalizeArg(v) != nil {
 			keep = append(keep, v)
 		}
 	}
-	return keep, nulls > 0
+	return keep, true
 }
 
 // Any is In for a slice you already hold: = ANY($1) with the slice as the one

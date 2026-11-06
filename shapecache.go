@@ -126,7 +126,7 @@ func (c *ShapeCache) Resolve(d Dialect, s Statement, binds ...Binding) (string, 
 	b.hash, b.err, b.version = true, nil, d.version()
 	b.slots = b.slots[:0]
 	b.h1, b.h2 = hashSeed1, hashSeed2
-	b.scopes, b.windows, b.noWindow, b.colHook, b.aggDepth, b.sawAgg, b.winCall = b.scopes[:0], nil, 0, nil, 0, false, false
+	b.scopes, b.windows, b.noWindow, b.colHook, b.aggDepth, b.sawAgg, b.winCall, b.inline = b.scopes[:0], nil, 0, nil, 0, false, false, 0
 	s.render(b)
 	key := shapeKey{b.version, b.h1, b.h2}
 	nslots := len(b.slots)

@@ -36,18 +36,21 @@ func inlineLiteral(v any) (string, error) {
 	if v == nil {
 		return "NULL", nil
 	}
-	switch x := v.(type) {
-	case time.Time:
+	if x, ok := v.(time.Time); ok {
 		return "'" + x.UTC().Format("2006-01-02T15:04:05.999999999Z") + "'::timestamptz", nil
-	case [16]byte:
-		h := hex.EncodeToString(x[:])
-		return "'" + h[0:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:] + "'::uuid", nil
-	case []byte:
-		// decode(..., 'hex') has no backslash, which a string with
-		// standard_conforming_strings off would read as an escape
-		return "decode('" + hex.EncodeToString(x) + "', 'hex')", nil
 	}
 	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Array && rv.Len() == 16 && rv.Type().Elem().Kind() == reflect.Uint8 {
+		var b [16]byte
+		reflect.Copy(reflect.ValueOf(b[:]), rv)
+		h := hex.EncodeToString(b[:])
+		return "'" + h[0:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:] + "'::uuid", nil
+	}
+	if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() == reflect.Uint8 {
+		// decode(..., 'hex') has no backslash, which a string with
+		// standard_conforming_strings off would read as an escape
+		return "decode('" + hex.EncodeToString(rv.Bytes()) + "', 'hex')", nil
+	}
 	switch rv.Kind() {
 	case reflect.Bool:
 		if rv.Bool() {
