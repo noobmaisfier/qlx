@@ -330,6 +330,26 @@ Arguments: `[pro 2026-01-01 00:00:00 +0000 UTC]`
 
 Here `Balance.EqIf(minBalance)` added nothing. A query built in pieces produces a few different shapes, each rendered only once (§8).
 
+The other comparisons have an optional variant too: `NeIf`, `InIf`, `IsNullIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf` (independent bounds) and, on text, `ContainsIf`, `ContainsFoldIf`, `HasPrefixIf`, `LikeIf`, `ILikeIf`. An empty string counts as absent in text searches. `InIf` with a list that is set but empty gives `FALSE`, like `In`. `qlx.When(opt, func(v T) Pred)` covers anything else.
+
+```go
+type Filter struct {
+    Tier      qt.Opt[string]
+    MinSpent  qt.Opt[int64]
+    Since     qt.Opt[time.Time]
+    Search    qt.Opt[string]
+}
+
+sel.Where(
+    Users.Tier.EqIf(f.Tier),
+    Users.Balance.GteIf(f.MinSpent),
+    Users.CreatedAt.GteIf(f.Since),
+    Users.Email.ContainsFoldIf(f.Search),
+)
+```
+
+Every combination of present filters is a distinct shape (2^n for n filters): with many independent filters, watch `ShapeCache.OnThrash`.
+
 ### 4.4 Joins
 
 ```go
@@ -1621,7 +1641,7 @@ A `deleted_at timestamptz` field: `Update(...).Set(T.DeletedAt.ToX(q.Now()))` in
 ```
 qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
-Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf   EqX GtX LtX (expression side)
+Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (expression side)
 .To(v)  .ToX(expr)  .Excluded()  .Returning(...)  .All()  .SetPatch(p)
 q.And q.Or q.Not    q.Exists q.InSelect q.Scalar q.Lateral  q.Union q.Except
 q.CountAll q.Count q.SumBig q.Avg q.Max q.StringAgg         .Filter .Distinct .OrderBy .Over

@@ -237,16 +237,37 @@ fails with `ErrShape` instead of updating nothing.
 ### Dynamic filters
 
 ```go
-tier := qt.Of("pro")            // present: becomes a predicate
-minBalance := qt.Unset[int64]() // absent: no predicate at all
+filter := struct {
+    Tier   qt.Opt[string]
+    Min    qt.Opt[int64]
+    Max    qt.Opt[int64]
+    Search qt.Opt[string]
+}{
+    Tier:   qt.Of("pro"),       // present: becomes a predicate
+    Search: qt.Unset[string](), // absent: no predicate at all
+}
 
 users, err := client.All[UserRow](ctx,
     q.Select(Users.ID, Users.Email).From(Users).
-        Where(Users.Tier.EqIf(tier), Users.Balance.EqIf(minBalance)))
+        Where(
+            Users.Tier.EqIf(filter.Tier),
+            Users.Balance.BetweenIf(filter.Min, filter.Max),
+            Users.Email.ContainsFoldIf(filter.Search),
+        ))
 ```
 
-`EqIf` is a real `WHERE` predicate only when the `qt.Opt` is set. Slices use one
-placeholder shape: `Users.ID.Any(ids)` and `...In(ids)` render `= ANY($1)`.
+An `...If` predicate is a real `WHERE` predicate only when its `qt.Opt` is set.
+`NeIf`, `InIf`, `IsNullIf`, `GtIf`/`GteIf`/`LtIf`/`LteIf` and `BetweenIf` cover
+the other comparisons; `BetweenIf` keeps whichever bounds are set. On text,
+`ContainsIf`, `ContainsFoldIf`, `HasPrefixIf`, `LikeIf` and `ILikeIf` also treat
+an empty string as absent. `InIf` with a list that is set but empty matches
+nothing (`FALSE`), like `In`. `q.When(opt, func(v T) Pred)` handles anything
+else. Slices use one placeholder shape: `Users.ID.Any(ids)` and `...In(ids)`
+render `= ANY($1)`.
+
+Each combination of present filters is a distinct statement shape, so `n`
+independent filters can produce up to `2^n` shapes: watch `ShapeCache.OnThrash`
+when the list endpoint has many of them.
 
 ### Transactions and retries
 
@@ -474,7 +495,7 @@ types are query-side types; they never appear in a result struct.
 
 `qt.Null[T]` is the general nullable wrapper: `.Valid`, `.V`, `qt.Some(v)` and
 `qt.None[T]()`. `qt.Opt[T]` is **not** a result type: it is an input type for
-dynamic filters and assignments (`EqIf`, `ToIf`).
+dynamic filters and assignments (`EqIf`, `BetweenIf`, `ToIf`, ...).
 
 For the result type itself:
 

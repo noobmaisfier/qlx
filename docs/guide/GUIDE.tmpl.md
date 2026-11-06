@@ -260,6 +260,26 @@ Deux outils : un `if` Go ordinaire, et les prédicats optionnels `EqIf(qt.Opt[T]
 
 Ici `Balance.EqIf(minBalance)` n'a rien ajouté. Une requête construite par morceaux produit quelques formes différentes, chacune rendue une seule fois (§8).
 
+Les autres comparaisons ont leur variante optionnelle : `NeIf`, `InIf`, `IsNullIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf` (bornes indépendantes) et, sur le texte, `ContainsIf`, `ContainsFoldIf`, `HasPrefixIf`, `LikeIf`, `ILikeIf`. Une chaîne vide compte pour absente dans les recherches texte. `InIf` avec une liste fournie mais vide donne `FALSE`, comme `In`. `qlx.When(opt, func(v T) Pred)` couvre le reste.
+
+```go
+type Filter struct {
+    Tier      qt.Opt[string]
+    MinSpent  qt.Opt[int64]
+    Since     qt.Opt[time.Time]
+    Search    qt.Opt[string]
+}
+
+sel.Where(
+    Users.Tier.EqIf(f.Tier),
+    Users.Balance.GteIf(f.MinSpent),
+    Users.CreatedAt.GteIf(f.Since),
+    Users.Email.ContainsFoldIf(f.Search),
+)
+```
+
+Chaque combinaison de filtres présents est une forme distincte (2^n pour n filtres) : pour beaucoup de filtres indépendants, surveillez `ShapeCache.OnThrash`.
+
 ### 4.4 Jointures
 
 {{ex:join-kinds}}
@@ -1165,7 +1185,7 @@ Un champ `deleted_at timestamptz` : `Update(...).Set(T.DeletedAt.ToX(q.Now()))` 
 ```
 qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
-Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf   EqX GtX LtX (côté expression)
+Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (côté expression)
 .To(v)  .ToX(expr)  .Excluded()  .Returning(...)  .All()  .SetPatch(p)
 q.And q.Or q.Not    q.Exists q.InSelect q.Scalar q.Lateral  q.Union q.Except
 q.CountAll q.Count q.SumBig q.Avg q.Max q.StringAgg         .Filter .Distinct .OrderBy .Over

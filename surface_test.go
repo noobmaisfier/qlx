@@ -13,9 +13,9 @@ import (
 func TestColumnFamilySurface(t *testing.T) {
 	limits := map[string]int{
 		"Col":      30,
-		"NumCol":   46,
-		"TextCol":  52,
-		"TimeCol":  41, // 38 + ToIf, ToOrDefault, ToNull (every column type has them)
+		"NumCol":   54, // +8: the optional predicates (optional.go): NeIf, InIf, IsNullIf, GtIf, GteIf, LtIf, LteIf, BetweenIf
+		"TextCol":  61, // +9: NeIf, InIf, IsNullIf and the five text searches (ContainsIf, ContainsFoldIf, HasPrefixIf, LikeIf, ILikeIf)
+		"TimeCol":  50, // 38 + ToIf, ToOrDefault, ToNull + the optional predicates (NeIf, InIf, IsNullIf, GtIf, GteIf, LtIf, LteIf, BetweenIf)
 		"BoolCol":  35,
 		"ArrayCol": 37,
 		"JSONBCol": 37,

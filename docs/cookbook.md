@@ -32,7 +32,7 @@ if tier != "" {
 sel = sel.Where(Users.Email.NotLike("%@spam.test")) // AND email NOT LIKE $2
 ```
 
-Builders are immutable: always assign the result (the analyzer flags a discarded one, V001). `Eq`, `Gt`, `Between`, `NotBetween`, `BetweenSymmetric`, `In`, `Like`, `ILike`, `SimilarTo`, `LikeEscape`, `IsNull`, `IsDistinctFrom` exist; `EqIf(qt.Opt)` skips the predicate for an absent optional filter.
+Builders are immutable: always assign the result (the analyzer flags a discarded one, V001). `Eq`, `Gt`, `Between`, `NotBetween`, `BetweenSymmetric`, `In`, `Like`, `ILike`, `SimilarTo`, `LikeEscape`, `IsNull`, `IsDistinctFrom` exist; `EqIf(qt.Opt)` skips the predicate for an absent optional filter, and `NeIf`, `InIf`, `IsNullIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf` and the text searches (`ContainsIf`, `ContainsFoldIf`, `HasPrefixIf`, `LikeIf`, `ILikeIf`) do the same. `qlx.When(opt, func(v T) Pred)` covers any other predicate.
 
 ## Joins
 

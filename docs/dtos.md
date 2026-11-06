@@ -331,7 +331,7 @@ Two details:
 - Sort by a column **and a unique tie-breaker** (`ID`), otherwise rows with the same `created_at` can move between pages.
 - The search text is a bound parameter, so it cannot inject SQL. A client typing `%` or `_` still acts as a wildcard in `ILIKE`; escape them if that matters.
 
-`qt.Opt` has JSON methods only, so a framework that binds query strings (Echo does, with the `query` tag) will not fill it: use pointers as above. Columns also have `EqIf(qt.Opt[T])`, which drops the predicate when the option is unset, if you already hold an `Opt`.
+`qt.Opt` has JSON methods only, so a framework that binds query strings (Echo does, with the `query` tag) will not fill it: use pointers as above. Columns also have `EqIf(qt.Opt[T])`, and `NeIf`, `InIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf`, `IsNullIf` and the text searches (`ContainsFoldIf`, `ILikeIf`, ...), which drop the predicate when the option is unset (an empty string counts as unset for text searches), if you already hold an `Opt`.
 
 ### The response envelope
 
