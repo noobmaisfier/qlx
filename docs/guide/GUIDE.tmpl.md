@@ -68,7 +68,6 @@ qlx check    # échoue si le code généré ou schema.lock est périmé ou modif
 | `qlx verify` | CI : une base vivante correspond-elle à `schema.lock` ? |
 | `qlx watch` | régénère à chaque modification de `migrations/` ou de `qlx.yaml` |
 | `qlx doctor` | liste les outils manquants, avertissements et objets non gérés |
-| `qlx vet` | analyse statique (builder jeté, `UPDATE` sans `WHERE`, ...) sans configuration |
 | `qlx prepare` | fait `PREPARE` de chaque requête d'un fichier `qtest.Dump` sur un vrai serveur |
 | `qlx rows` | génère `ScanTargets` pour vos structs marquées `//qlx:row` |
 | `qlx sql2go` | convertit du SQL en code QLX (compilé avec `-tags sql2go`) |
@@ -224,7 +223,7 @@ préférez du polling ou une file quand les instances passent à zéro.
 
 ## 4. Lire : `SELECT`
 
-Les builders sont **immuables** : toujours réassigner le résultat (`sel = sel.Where(...)`). Oublier est signalé par `qlx vet` (V001).
+Les builders sont **immuables** : toujours réassigner le résultat (`sel = sel.Where(...)`). Oublier est signalé par l'analyseur (V001).
 
 ### 4.1 Le cas simple
 
@@ -1051,10 +1050,10 @@ Une construction plus récente que votre plus ancienne cible est une erreur de r
 | --- | --- |
 | Compilateur | types, nullabilité, mélange d'IDs de tables, colonnes inexistantes, constructeurs d'insertion incomplets |
 | Rendu | portée des colonnes, `GROUP BY`, colonnes requises, `UPDATE`/`DELETE` sans condition, version PG |
-| `qlx vet` / analyseur | voir ci-dessous |
+| Analyseur | voir ci-dessous |
 | `PREPARE` réel | tout ce que seul le serveur sait : `qtest.Dump` puis `qlx prepare -queries queries.json` |
 
-Codes de l'analyseur (`go vet -vettool`, gopls, golangci-lint). Règle : une erreur *présente* dans le code (colonne assignée deux fois) est toujours signalée ; une partie *absente* (pas de `Set`) l'est seulement quand la chaîne est transmise telle quelle (argument, littéral composite, ou `return` dont le résultat est `qlx.Statement`) ; une chaîne gardée dans une variable ou renvoyée comme builder (`SelectQuery`, `TableFunc`...) peut être complétée plus loin. Un argument que l'analyseur ne sait pas résoudre (`args...`, fonction d'aide) le rend silencieux, jamais approximatif :
+L'analyseur est le seul contrôleur statique : `go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest`, puis `go vet -vettool=$(which qlxvet) ./...` (il tourne aussi dans gopls et golangci-lint). `qlx vet` n'existe plus. Règle : une erreur *présente* dans le code (colonne assignée deux fois) est toujours signalée ; une partie *absente* (pas de `Set`) l'est seulement quand la chaîne est transmise telle quelle (argument, littéral composite, ou `return` dont le résultat est `qlx.Statement`) ; une chaîne gardée dans une variable ou renvoyée comme builder (`SelectQuery`, `TableFunc`...) peut être complétée plus loin. Un argument que l'analyseur ne sait pas résoudre (`args...`, fonction d'aide) le rend silencieux, jamais approximatif :
 
 | Code | Signale |
 | --- | --- |
@@ -1234,7 +1233,7 @@ Un champ `deleted_at timestamptz` : `Update(...).Set(T.DeletedAt.ToX(q.Now()))` 
 ## 17. Aide-mémoire
 
 ```
-qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
+qlx init | gen | watch | check | verify | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
 Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (côté expression)
 q.After q.KeyAsc q.KeyDesc q.KeyOrder .After(v)  q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks

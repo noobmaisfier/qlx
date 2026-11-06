@@ -14,7 +14,7 @@ The review found that the code is sound and the defects were in the release chai
 4. `cd bench && go test -run TestBudgets` (allocation budgets only; see the bench package comment for what is and is not time-bounded).
 5. `scripts/sql2go.sh` for the optional parser (needs cgo and a C compiler).
 
-Two tools check code: `qlx vet` (V001-V005, standard library only) and the analyzer via `go vet -vettool` (V001-V030, needs x/tools).
+One tool checks code: the analyzer via `go vet -vettool` (V001-V030, needs x/tools). `qlx vet` was removed.
 
 
 Written on a machine with Go 1.24 and PostgreSQL 16 only; section 0 records the
@@ -51,7 +51,7 @@ What changed since the first round (see docs/decisions.md for why):
 
 Done on your side: build, vet, `go test`, `-race`, the full suite through
 `scripts/with_pg.sh` on all four servers, 100 000 differential-fuzz queries per
-server (0 rejected), generator end to end, `qlx vet`, `otelqlx`, pgx
+server (0 rejected), generator end to end, `otelqlx`, pgx
 integration tests. It found six defects; all are fixed in this revision:
 
 | Defect | Fix |
@@ -173,15 +173,14 @@ qlx init -dir /tmp/newproj && qlx gen -config /tmp/newproj/qlx.json
 
 Both are covered by tests that run when PostgreSQL server binaries exist.
 
-## 9. qlx vet
+## 9. The analyzer
 
 ```
-go run ./cmd/qlx vet ./...      # in your application module; exit 1 on findings
+go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest
+go vet -vettool=$(which qlxvet) ./...      # in your application module
 ```
 
-It needs the code to compile (it reads the compiler's export data). It checks
-non-test files only. If you want it as `go vet -vettool`, that is a thin
-`unitchecker` wrapper around `internal/vet/checks.go` once x/tools is available.
+It is the only static checker (`qlx vet` was removed; the command prints these two lines and exits 2). It needs the code to compile.
 
 ## 10. OpenTelemetry adapter
 

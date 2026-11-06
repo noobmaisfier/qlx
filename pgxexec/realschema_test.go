@@ -4,7 +4,7 @@ package pgxexec_test
 // is set, every *.sql in that directory: Pagila, Chinook, Northwind or your
 // own) goes through everything a user does with it, in a database of its own:
 //
-//	qlx init -> migration -> qlx gen -> qlx check -> go vet -> qlx vet
+//	qlx init -> migration -> qlx gen -> qlx check -> go vet
 //	-> a program that, for every generated table, renders SELECT of all its
 //	   columns, asks the server to PREPARE it, checks the row type against the
 //	   server's description (VerifyRow) and runs it
@@ -289,7 +289,6 @@ func TestRealWorldSchemas(t *testing.T) {
 			}
 			rsGo("build", "-o", exe, ".")
 			rsGo("vet", "./...")
-			run(nil, bin, "vet", "./...")
 			if tool := os.Getenv("QLX_VETTOOL"); tool != "" { // the go/analysis analyzer, when built
 				rsGo("vet", "-vettool="+tool, "./...")
 			}

@@ -81,7 +81,7 @@ func TestSortsParse(t *testing.T) {
 					t.Errorf("NewSorts accepted %q", name)
 				}
 			}()
-			q.NewSorts(map[string]q.Orderable{name: Users.ID})
+			_ = q.NewSorts(map[string]q.Orderable{name: Users.ID}) // panics before the assignment
 		}()
 	}
 }

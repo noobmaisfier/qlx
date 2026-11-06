@@ -1,7 +1,6 @@
 // Command qlx generates typed query-builder symbols from a PostgreSQL
 // schema and keeps them honest.
 //
-//	qlx vet      static checks: discarded builders, UPDATE/DELETE without WHERE, bad Register
 //	qlx init     write qlx.yaml and a migrations directory
 //	qlx gen      read the schema, write schema.lock and the Go package
 //	qlx check    fail if the Go package or schema.lock is out of date
@@ -44,16 +43,15 @@ func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
 
 func run(args []string, out, errw io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(errw, "usage: qlx vet|rows|init|gen|watch|check|verify|doctor|prepare|sql2go|regress [-config qlx.json] [-from-lock]")
+		fmt.Fprintln(errw, "usage: qlx rows|init|gen|watch|check|verify|doctor|prepare|sql2go|regress [-config qlx.json] [-from-lock]")
 		return 2
 	}
 	cmd := args[0]
-	if cmd == "vet" { // static checks need no config
-		code, err := cmdVet(args[1:], out)
-		if err != nil {
-			fmt.Fprintln(errw, "qlx:", err)
-		}
-		return code
+	if cmd == "vet" { // removed: the analyzer is the only static checker
+		fmt.Fprintln(errw, "qlx: `qlx vet` was removed; use the analyzer, which reports every rule:\n"+
+			"  go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest\n"+
+			"  go vet -vettool=$(which qlxvet) ./...")
+		return 2 // not 0: a CI step that still calls `qlx vet` must not pass silently
 	}
 	if cmd == "rows" { // needs no config either
 		if err := cmdRows(args[1:], out); err != nil {

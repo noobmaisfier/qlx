@@ -4,7 +4,7 @@ package pgxexec_test
 // scratch project outside the repository:
 //
 //	qlx init -> write a migration -> qlx gen -> qlx check -> a real program
-//	(insert, update, join, delete, VerifyRow) -> go vet -> qlx vet
+//	(insert, update, join, delete, VerifyRow) -> go vet
 //
 // It needs: the Go toolchain, PostgreSQL server binaries (qlx gen starts a
 // throwaway server from the migrations), QLX_TEST_DSN naming a database the
@@ -281,7 +281,6 @@ func TestNewUserEndToEnd(t *testing.T) {
 	}
 	build("go", "build", "-o", filepath.Join(tmp, "app.bin"), ".")
 	build("go", "vet", "./...")
-	run(app, nil, bin, "vet", "./...")
 
 	// the program owns the schema "newuser" in the test database
 	ctx := context.Background()

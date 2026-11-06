@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"github.com/noobmaisfier/qlx/internal/gover"
 	"os"
 	"path/filepath"
 	"strings"
@@ -162,28 +161,10 @@ func TestInitScaffoldsAndGenWorks(t *testing.T) {
 	}
 }
 
-func TestVetSubcommandExitCodes(t *testing.T) {
-	dir := t.TempDir()
-	root, _ := filepath.Abs("../..")
-	os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module example.com/app\n\ngo "+gover.Directive()+"\n\nrequire github.com/noobmaisfier/qlx v0.0.0\n\nreplace github.com/noobmaisfier/qlx => "+root+"\n"), 0o644)
-	os.WriteFile(filepath.Join(dir, "main.go"), []byte(`package app
-
-import (
-	q "github.com/noobmaisfier/qlx"
-	"github.com/noobmaisfier/qlx/fixture"
-)
-
-func f() {
-	s := q.Select(fixture.Users.ID).From(fixture.Users)
-	s.Limit(1)
-	_ = s
-}
-`), 0o644)
-	wd, _ := os.Getwd()
-	defer os.Chdir(wd)
-	os.Chdir(dir)
+func TestVetPointsToTheAnalyzer(t *testing.T) {
 	var out, errb bytes.Buffer
-	if code := run([]string{"vet"}, &out, &errb); code != 1 || !strings.Contains(out.String(), "V001") {
+	code := run([]string{"vet", "./..."}, &out, &errb)
+	if code != 2 || !strings.Contains(errb.String(), "qlxvet") || !strings.Contains(errb.String(), "go install") {
 		t.Fatalf("code %d out %q err %q", code, out.String(), errb.String())
 	}
 }

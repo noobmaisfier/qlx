@@ -68,7 +68,6 @@ qlx check    # fails if the generated code or schema.lock is stale or hand-edite
 | `qlx verify` | CI: does a live database match `schema.lock`? |
 | `qlx watch` | regenerates on every change to `migrations/` or `qlx.yaml` |
 | `qlx doctor` | lists missing tools, warnings and unmanaged objects |
-| `qlx vet` | static analysis (discarded builder, `UPDATE` without `WHERE`, ...) with no configuration |
 | `qlx prepare` | runs `PREPARE` for every query in a `qtest.Dump` file on a real server |
 | `qlx rows` | generates `ScanTargets` for your structs marked `//qlx:row` |
 | `qlx sql2go` | converts SQL into qlx code (built with `-tags sql2go`) |
@@ -220,7 +219,7 @@ that stays open, so prefer polling or a queue when instances scale to zero.
 
 ## 4. Reading: `SELECT`
 
-Builders are **immutable**: always reassign the result (`sel = sel.Where(...)`). Forgetting to is reported by `qlx vet` (V001).
+Builders are **immutable**: always reassign the result (`sel = sel.Where(...)`). Forgetting to is reported by the analyzer (V001).
 
 ### 4.1 The simple case
 
@@ -1047,10 +1046,10 @@ A construct newer than your oldest target is a render error that names the versi
 | --- | --- |
 | Compiler | types, nullability, mixed-up table IDs, nonexistent columns, incomplete insert constructors |
 | Render | column scope, `GROUP BY`, required columns, `UPDATE`/`DELETE` without a condition, PG version |
-| `qlx vet` / analyzer | see below |
+| Analyzer | see below |
 | Real `PREPARE` | everything only the server knows: `qtest.Dump` then `qlx prepare -queries queries.json` |
 
-Analyzer codes (`go vet -vettool`, gopls, golangci-lint). Rule: an error *present* in the code (column assigned twice) is always reported; a *missing* part (no `Set`) is reported only when the chain is passed on as is (argument, composite literal, or a `return` whose result is `qlx.Statement`); a chain held in a variable or returned as a builder (`SelectQuery`, `TableFunc`...) may be completed later. An argument the analyzer cannot resolve (`args...`, helper function) makes it silent, never approximate:
+The analyzer is the only static checker: `go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest`, then `go vet -vettool=$(which qlxvet) ./...` (it also runs in gopls and golangci-lint). `qlx vet` no longer exists. Rule: an error *present* in the code (column assigned twice) is always reported; a *missing* part (no `Set`) is reported only when the chain is passed on as is (argument, composite literal, or a `return` whose result is `qlx.Statement`); a chain held in a variable or returned as a builder (`SelectQuery`, `TableFunc`...) may be completed later. An argument the analyzer cannot resolve (`args...`, helper function) makes it silent, never approximate:
 
 | Code | Reports |
 | --- | --- |
@@ -1230,7 +1229,7 @@ A `deleted_at timestamptz` field: `Update(...).Set(T.DeletedAt.ToX(q.Now()))` in
 ## 17. Cheat sheet
 
 ```
-qlx init | gen | watch | check | verify | vet | doctor | prepare | rows | sql2go | regress
+qlx init | gen | watch | check | verify | doctor | prepare | rows | sql2go | regress
 q.Select / InsertInto / Update / DeleteFrom / Merge         client.All / One / Maybe / Each / Exec
 Eq Ne Gt Gte Lt Lte Between In Any Like ILike IsNull EqIf GtIf BetweenIf ContainsFoldIf …   EqX GtX LtX (expression side)
 q.After q.KeyAsc q.KeyDesc q.KeyOrder .After(v)  q.NewSorts().Parse   InsertMany InsertManyReturning .Chunks

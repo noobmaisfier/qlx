@@ -610,4 +610,4 @@ Cases worth a test per resource: absent / `null` / value for every nullable patc
 5. Map errors with the one `toAPIError`; log the original.
 6. Check authorization on every `:id` route, not only that the id parses.
 7. Write the handler tests of section 13.
-8. Run `qlxvet` (V018 checks that the row type matches the selected columns) and, in tests, `pgxexec.VerifyRow` for each row type against the real server: it also reports a nullable column read into a plain field.
+8. Run the analyzer, `go vet -vettool=$(which qlxvet) ./...` (V018 checks that the row type matches the selected columns), and, in tests, `pgxexec.VerifyRow` for each row type against the real server: it also reports a nullable column read into a plain field.

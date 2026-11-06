@@ -430,29 +430,26 @@ to HTTP belongs to the application.
 
 ### Analyzer
 
-`qlx vet` runs the checks that need only the standard library, V001–V005, with
-no configuration and no extra install:
-
-```bash
-qlx vet ./...
-```
-
-In CI, or inside gopls and golangci-lint, use the full `go/analysis` pass:
+The analyzer is the only static checker. Install it and run it:
 
 ```bash
 go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest
 go vet -vettool="$(go env GOPATH)/bin/qlxvet" -targets=16,17,18,19 ./...
 ```
 
-The full analyzer reports V001–V030: a column outside `FROM`, `UPDATE` without
+It also runs in CI, gopls and golangci-lint. `qlx vet` no longer exists: the
+command prints these two lines and exits 2, so an old CI step cannot pass
+silently.
+
+The analyzer reports V001–V030: a column outside `FROM`, `UPDATE` without
 `WHERE`, a bare column next to `GroupBy`, an aggregate in `WHERE`, a feature
 newer than your targets, `ToNull()` on a `NOT NULL` column. For mapping, V018
 compares `R` with the selected
 columns: count, order, field or alias names, Go types, `qt.Null` where the
 column can be NULL, and the optional side of an outer join. That is what turns a
 wrong struct, a missing alias or a swapped field into a `go vet` finding before
-the query runs. A single `qlx vet` front-end that delegates to `qlxvet` is
-planned; until then, the two commands above have the coverage stated here.
+the query runs. There is one static checker and one rule set (decision D9h):
+the analyzer lives in its own module so that `x/tools` stays out of the core.
 
 A suppression needs a reason: `//qlx:ignore <reason>`. See
 [analyzer/README.md](analyzer/README.md).
