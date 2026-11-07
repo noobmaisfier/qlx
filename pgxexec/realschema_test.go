@@ -272,7 +272,7 @@ func TestRealWorldSchemas(t *testing.T) {
 			rsWrite(t, filepath.Join(app, "go.sum"), string(gosum))
 			rsWrite(t, filepath.Join(app, "main.go"), prog.String())
 
-			env := []string{"GOFLAGS=-mod=mod"}
+			env := []string{"GOWORK=off"}
 			exe := filepath.Join(tmp, "app_"+name+".bin")
 			rsGo := func(args ...string) {
 				t.Helper()

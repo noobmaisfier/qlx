@@ -264,7 +264,7 @@ func TestNewUserEndToEnd(t *testing.T) {
 	write("go.sum", string(sum))
 	write("main.go", newUserMain)
 
-	env := []string{"GOFLAGS=-mod=mod"}
+	env := []string{"GOWORK=off"}
 	build := func(name string, args ...string) {
 		t.Helper()
 		cmd := exec.Command(name, args...)
