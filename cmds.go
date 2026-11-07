@@ -143,6 +143,7 @@ func Declare[T any](p Param[T], t PgType[T]) ParamDecl { return ParamDecl{p.id, 
 // use typed Params (no constants), because the server owns the placeholders;
 // the declared types are ordered by first use of each Param.
 func Prepare(name string, s Statement, decls ...ParamDecl) Command {
+	decls = slices.Clone(decls)
 	return cmd(func(b *builder) {
 		nb := newBuilder(Dialect{Version: b.version})
 		s.render(nb)
@@ -181,6 +182,7 @@ func Prepare(name string, s Statement, decls ...ParamDecl) Command {
 
 // Execute renders EXECUTE name (args). The arguments are bound parameters.
 func Execute(name string, args ...any) Command {
+	args = slices.Clone(args)
 	return cmd(func(b *builder) {
 		b.write("EXECUTE ")
 		b.ident(name)
@@ -416,6 +418,7 @@ type Procedure struct{ Schema, Name string }
 
 // Call is CALL schema.name(args).
 func Call(p Procedure, args ...Value) Command {
+	args = slices.Clone(args)
 	return cmd(func(b *builder) {
 		b.write("CALL ")
 		if p.Schema != "" {

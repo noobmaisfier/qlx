@@ -2,6 +2,7 @@ package qlx
 
 import (
 	"fmt"
+	"slices"
 )
 
 func sameTable(a, b TableRef) bool {
@@ -97,12 +98,15 @@ func (q InsertQuery) outNames() []string { return returningNames(q.returning) }
 func (q InsertQuery) With(ctes ...CTE) InsertQuery { q.ctes = app(q.ctes, ctes...); return q }
 
 // Row adds one row of assignments. Every row must assign the same columns.
-func (q InsertQuery) Row(as ...Assignment) InsertQuery { q.rows = app(q.rows, live(as)); return q }
+func (q InsertQuery) Row(as ...Assignment) InsertQuery {
+	q.rows = app(q.rows, slices.Clone(live(as))) // a copy: as... may be reused by the caller
+	return q
+}
 
 // Values adds rows from generated insert types.
 func (q InsertQuery) Values(rows ...RowAssigner) InsertQuery {
 	for _, r := range rows {
-		q.rows = app(q.rows, live(r.Assignments()))
+		q.rows = app(q.rows, slices.Clone(live(r.Assignments())))
 	}
 	return q
 }
@@ -304,14 +308,21 @@ func (q InsertQuery) renderRows(b *builder) bool {
 			b.fail(fmt.Errorf("%w: rows of one INSERT must assign the same columns", ErrShape))
 			return false
 		}
+		seen := make([]bool, len(first))
 		for _, a := range r {
 			if !checkAssignTable(b, q.table, a) {
 				return false
 			}
-			if _, ok := pos[a.col.name]; !ok {
+			i, ok := pos[a.col.name]
+			if !ok {
 				b.fail(fmt.Errorf("%w: rows of one INSERT must assign the same columns (%s)", ErrShape, a.col.name))
 				return false
 			}
+			if seen[i] { // with equal counts, a repeat would leave another column unassigned
+				b.fail(fmt.Errorf("%w: column %s assigned twice", ErrShape, a.col.name))
+				return false
+			}
+			seen[i] = true
 		}
 	}
 	have := make(map[string]bool, len(pos))

@@ -37,6 +37,9 @@ func inlineLiteral(v any) (string, error) {
 		return "NULL", nil
 	}
 	if x, ok := v.(time.Time); ok {
+		if x.Year() < 1 { // Go counts a year 0 and negative years; PostgreSQL writes BC dates differently
+			return "", fmt.Errorf("%w: a time before year 1 cannot be written as a literal", ErrParams)
+		}
 		return "'" + x.UTC().Format("2006-01-02T15:04:05.999999999Z") + "'::timestamptz", nil
 	}
 	rv := reflect.ValueOf(v)
@@ -70,6 +73,9 @@ func inlineLiteral(v any) (string, error) {
 			return "'Infinity'::float8", nil
 		case math.IsInf(f, -1):
 			return "'-Infinity'::float8", nil
+		}
+		if f == 0 && math.Signbit(f) { // (-0)::float8 would be an integer 0, which has no sign
+			return "'-0'::float8", nil
 		}
 		return parenNeg(strconv.FormatFloat(f, 'g', -1, 64)) + "::float8", nil
 	case reflect.String:

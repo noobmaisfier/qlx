@@ -1,6 +1,9 @@
 package qlx
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // MaxBindParams is the number of parameters one statement can carry: the
 // PostgreSQL wire protocol counts them in 16 bits.
@@ -44,7 +47,7 @@ func (q InsertQuery) Chunks(rows []RowAssigner, maxParams int) ([]InsertQuery, e
 			if len(as) != len(live0) {
 				return nil, fmt.Errorf("%w: row %d assigns %d columns, the first assigns %d", ErrShape, start+i, len(as), len(live0))
 			}
-			c.rows = append(c.rows, as)
+			c.rows = append(c.rows, slices.Clone(as))
 		}
 		out = append(out, c)
 	}

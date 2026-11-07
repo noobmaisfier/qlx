@@ -273,6 +273,9 @@ type Statement interface {
 
 // Render renders a statement once for the dialect.
 func Render(d Dialect, s Statement) (Stmt, error) {
+	if s == nil {
+		return Stmt{}, fmt.Errorf("%w: nil statement", ErrShape)
+	}
 	b := newBuilder(d)
 	s.render(b)
 	if b.err != nil {

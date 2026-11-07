@@ -3,6 +3,7 @@ package qlx
 import (
 	"fmt"
 	"regexp"
+	"slices"
 )
 
 var lsnRe = regexp.MustCompile(`^[0-9A-Fa-f]{1,8}/[0-9A-Fa-f]{1,8}$`)
@@ -151,6 +152,7 @@ func WithForceNull(t Table, cols ...ColumnRef) CopyOption {
 }
 
 func colListOption(dir copyDir, name string, t Table, cols []ColumnRef) CopyOption {
+	cols = slices.Clone(cols)
 	return CopyOption{dir: dir, what: name, f: func(b *builder) {
 		b.write(name + " (")
 		b.identList(colNamesOf(t.tableRef(), cols, b))
@@ -195,7 +197,7 @@ type CopyFromStdin struct {
 }
 
 func CopyIn(t Table, cols ...ColumnRef) CopyFromStdin {
-	return CopyFromStdin{t: t.tableRef(), cols: cols}
+	return CopyFromStdin{t: t.tableRef(), cols: slices.Clone(cols)}
 }
 func (c CopyFromStdin) With(opts ...CopyOption) CopyFromStdin {
 	c.opts = app(c.opts, opts...)
@@ -246,7 +248,7 @@ func CopyQueryOut(q Query) CopyOut { return CopyOut{q: q} }
 // partitioned (PostgreSQL 19) or materialized views (PostgreSQL 18).
 func CopyTableOut(t Table, cols ...ColumnRef) CopyOut {
 	tr := t.tableRef()
-	return CopyOut{t: &tr, cols: cols}
+	return CopyOut{t: &tr, cols: slices.Clone(cols)}
 }
 
 func (c CopyOut) With(opts ...CopyOption) CopyOut { c.opts = app(c.opts, opts...); return c }
@@ -288,7 +290,7 @@ type MaintTarget struct {
 
 // Target names a table for VACUUM or ANALYZE.
 func Target(t Table, cols ...ColumnRef) MaintTarget {
-	return MaintTarget{t: t.tableRef(), cols: cols}
+	return MaintTarget{t: t.tableRef(), cols: slices.Clone(cols)}
 }
 
 // Only excludes partitions and inheritance children (PostgreSQL 18).
@@ -356,11 +358,13 @@ func renderMaint(b *builder, verb string, opts []MaintOption, targets []MaintTar
 
 // Vacuum is VACUUM (options) targets.
 func Vacuum(opts []MaintOption, targets ...MaintTarget) Command {
+	opts, targets = slices.Clone(opts), slices.Clone(targets)
 	return cmd(func(b *builder) { renderMaint(b, "VACUUM", opts, targets) })
 }
 
 // AnalyzeTables is ANALYZE (options) targets.
 func AnalyzeTables(opts []MaintOption, targets ...MaintTarget) Command {
+	opts, targets = slices.Clone(opts), slices.Clone(targets)
 	return cmd(func(b *builder) { renderMaint(b, "ANALYZE", opts, targets) })
 }
 
@@ -496,6 +500,7 @@ const (
 
 // LockTable is LOCK TABLE t IN mode MODE [NOWAIT].
 func LockTable(mode LockMode, noWait bool, ts ...Table) Command {
+	ts = slices.Clone(ts)
 	return cmd(func(b *builder) {
 		if len(ts) == 0 {
 			b.fail(fmt.Errorf("%w: LOCK TABLE needs a table", ErrShape))
@@ -558,10 +563,10 @@ type GrantStmt struct {
 }
 
 // Grant starts GRANT privileges.
-func Grant(privs ...Privilege) GrantStmt { return GrantStmt{privs: privs} }
+func Grant(privs ...Privilege) GrantStmt { return GrantStmt{privs: slices.Clone(privs)} }
 
 // Revoke starts REVOKE privileges.
-func Revoke(privs ...Privilege) GrantStmt { return GrantStmt{revoke: true, privs: privs} }
+func Revoke(privs ...Privilege) GrantStmt { return GrantStmt{revoke: true, privs: slices.Clone(privs)} }
 
 func (g GrantStmt) OnTables(ts ...Table) GrantStmt {
 	for _, t := range ts {

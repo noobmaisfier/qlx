@@ -2,6 +2,7 @@ package qlx
 
 import (
 	"fmt"
+	"slices"
 )
 
 func app[T any](s []T, v ...T) []T {
@@ -43,7 +44,9 @@ type SelectQuery struct {
 }
 
 // Select starts a SELECT with the given items.
-func Select(items ...Selectable) SelectQuery { return SelectQuery{items: items} }
+// Select starts a SELECT. The items are copied: a slice passed as xs... can be
+// reused or changed afterwards without changing the query.
+func Select(items ...Selectable) SelectQuery { return SelectQuery{items: slices.Clone(items)} }
 
 func (SelectQuery) queryNode() {}
 func (SelectQuery) cteBody()   {}

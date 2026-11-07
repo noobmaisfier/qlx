@@ -1,6 +1,9 @@
 package qlx
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // Utility commands an application runs that are not DDL: session variables,
 // roles, DISCARD variants, deferred constraints, maintenance. Names are
@@ -56,6 +59,7 @@ func SetConstraintsAll(deferred bool) Command {
 
 // SetConstraints is SET CONSTRAINTS name, ... DEFERRED|IMMEDIATE.
 func SetConstraints(deferred bool, names ...string) Command {
+	names = slices.Clone(names)
 	return cmd(func(b *builder) {
 		if len(names) == 0 {
 			b.fail(fmt.Errorf("%w: SET CONSTRAINTS needs a name (use SetConstraintsAll)", ErrShape))
