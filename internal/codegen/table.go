@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -41,6 +42,10 @@ func newTableGen(m *mapper, nm *namer, t catalog.Table, multiSchema bool, jsonTy
 	base := nm.local(t.Schema, t.Name)
 	nm.claimTable(base, t.Schema, t.Name)
 	g.sym = nm.take(base, camel(t.Schema))
+	if g.sym != base {
+		m.warn(fmt.Sprintf("table %s.%s is called %s in Go, not %s: that name is taken by an enum, one of its values, or another object. "+
+			"The name changes again if the other object goes away: rename one of them to settle it", t.Schema, t.Name, g.sym, base))
+	}
 	g.tname = nm.take(g.sym+"T", "")
 	row := nm.localSingular(t.Schema, t.Name)
 	g.row = nm.take(row, "Row")

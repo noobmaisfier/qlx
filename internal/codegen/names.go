@@ -90,9 +90,56 @@ func lowerCamel(s string) string {
 	return out
 }
 
+// irregularSingular holds plurals that the suffix rules below get wrong, keyed
+// by the last word of the name in lower case. A name is matched on its last
+// word only, so order_statuses becomes OrderStatus but abuses is left to the
+// suffix rules (it is not a "uses" word).
+var irregularSingular = map[string]string{
+	"statuses": "status", "buses": "bus", "viruses": "virus", "bonuses": "bonus", "campuses": "campus",
+	"censuses": "census", "choruses": "chorus", "circuses": "circus", "cactuses": "cactus",
+	"apparatuses": "apparatus", "surpluses": "surplus", "prospectuses": "prospectus", "syllabuses": "syllabus",
+	"aliases": "alias", "biases": "bias", "canvases": "canvas", "gases": "gas", "lenses": "lens",
+	"analyses": "analysis", "diagnoses": "diagnosis", "theses": "thesis", "hypotheses": "hypothesis",
+	"crises": "crisis", "parentheses": "parenthesis", "synopses": "synopsis", "bases": "base",
+	"indices": "index", "vertices": "vertex", "matrices": "matrix", "appendices": "appendix",
+	"quizzes": "quiz", "heroes": "hero", "potatoes": "potato", "tomatoes": "tomato", "echoes": "echo",
+	"people": "person", "children": "child", "men": "man", "women": "woman",
+	"mice": "mouse", "geese": "goose", "feet": "foot", "teeth": "tooth", "criteria": "criterion",
+	"phenomena": "phenomenon", "media": "medium", "memoranda": "memorandum",
+}
+
+// uncountable names have no plural form: the row type is the name itself.
+var uncountable = map[string]bool{
+	"news": true, "series": true, "species": true, "sheep": true, "fish": true, "data": true,
+	"metadata": true, "staff": true, "equipment": true, "information": true, "software": true,
+	"hardware": true, "money": true, "rice": true, "aircraft": true, "lens": true,
+}
+
+// lastWord splits a camel-case name at its last capital letter.
+func lastWord(s string) (head, last string) {
+	i := strings.LastIndexFunc(s, unicode.IsUpper)
+	if i < 0 {
+		return "", s
+	}
+	return s[:i], s[i:]
+}
+
 // singular turns a plural table name into a row type name.
 func singular(s string) string {
-	l := strings.ToLower(s)
+	head, last := lastWord(s)
+	l := strings.ToLower(last)
+	if uncountable[l] {
+		return s
+	}
+	if w, ok := irregularSingular[l]; ok {
+		r := []rune(w)
+		r[0] = unicode.ToUpper(r[0])
+		if unicode.IsLower([]rune(last)[0]) { // an all-lower name stays lower
+			r[0] = unicode.ToLower(r[0])
+		}
+		return head + string(r)
+	}
+	l = strings.ToLower(s)
 	switch {
 	case strings.HasSuffix(l, "ies") && len(l) > 3:
 		return s[:len(s)-3] + "y"

@@ -166,6 +166,11 @@ one server (16 and 19 at least). Say in the pull request which majors you ran.
 Useful test families:
 
 - **Golden tests** (`golden_test.go`, `testdata/*.golden`): rendered SQL.
+- **Generated-code contract** (`internal/codegen/stability_test.go`): `testdata/surface.golden` lists every exported
+  name and field type generated for the fixture and for each hostile schema. A change to a name or a type is a diff of
+  that file and is reviewed like an API change; accept it with `QLX_UPDATE_GOLDEN=1 go test -run SurfaceGolden ./internal/codegen`.
+  `TestAddingThingsNeverChangesExistingNames` adds tables, columns, enums, functions, constraints and whole schemas
+  to a database and requires every name generated before to stay the same.
   Review the diff by hand, then update with `go test -run Golden -update`.
 - **Compile-fail corpus** (`compilefail_test.go`): every rule the compiler is
   supposed to enforce has an example that must not build, with the message it

@@ -850,7 +850,7 @@ The generator turns SQL names into exported Go identifiers:
 | --- | --- | --- |
 | `user_id` | `UserID` | words separated by `_`, first letter capitalized, initialisms in uppercase |
 | `api_url` | `APIURL` | recognized initialisms: `id url uuid api ip http https json jsonb html sql xml uri ttl cpu os db tls ssl ssh csv pdf ui` |
-| table `users` | `Users` (symbol), `UsersT` (type), `User` (row) | the row is the singular: `ies` → `y`, `sses/xes/ches/shes` → without `es`, `ss/us/is` unchanged, otherwise without the final `s` |
+| table `users` | `Users` (symbol), `UsersT` (type), `User` (row) | the row is the singular: a short list of irregular plurals first (`statuses` → `Status`, `people` → `Person`, `analyses` → `Analysis`; `news`, `series`, `data` stay as they are), then `ies` → `y`, `sses/xes/ches/shes` → without `es`, `ss/us/is` unchanged, otherwise without the final `s`. The irregulars are matched on the last word, so `order_statuses` gives `OrderStatus` |
 | column `type` | `Type` | a reserved package word gets the suffix `Col`; two columns that give the same name are numbered |
 | table of a non-principal schema (more than one schema) | always prefixed: `BillingUsers`, row `BillingUser` | the first schema of `schemas` keeps plain names; a name never depends on what else is in the database |
 | two tables ending up with the same name | error at generation | no silent winner; rename one or `exclude` it |

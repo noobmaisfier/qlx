@@ -20,3 +20,19 @@ func TestOddNamesUnit(t *testing.T) {
 		}
 	}
 }
+
+func TestSingularRowNames(t *testing.T) {
+	for in, want := range map[string]string{
+		"Users": "User", "Orders": "Order", "Categories": "Category", "Addresses": "Address", "Boxes": "Box",
+		"Statuses": "Status", "OrderStatuses": "OrderStatus", "Buses": "Bus", "Viruses": "Virus",
+		"Aliases": "Alias", "Analyses": "Analysis", "People": "Person", "Children": "Child",
+		"Indices": "Index", "Quizzes": "Quiz", "Heroes": "Hero",
+		"News": "News", "Series": "Series", "Data": "Data", "Metadata": "Metadata", "UserData": "UserData",
+		"Abuses": "Abuse", "Causes": "Cause", "Houses": "House", "Responses": "Response", "Databases": "Database",
+		"Status": "Status", "Bus": "Bus", "UserIDs": "UserID", "Shoes": "Shoe",
+	} {
+		if got := singular(in); got != want {
+			t.Errorf("singular(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
