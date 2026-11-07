@@ -221,6 +221,127 @@ matches the `Select`, and V018 checks the names and Nullability as well.
 with aliases are all typed. A column of the optional side becomes nullable when
 you wrap it with `q.Nullable`.
 
+### Window functions
+
+```go
+byUser := q.Window().PartitionBy(Orders.UserID).OrderBy(Orders.CreatedAt.Desc())
+
+orders, err := client.All[OrderRankRow](ctx,
+    q.Select(
+        Orders.ID,
+        Orders.UserID,
+        q.RowNumber().Over(byUser).As("nth"),
+        q.Lag(Orders.Total).Over(byUser).As("previous"),
+        q.SumBig(Orders.Total).Over(byUser.Rows(q.UnboundedPreceding, q.CurrentRow)).As("running"),
+    ).From(Orders))
+```
+
+```sql
+SELECT "orders"."id", "orders"."user_id",
+       row_number() OVER (PARTITION BY "orders"."user_id" ORDER BY "orders"."created_at" DESC) AS "nth",
+       lag("orders"."total") OVER (PARTITION BY "orders"."user_id" ORDER BY "orders"."created_at" DESC) AS "previous",
+       sum("orders"."total") OVER (PARTITION BY "orders"."user_id" ORDER BY "orders"."created_at" DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS "running"
+FROM "public"."orders"
+```
+
+`q.Window()` describes the partition, order and frame (`Rows`, `Range`, `Groups`). `.Over(w)` applies it to `RowNumber`, `Rank`, `DenseRank`, `Lag`, `Lead`, `FirstValue`, `LastValue`, or any aggregate. On PostgreSQL 19, `Lag(...).IgnoreNulls()` renders `IGNORE NULLS`.
+
+### Common Table Expressions (WITH)
+
+```go
+counts := q.NewCTE("counts",
+    q.Select(Orders.UserID.As("user_id"), q.Count(Orders.ID).As("n")).
+        From(Orders).
+        GroupBy(Orders.UserID))
+
+userID := q.NewField[int64]("user_id")
+n := q.NewField[int64]("n")
+
+users, err := client.All[ActiveUserRow](ctx,
+    q.Select(Users.Email, q.RefNum(counts, n).As("order_count")).
+        With(counts).
+        From(Users).
+        Join(counts).On(q.RefNum(counts, userID).EqX(Users.ID)).
+        Where(q.RefNum(counts, n).Gt(5)))
+```
+
+```sql
+WITH "counts" AS (
+    SELECT "orders"."user_id" AS "user_id", count("orders"."id") AS "n"
+    FROM "public"."orders" GROUP BY "orders"."user_id"
+)
+SELECT "users"."email", "counts"."n" AS "order_count"
+FROM "public"."users"
+JOIN "counts" ON "counts"."user_id" = "users"."id"
+WHERE "counts"."n" > $1
+```
+
+`.With(cte)` attaches the CTE; its columns are read with `q.Ref`, `q.RefNum`, or `q.RefText`. CTEs support `.Materialized()`, `.NotMaterialized()`, and `q.Recursive(...)` with `.SearchDepthFirst(...)` and `.Cycle(...)`.
+
+### Full-text search (tsvector)
+
+Full-text search uses the typed `pgcat/fts` package and `pg` facade:
+
+```go
+import (
+    "github.com/noobmaisfier/qlx/pg"
+    "github.com/noobmaisfier/qlx/pgcat/fts"
+)
+
+query := pg.PlaintoTsquery("database performance")
+docVec := pg.ToTsvector(Articles.Body)
+
+articles, err := client.All[ArticleSummary](ctx,
+    q.Select(
+        Articles.ID,
+        Articles.Title,
+        pg.TsRank(docVec, query).As("rank"),
+    ).
+        From(Articles).
+        Where(fts.OpAtAtTsvectorTsquery(docVec, query)).
+        OrderBy(q.RawExpr("rank").Desc()).
+        Limit(10))
+```
+
+```sql
+SELECT "articles"."id", "articles"."title",
+       ts_rank(to_tsvector("articles"."body"), plainto_tsquery($1)) AS "rank"
+FROM "public"."articles"
+WHERE to_tsvector("articles"."body") @@ plainto_tsquery($2)
+ORDER BY rank DESC LIMIT $3
+```
+
+Functions include `ToTsvector`, `PlaintoTsquery`, `WebsearchToTsquery` (web-style syntax with quotes and `-`), `TsRank`, `TsHeadline`, and the `@@` match operator (`fts.OpAtAtTsvectorTsquery`).
+
+### Vector similarity search (pgvector)
+
+With `pgvector` enabled under `extensions:` in `qlx.yaml`, vectors are typed as `qt.Vector` (`[]float32`), with distance operators in `pgcat/ext/vector`:
+
+```go
+import "github.com/noobmaisfier/qlx/pgcat/ext/vector"
+
+target := qt.Vector{0.05, 0.49, 0.86, /* ... */} // 1536-dim embedding
+
+items, err := client.All[ItemMatch](ctx,
+    q.Select(
+        Items.ID,
+        Items.Title,
+        vector.OpLtEqGtVectorVector(Items.Embedding, q.Val(target)).As("cosine_distance"),
+    ).
+        From(Items).
+        OrderBy(vector.OpLtEqGtVectorVector(Items.Embedding, q.Val(target)).Asc()).
+        Limit(10))
+```
+
+```sql
+SELECT "items"."id", "items"."title",
+       "items"."embedding" <=> $1 AS "cosine_distance"
+FROM "public"."items"
+ORDER BY "items"."embedding" <=> $2 ASC LIMIT $3
+```
+
+Operators include `<=>` (cosine distance, `OpLtEqGt`), `<->` (L2 distance, `OpLtMinusGt`), and `<#>` (negative inner product, `OpLtHashGt`). `qt.HalfVector` (FP16) and `qt.SparseVector` are also supported.
+
 ### INSERT, upsert, RETURNING
 
 ```go
@@ -616,7 +737,8 @@ types are query-side types; they never appear in a result struct.
 
 `qt.Null[T]` is the general nullable wrapper: `.Valid`, `.V`, `qt.Some(v)` and
 `qt.None[T]()`. `qt.Opt[T]` is **not** a result type: it is an input type for
-dynamic filters and assignments (`EqIf`, `BetweenIf`, `ToIf`, ...).
+dynamic filters (`EqIf`, `BetweenIf`, text filters) and update assignments (`ToIf`);
+see [Dynamic filters](#dynamic-filters) for the full list.
 
 For the result type itself:
 
