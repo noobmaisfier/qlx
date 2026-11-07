@@ -81,7 +81,7 @@ func main() {
 `)
 			cmd := exec.Command("go", "build", "-o", os.DevNull, ".")
 			cmd.Dir = dir
-			cmd.Env = append(os.Environ(), "GOWORK=off", "GOPROXY=off", "GOTOOLCHAIN=local")
+			cmd.Env = append(os.Environ(), "GOWORK=off", "GOFLAGS=-mod=mod", "GOPROXY=off", "GOTOOLCHAIN=local")
 			out, err := cmd.CombinedOutput()
 			if c.want == "" {
 				if err != nil {

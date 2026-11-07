@@ -63,7 +63,7 @@ func vet(t *testing.T, tool, dir string, patterns ...string) vetResult {
 	t.Helper()
 	cmd := exec.Command("go", append([]string{"vet", "-vettool=" + tool}, patterns...)...)
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), "GOWORK=off")
+	cmd.Env = append(os.Environ(), "GOWORK=off", "GOFLAGS=-mod=mod")
 	var out bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &out
 	err := cmd.Run()

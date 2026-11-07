@@ -287,7 +287,7 @@ func TestOddSchemasNeverGenerateBrokenCode(t *testing.T) {
 	if len(accepted) > 0 {
 		cmd := exec.Command("go", "vet", "./...")
 		cmd.Dir = dir
-		cmd.Env = append(os.Environ(), "GOWORK=off", "GOPROXY=off", "GOTOOLCHAIN=local")
+		cmd.Env = append(os.Environ(), "GOWORK=off", "GOFLAGS=-mod=mod", "GOPROXY=off", "GOTOOLCHAIN=local")
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Errorf("generated code for accepted schemas does not build:\n%s", out)
 		}

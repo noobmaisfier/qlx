@@ -51,7 +51,7 @@ func TestGeneratedCodeBuilds(t *testing.T) {
 	}
 	cmd := exec.Command("go", "vet", "./...")
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), "GOWORK=off", "GOPROXY=off", "GOTOOLCHAIN=local")
+	cmd.Env = append(os.Environ(), "GOWORK=off", "GOFLAGS=-mod=mod", "GOPROXY=off", "GOTOOLCHAIN=local")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("generated code does not build:\n%s", out)
 	}
