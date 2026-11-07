@@ -1191,7 +1191,7 @@ The table that follows is the type mapping. §10.11 explains how to check all of
 | `date` | `qt.Date` (or `time.Time` with `date: stdlib`) |
 | `time`, `timetz` | `qt.TimeOfDay`, `qt.TimeTZ` |
 | `timestamp` | `qt.LocalTime` |
-| `timestamptz` | `time.Time` |
+| `timestamptz` | `qt.Timestamptz` |
 | `interval` | `qt.Interval` |
 | `json`, `jsonb` | `qt.JSONB[T]` (T: `json.RawMessage` or your struct) |
 | `inet`, `cidr` | `netip.Addr`, `netip.Prefix` |
@@ -1422,7 +1422,7 @@ What pgx can read into a field (checked on PostgreSQL 16 with `VerifyRow`):
 | `numeric` | `qt.Numeric`, `float64`, or your override type | |
 | `text`, `varchar` | `string`, `[]byte` | a number |
 | `bool` | `bool` | an integer |
-| `timestamptz`, `timestamp`, `date` | `time.Time`, the matching `qt` types | `string` |
+| `timestamptz`, `timestamp`, `date` | `qt.Timestamptz` (default), `time.Time` (stdlib), the matching `qt` types | `string` |
 | `bytea` | `[]byte` | |
 | `T[]` | `[]T` | a scalar |
 | `uuid` | `uuid.UUID`, `[16]byte`, `string` | |

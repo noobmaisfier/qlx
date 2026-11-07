@@ -9,7 +9,7 @@ columns cannot receive a plain value, and a required `INSERT` column cannot be
 forgotten. The analyzer catches the SQL mistakes the Go compiler cannot, and a
 real `PREPARE` checks the rest in tests.
 
-> **Status: pre-release.** Current release: `v0.27.0`. The core, generator,
+> **Status: pre-release.** Current release: `v0.27.0` (main carries 7 unreleased commits). The core, generator,
 > executor and analyzer are verified on PostgreSQL 16, 17, 18 and 19. See
 > [Verification](#verification) for what has been run.
 
@@ -295,18 +295,19 @@ import (
     "github.com/noobmaisfier/qlx/pgcat/fts"
 )
 
-query := pg.PlaintoTsquery("database performance")
+query := pg.PlaintoTsquery(q.Val("database performance"))
 docVec := pg.ToTsvector(Articles.Body)
+rank := fts.TsRankTsvectorTsquery(docVec, query)
 
 articles, err := client.All[ArticleSummary](ctx,
     q.Select(
         Articles.ID,
         Articles.Title,
-        pg.TsRank(docVec, query).As("rank"),
+        rank.As("rank"),
     ).
         From(Articles).
-        Where(fts.OpAtAtTsvectorTsquery(docVec, query)).
-        OrderBy(q.RawExpr("rank").Desc()).
+        Where(q.BoolExpr{Expr: fts.OpAtAtTsvectorTsquery(docVec, query)}.Pred()).
+        OrderBy(rank.Desc()).
         Limit(10))
 ```
 
@@ -315,7 +316,7 @@ SELECT "articles"."id", "articles"."title",
        ts_rank(to_tsvector("articles"."body"), plainto_tsquery($1)) AS "rank"
 FROM "public"."articles"
 WHERE to_tsvector("articles"."body") @@ plainto_tsquery($2)
-ORDER BY rank DESC LIMIT $3
+ORDER BY ts_rank(to_tsvector("articles"."body"), plainto_tsquery($3)) DESC LIMIT $4
 ```
 
 Functions include `ToTsvector`, `PlaintoTsquery`, `WebsearchToTsquery` (web-style syntax with quotes and `-`), `TsRank`, `TsHeadline`, and the `@@` match operator (`fts.OpAtAtTsvectorTsquery`).
@@ -581,7 +582,7 @@ Then generate `ScanTargets` in field order and run it whenever a marked struct
 changes:
 
 ```bash
-qlx rows ./...    # writes qlx_rows.go: one ScanTargets per //qlx:row struct
+qlx rows ./...        # writes qlx_rows.go: one ScanTargets per //qlx:row struct
 ```
 
 For `//qlx:row`, the rules that matter:

@@ -7,11 +7,9 @@ An extension pack has three parts:
 2. **Ledger** (`ledgers/<pack>.json`): functions, operators and casts, extracted
    from real servers of **every** targeted major (16–19) and merged, so a
    function that appears or disappears between majors carries `since`/`until`.
-3. **Generated wrappers** (`pgcat/ext/<name>`): produced by `pgcat gen`; never
-   edited.
+3. **Generated wrappers** (`pgcat/ext/<pkg>`): produced by `pgcat gen`; directory names follow `pgcat.ExtPackage` (e.g. `pg_trgm` → `pgtrgm`, `pgvector` → `vector`, `uuid-ossp` → `uuidossp`); never edited.
 
-Nothing in a ledger is written by hand. A pack with types but no ledger is
-*extraction-only* (`internal/packs/status.go`).
+Nothing in a ledger is written by hand. A pack listed in `extractionOnly` (`internal/packs/status.go`) without a committed ledger is *extraction-only*.
 
 ## Refreshing or adding a pack
 
@@ -44,13 +42,13 @@ On a server with the extension installed, on each major:
 
 ```bash
 QLX_PG_HOST=… PGPORT=… QLX_PG_VERSION=18 PGPASSWORD=… \
-  go test -run TestServerAcceptsEveryWrapper ./pgcat/ext/<name>
-(cd pgxexec && QLX_TEST_DSN=… go test -run <Pack>Extension .)
+  go test -run TestServerAcceptsEveryWrapper ./pgcat/ext/<pkg>
+(cd pgxexec && QLX_TEST_DSN=… go test -run TestPGVectorExtension .) # or TestPostGISExtension
 ```
 
 Every wrapper must prepare on the majors inside its range and must be skipped
-outside it. A round-trip test in `pgxexec` (see `vector_test.go`) skips itself
-when the extension is missing.
+outside it. Round-trip tests in `pgxexec` (for `pgvector` and `postgis`) skip
+themselves when the extension is missing.
 
 ## Finishing a pack that was extraction-only
 

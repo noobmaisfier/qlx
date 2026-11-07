@@ -53,12 +53,8 @@ scripts/with_pg.sh go test ./...   # the same, against a throwaway cluster
 ```
 
 The internal modules (`pgxexec`, `otelqlx`, `analyzer`, `bench`) are separate
-Go modules. For local development that links them to the root module, create a
-workspace (these files are gitignored):
-
-```bash
-go work init . && go work use ./pgxexec ./analyzer ./otelqlx ./bench
-```
+Go modules. A root `go.work` file is committed to link them to the root module
+during local development (see [go.work](#gowork) below).
 
 `scripts/with_pg.sh` starts a cluster on a unix socket, loads
 `fixture/schema.sql`, exports the `QLX_PG_*` variables, runs your command and
@@ -86,15 +82,14 @@ own files change on `main`.
 
 | Job | What it does |
 | --- | --- |
-| `test` | the matrix: PostgreSQL 16/17/18/19 × pgx latest/min, `go vet`, the four modules, `gofmt` |
+| `test` | the matrix: PostgreSQL 16/17/18/19 (19 via `postgres:19rc1`) × pgx latest/min, `go vet`, the four modules, `gofmt` |
 | `ledgers` | grammar ledger against PG 18 and master, command ledger, generated code is current |
 | `extensions` | extracts and diffs pgvector, pg_trgm, hstore, ltree, citext, runs their wrappers |
-| `bench` | budgets and benchmarks, written to `~/.cache/qlx-ci/bench.txt` |
+| `bench` | budgets and benchmarks, written to `bench/bench.txt` (or `~/.cache/qlx-ci/bench.txt` with `ci-local.sh`) |
 | `fuzz` | `FuzzQuoteIdent` and `FuzzRenderNeverPanics` (the manual workflow) |
 | `postgis` | extracts PostGIS from PGDG on 16–19, merges, diffs the committed ledger |
-| `regress` | reports `skip`: `qlx regress` is a manual tool, see below |
 
-`qlx regress` is not part of CI. It needs a `qlx.yaml`, a `schema.lock` and a
+`qlx regress` is not part of CI (it is run manually or via `scripts/ci-local.sh`). It needs a `qlx.yaml`, a `schema.lock` and a
 baseline `ledgers/regress.json`, and with the fixture schema only 4 of the
 ~50,000 statements of PostgreSQL's regression suite translate: the ledger is
 9 MB and gates almost nothing. To use it by hand, generate a config for
@@ -115,8 +110,8 @@ no cache between runs.
 | `pgcat/`, `pg/` | **generated** wrappers for catalog functions and operators |
 | `pgcat/ext/*` | **generated** wrappers for extension packs |
 | `pgcat.json`, `ledgers/` | the catalog and extension ledgers the wrappers come from |
-| `cmd/qlx` | the generator and checks (`gen`, `check`, `verify`, `doctor`, `watch`, `prepare`, `regress`, `sql2go`, plus `init`, `vet`, `rows`) |
-| `cmd/pgcat` | the ledger tool (`extract`, `merge`, `versions`, `diff`, `gen`, `docs`, `grammar`) |
+| `cmd/qlx` | the generator and checks (`gen`, `check`, `verify`, `doctor`, `watch`, `prepare`, `regress`, `sql2go`, plus `init`, `rows`) |
+| `cmd/pgcat` | the ledger tool (`extract`, `merge`, `versions`, `enrich`, `gen`, `diff`, `grammar`, `docs`, `coverage`) |
 | `internal/` | generator, ledger and pack code |
 | `pgxexec/` | executor on pgx v5 (own module) |
 | `analyzer/` | `go/analysis` analyzer, codes V001 and up (own module) |

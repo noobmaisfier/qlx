@@ -43,10 +43,10 @@ type Config struct {
 	// Date chooses the Go type of date columns: "qt" (default) is qt.Date, a
 	// calendar date with no time zone; "stdlib" is time.Time at midnight UTC.
 	Date string `json:"date,omitempty"`
-	// Timestamptz chooses the Go type of timestamptz columns: "stdlib"
-	// (default) is time.Time, which cannot hold 'infinity' (reading such a row
-	// fails); "qt" is qt.Timestamptz, which can, and also reads and writes
-	// -infinity.
+	// Timestamptz chooses the Go type of timestamptz columns: "qt"
+	// (default) is qt.Timestamptz, which can hold 'infinity' and '-infinity';
+	// "stdlib" is time.Time, which cannot hold 'infinity' (reading such a row
+	// fails).
 	Timestamptz string `json:"timestamptz,omitempty"`
 	// ArrayNulls types the elements of every array column as qt.Null[T], so a
 	// NULL element can be read. PostgreSQL never says whether an array may hold

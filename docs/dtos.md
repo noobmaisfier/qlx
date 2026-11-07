@@ -65,7 +65,7 @@ Rules that follow:
 
 - A response DTO can hold a `qt.Null[string]` directly: it already writes `null` or the value. Convert to `*string` (`Null.Ptr()`) only if the consumers of the DTO want pointers.
 - Never put a generated enum or a text-form type (`qt.Geometry`, `qt.LTree`) in a public contract without deciding that its text form is the contract.
-- `qt.Date` and `qt.Timestamptz` write `"infinity"` and `"-infinity"`. A client that parses every timestamp with a date library fails on those rows. If you never store infinities, clients never see them; if you do, document it.
+- `qt.Date` and `qt.Timestamptz` write `"infinity"` and `"-infinity"`. A client that parses every timestamp with a date library fails on those rows. If you never store infinities, clients never see them; if you do, document it. Note that mapping generated table columns to `time.Time` (and opting out of `qt.Timestamptz`) requires setting `timestamptz: stdlib` in `qlx.yaml` (by default, columns are `qt.Timestamptz`).
 
 Example, a DTO that mixes several (**tested**, `qt/json_test.go` covers each form):
 

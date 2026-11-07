@@ -8,7 +8,7 @@
 
 The review found that the code is sound and the defects were in the release chain. Before sending a tree:
 
-1. `scripts/release.sh` : merges the ledgers of PostgreSQL 16-19, regenerates `pgcat/`, `pg/` and `docs/pgcat`, runs `go mod tidy` in every module (this writes the `go.sum` files), and fails if anything is left uncommitted-different. A ledger of one version only produces wrappers that fail on the others (functions removed in 17 and later are unbounded).
+1. `scripts/release.sh` : merges the ledgers of PostgreSQL 16-19, regenerates `pgcat/`, `pg/` and `docs/pgcat`, runs `go mod tidy` in `bench` and delegates `pgxexec`, `otelqlx`, `analyzer` to `scripts/release-modules.sh` (this writes the `go.sum` files), and fails if anything is left uncommitted-different. A ledger of one version only produces wrappers that fail on the others (functions removed in 17 and later are unbounded).
 2. `scripts/with_pg.sh go test ./...` on 16, 17, 18 and 19.
 3. `cd analyzer && go test ./...` (testdata is its own module: `analyzer/qlxvet/testdata/go.mod`; `app2` covers qualified imports).
 4. `cd bench && go test -run TestBudgets` (allocation budgets only; see the bench package comment for what is and is not time-bounded).
@@ -224,7 +224,7 @@ names if you track a newer semantic-conventions release.
 - `qlx rows [-dir .]` : génère `qlx_rows.go` avec `ScanTargets()` pour les structs marquées `//qlx:row` (ordre des champs = ordre des colonnes, `qlx:"-"` ignore un champ ; champs embarqués et génériques refusés). Le repli `unsafe` par offsets n'est volontairement pas fait : le code généré couvre le besoin sans réflexion ni `unsafe`.
 - `pgcat docs -ledger pgcat.json -o docs/pgcat` : pages Markdown de référence (index + fonctions par lettre + opérateurs, avec plages de versions). `docs/pgcat/` est généré depuis le ledger PG16 seul ; à régénérer après la fusion 16–19 pour que les colonnes « Versions » soient réelles.
 - `pgcat diff old.json new.json` : fonctions/opérateurs/casts ajoutés, retirés, changés entre deux ledgers extraits de versions différentes (point de départ de la revue d'une release).
-- `NotNull` (avec `error_on_null` sur PG19) existait déjà ; un test de rendu par version a été ajouté. Le mapping `uuid` reste `[16]byte` (pas de type uuid dans la stdlib à ma connaissance) ; l'override de type de `qlx.json` permet d'y brancher `google/uuid`.
+- `NotNull` (avec `error_on_null` sur PG19) existait déjà ; un test de rendu par version a été ajouté. Le mapping `uuid` utilise par défaut le type stdlib `uuid.UUID` (`uuid: std`) ; `uuid: bytes` génère `[16]byte`.
 
 ## Catalog wrappers: what is generated (2026-10)
 
@@ -338,7 +338,7 @@ Found in the received tree and fixed here:
 
 Results on the final tree:
 
-- root suite: 31 packages ok on 16.15, 17.11, 18.4 and 19rc1; `-race` green in
+- root suite: 31 packages ok on 16.15, 17.11, 18.6 and 19rc1; `-race` green in
   the root module;
 - `TestServerAcceptsEveryWrapper`: 3721 / 3761 / 3845 / 3892 wrappers checked
   (PG 16/17/18/19), 0 failures;
@@ -362,7 +362,7 @@ pgvector cannot be extracted in an environment that has no server with the
 extension installed, so the artifacts were produced here and committed:
 
 - **Ledger**: `ledgers/pgvector.json`, merged from PostgreSQL 16.15, 17.11,
-  18.4 and 19rc1, all with pgvector **0.8.7**. The four extractions are
+  18.6 and 19rc1, all with pgvector **0.8.7**. The four extractions are
   identical except for the `versions` field; the merged ledger lists
   `[16 17 18 19]`, 118 functions, 40 operators and 23 casts.
   SHA-256 `fde8add84bee2a9792b7ff0ef56428af01c4299c987d666ca9135053ec7b29b7`.
@@ -428,7 +428,7 @@ Results on this tree:
   `analysistest`** over `./src/app`, `./src/app2`, `./src/shape`,
   `./src/mapping` and `./src/gaps`; this is the run the author's local stub
   could not provide.
-- Root suite: 33 packages ok on PG 16.15 / 17.11 / 18.4 / 19rc1, plus
+- Root suite: 33 packages ok on PG 16.15 / 17.11 / 18.6 / 19rc1, plus
   `-race` on PG 18.
 - Wrappers: 3721 / 3761 / 3845 / 3892 prepared, 0 errors; pgvector 117 per
   major, 0 errors.
@@ -436,7 +436,7 @@ Results on this tree:
   four pgvector servers.
 - `bench`, `otelqlx`, `sql2go`: green. `gofmt -l` empty; `go vet` clean in
   all five modules.
-- `docs/GUIDE.md` regenerated: 1561 lines, exactly `GUIDE (3).md` plus the eight
+- `docs/GUIDE.md` regenerated: 1729 lines, exactly `GUIDE (3).md` plus the eight
   V019-V026 rows.
 - `pgcat gen` / `pgcat docs` produced no diff, confirming the canonical
   ledgers were untouched.
@@ -463,7 +463,7 @@ Two changes, both verified here:
    range entries with a synthetic four-major `pg_trgm` ledger.
 
 The gate exposed the expected state, so the four contrib ledgers were
-re-extracted from the real 16.15 / 17.11 / 18.4 / 19rc1 servers and merged:
+re-extracted from the real 16.15 / 17.11 / 18.6 / 19rc1 servers and merged:
 
 | Pack | Versions | Functions | Operators | Wrapped | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -544,7 +544,7 @@ Changes:
   four extractions and diffs against the committed ledger;
 - `.github/workflows/ci.yml` drops PostGIS from the `extensions` matrix: the
   16-19 workflow owns it (no `postgis/postgis:*-3.7` image exists);
-- guide template regenerated: 1561 lines, 72 746 bytes.
+- guide template regenerated: 1729 lines, 72 746 bytes.
 
 The root suite is now 34 packages. Still open: the first GitHub Actions run and
 `go.sum` regeneration on the author's machine.

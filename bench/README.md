@@ -37,7 +37,7 @@ library's own CPU and allocation cost.
 | QLX static mode | 268 ns | 79 B | 2 |
 | QLX normal (cache hit) | 5.80 µs | 2.81 KiB | 22 |
 | QLX normal (cache miss, full render) | 11.8 µs | 5.04 KiB | 69 |
-| squirrel | 22.4 µs | 5.73 KiB | 104 |
+| squirrel | 28.7 µs | 5.73 KiB | 104 |
 | goqu | 17.8 µs | 6.41 KiB | 189 |
 | bun | 2.91 µs | 1.56 KiB | 17 |
 | jet | 11.8 µs | 3.85 KiB | 84 |

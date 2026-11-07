@@ -15,7 +15,7 @@ type idInfo struct {
 
 func newMapper(s *catalog.Schema, cfg Config, warn func(string)) *mapper {
 	m := &mapper{s: s, over: cfg.Overrides, uuidBytes: cfg.UUID == "bytes", packTypes: newPackTypes(cfg.Extensions),
-		enumNames: map[uint32]string{}, warn: warn, ids: cfg.IDs == "string", dateStd: cfg.Date == "stdlib", tsQT: cfg.Timestamptz == "qt", arrayNull: cfg.ArrayNulls,
+		enumNames: map[uint32]string{}, warn: warn, ids: cfg.IDs == "string", dateStd: cfg.Date == "stdlib", tsQT: cfg.Timestamptz != "stdlib", arrayNull: cfg.ArrayNulls,
 		exclude: map[string]bool{}, idInfos: map[string]*idInfo{}}
 	for _, e := range cfg.Exclude {
 		m.exclude[e] = true

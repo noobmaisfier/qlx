@@ -574,19 +574,19 @@
     },
     "a_expr: row OVERLAPS row": {
       "status": "supported",
-      "symbol": "qlx.Overlaps"
+      "symbol": "ArrayExpr.Overlaps method; pgcat Overlaps* functions (no package-level qlx.Overlaps)"
     },
     "array_expr: '[' ']'": {
       "status": "supported",
-      "symbol": "qlx.Array / ArrayFromQuery"
+      "symbol": "qlx.ArrayFromQuery (no qlx.Array helper)"
     },
     "array_expr: '[' array_expr_list ']'": {
       "status": "supported",
-      "symbol": "qlx.Array / ArrayFromQuery"
+      "symbol": "qlx.ArrayFromQuery (no qlx.Array helper)"
     },
     "array_expr: '[' expr_list ']'": {
       "status": "supported",
-      "symbol": "qlx.Array / ArrayFromQuery"
+      "symbol": "qlx.ArrayFromQuery (no qlx.Array helper)"
     },
     "b_expr: '+' b_expr": {
       "status": "supported",
@@ -682,7 +682,7 @@
     },
     "c_expr: ARRAY array_expr": {
       "status": "supported",
-      "symbol": "qlx.Array / generated array wrappers"
+      "symbol": "generated array wrappers (no qlx.Array helper)"
     },
     "c_expr: ARRAY select_with_parens": {
       "status": "supported",
@@ -702,7 +702,7 @@
     },
     "c_expr: PARAM opt_indirection": {
       "status": "supported",
-      "symbol": "qlx.Scalar / ScalarN; qlx.Param[T]"
+      "symbol": "qlx.Scalar / ScalarN; qlx.NewParam[T] (qlx.Param[T] is a type)"
     },
     "c_expr: case_expr": {
       "status": "supported",
@@ -714,7 +714,7 @@
     },
     "c_expr: explicit_row": {
       "status": "supported",
-      "symbol": "qlx.Row"
+      "symbol": "not provided (no qlx.Row helper)"
     },
     "c_expr: func_expr": {
       "status": "supported",
@@ -722,15 +722,15 @@
     },
     "c_expr: implicit_row": {
       "status": "supported",
-      "symbol": "qlx.Row"
+      "symbol": "not provided (no qlx.Row helper)"
     },
     "c_expr: select_with_parens": {
       "status": "supported",
-      "symbol": "qlx.Scalar / ScalarN; qlx.Param[T]"
+      "symbol": "qlx.Scalar / ScalarN; qlx.NewParam[T] (qlx.Param[T] is a type)"
     },
     "c_expr: select_with_parens indirection": {
       "status": "supported",
-      "symbol": "qlx.Scalar / ScalarN; qlx.Param[T]"
+      "symbol": "qlx.Scalar / ScalarN; qlx.NewParam[T] (qlx.Param[T] is a type)"
     },
     "case_expr: CASE case_arg when_clause_list case_default END_P": {
       "status": "supported",
@@ -738,7 +738,7 @@
     },
     "common_table_expr: name opt_name_list AS opt_materialized '(' PreparableStmt ')' opt_search_clause opt_cycle_clause": {
       "status": "supported",
-      "symbol": "qlx.CTE / Recursive"
+      "symbol": "qlx.NewCTE / Recursive"
     },
     "copy_from: FROM": {
       "status": "supported",
@@ -1696,15 +1696,15 @@
     },
     "row: '(' expr_list ',' a_expr ')'": {
       "status": "supported",
-      "symbol": "qlx.Row"
+      "symbol": "not provided (no qlx.Row helper)"
     },
     "row: ROW '(' ')'": {
       "status": "supported",
-      "symbol": "qlx.Row"
+      "symbol": "not provided (no qlx.Row helper)"
     },
     "row: ROW '(' expr_list ')'": {
       "status": "supported",
-      "symbol": "qlx.Row"
+      "symbol": "not provided (no qlx.Row helper)"
     },
     "row_or_rows: ROW": {
       "status": "supported",

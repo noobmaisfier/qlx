@@ -18,7 +18,7 @@ targets: [18, 19]      # PostgreSQL majors the code must run on
 # database_url: postgres://localhost/app   # read a live database instead
 # uuid: std            # "std" is the standard library uuid.UUID, "bytes" is [16]byte
 # date: qt            # "qt" is qt.Date (a calendar date), "stdlib" is time.Time
-# timestamptz: stdlib  # "qt" is qt.Timestamptz, which can hold infinity (time.Time cannot)
+# timestamptz: stdlib  # opt in to time.Time (default is qt.Timestamptz, which can hold infinity)
 # array_nulls: false   # true types array elements as qt.Null[T] so NULL elements can be read
 # ids: int             # "string" types integer primary and foreign keys as qt.ID (opaque strings in JSON; call qt.SetIDKey)
 # json_types:          # document type of json/jsonb columns (default json.RawMessage)

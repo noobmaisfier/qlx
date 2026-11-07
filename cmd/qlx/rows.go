@@ -32,20 +32,82 @@ import (
 // Output goes to qlx_rows.go in each package directory.
 func cmdRows(args []string, out io.Writer) error {
 	fs := flag.NewFlagSet("rows", flag.ContinueOnError)
-	root := fs.String("dir", ".", "directory containing the Go package (default \".\"; a trailing \"...\" is accepted)")
+	root := fs.String("dir", ".", "directory containing the Go package (default \".\"; a trailing \"...\" recurses)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	dir := *root
+
+	base := *root
+	recursive := false
 	if fs.NArg() > 0 {
 		arg := fs.Arg(0)
+		if strings.Contains(arg, "...") {
+			recursive = true
+		}
 		arg = strings.TrimSuffix(arg, "/...")
 		arg = strings.TrimSuffix(arg, "...")
 		if arg == "" || arg == "." {
 			arg = "."
 		}
-		dir = arg
+		base = arg
+	} else if strings.Contains(base, "...") {
+		recursive = true
+		base = strings.TrimSuffix(base, "/...")
+		base = strings.TrimSuffix(base, "...")
+		if base == "" || base == "." {
+			base = "."
+		}
 	}
+
+	if !recursive {
+		return runRowsDir(base, out)
+	}
+
+	var dirs []string
+	err := filepath.WalkDir(base, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		name := d.Name()
+		if name != "." && (strings.HasPrefix(name, ".") || name == "vendor" || name == "testdata") {
+			return filepath.SkipDir
+		}
+		hasGo := false
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return err
+		}
+		for _, e := range entries {
+			if e.IsDir() {
+				continue
+			}
+			n := e.Name()
+			if strings.HasSuffix(n, ".go") && !strings.HasSuffix(n, "_test.go") && n != "qlx_rows.go" {
+				hasGo = true
+				break
+			}
+		}
+		if hasGo {
+			dirs = append(dirs, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	sort.Strings(dirs)
+	for _, dir := range dirs {
+		if err := runRowsDir(dir, out); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func runRowsDir(dir string, out io.Writer) error {
 	src, n, err := genRows(dir)
 	if err != nil {
 		return err

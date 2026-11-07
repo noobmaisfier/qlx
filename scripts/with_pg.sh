@@ -29,7 +29,11 @@ as_pg "$PGBIN/pg_ctl" -D "$work/data" -w -l "$work/log" \
 as_pg "$PGBIN/createdb" -h "$sock" qlx
 as_pg "$PGBIN/psql" -h "$sock" -d qlx -X -q -v ON_ERROR_STOP=1 -f "$root/fixture/schema.sql"
 
+as_pg "$PGBIN/createdb" -h "$sock" qlx_test
+as_pg "$PGBIN/psql" -h "$sock" -d qlx_test -X -q -v ON_ERROR_STOP=1 -f "$root/fixture/schema.sql"
+
 export QLX_PG_HOST="$sock" QLX_PG_DB=qlx QLX_PG_VERSION="$major"
+export QLX_TEST_DSN="host=$sock dbname=qlx_test sslmode=disable"
 if [ "$(id -u)" = 0 ]; then export QLX_PG_USER=postgres; fi
 echo "PostgreSQL $major ready on $sock" >&2
 "$@"

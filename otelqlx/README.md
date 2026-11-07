@@ -32,11 +32,12 @@ if err != nil {
 
 tracedDB := pgxexec.Observed(client.DB(), obs.Observe)
 
-user, err := pgxexec.One[UserRow](ctx, tracedDB,
+st, _ := q.Render(q.Dialect{Version: q.PG18},
     q.Tagged("users.by_id",
         q.Select(db.Users.ID, db.Users.Email).
             From(db.Users).
             Where(db.Users.ID.Eq(7))))
+user, err := pgxexec.One[UserRow](ctx, tracedDB, st)
 ```
 
 `Observe` has the signature of `pgxexec.Observer`. Without explicit providers,

@@ -14,7 +14,7 @@
 
 Migrate one query at a time: QLX runs on the same pgx pool (`client.Pool`), so raw and typed code share connections and transactions.
 
-**Convert SQL automatically:** `qlx sql2go -e 'SELECT id FROM users WHERE id = 1'` prints the QLX code for a statement (build with `-tags sql2go`). Literals become bound parameters.
+**Convert SQL automatically:** `qlx sql2go -e 'SELECT id FROM users WHERE id = 1'` prints the QLX code for a statement (build with `-tags sql2go`). Literals are kept in Go expressions (e.g. `Eq(1)`) and become bound parameters at render time.
 
 ## From sqlc
 

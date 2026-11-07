@@ -68,7 +68,7 @@ if opt.Set {
   `pgx.ErrTooManyRows` otherwise.
 - `Maybe` returns an unset `qt.Opt[R]` for zero rows and an error for more.
 - `Each[R]` returns `iter.Seq2[R, error]` and streams rows without a slice.
-- `AllScan`/`OneScan`/`EachScan` are the positional forms: the type constraint
+- Package-level `AllScan`/`OneScan`/`EachScan` are the positional forms (they take a rendered `qlx.Stmt`): the type constraint
   checks at compile time that `R` has `ScanTargets`.
 
 ```go
@@ -105,16 +105,16 @@ err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{}, pgxexec.Retry{
     Attempts: 3,
     Base:     10 * time.Millisecond,
 }, func(ctx context.Context, tx pgx.Tx) error {
-    if _, err := pgxexec.Exec(ctx, tx,
-        q.Update(db.Users).
-            Set(db.Users.Balance.ToX(db.Users.Balance.Sub(5))).
-            Where(db.Users.ID.Eq(7))); err != nil {
+    upd1, _ := client.Render(q.Update(db.Users).
+        Set(db.Users.Balance.ToX(db.Users.Balance.Sub(5))).
+        Where(db.Users.ID.Eq(7)))
+    if _, err := pgxexec.Exec(ctx, tx, upd1); err != nil {
         return err
     }
-    _, err := pgxexec.Exec(ctx, tx,
-        q.Update(db.Users).
-            Set(db.Users.Balance.ToX(db.Users.Balance.Add(5))).
-            Where(db.Users.ID.Eq(8)))
+    upd2, _ := client.Render(q.Update(db.Users).
+        Set(db.Users.Balance.ToX(db.Users.Balance.Add(5))).
+        Where(db.Users.ID.Eq(8)))
+    _, err := pgxexec.Exec(ctx, tx, upd2)
     return err
 })
 ```

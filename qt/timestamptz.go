@@ -9,7 +9,7 @@ import (
 // Timestamptz is PostgreSQL's timestamptz with its two special values.
 // time.Time cannot hold 'infinity' or '-infinity' (reading such a row into a
 // time.Time fails), which is why columns that use them as "never expires" or
-// "since forever" need this type: generate with `timestamptz: qt`.
+// "since forever" need this type: it is the default for `timestamptz` columns (opt out with `timestamptz: stdlib`).
 //
 // A finite value is an instant (the zone it was built in is irrelevant, as in
 // the database). The zero Timestamptz is the Unix epoch, not infinity. Compare

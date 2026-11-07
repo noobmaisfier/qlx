@@ -56,7 +56,7 @@ another one. All three formats have the same keys.
 | `json_types` | mapping | none | Go document type of a `json`/`jsonb` column. See [§1.3](#13-overrides-and-json-columns). |
 | `uuid` | `std` \| `bytes` | `std` | `std` is the standard library's `uuid.UUID` (Go 1.27); `bytes` is `[16]byte`, for code that must still build on an older toolchain. |
 | `date` | `qt` \| `stdlib` | `qt` | `qt` is `qt.Date`, a calendar date with no time zone; `stdlib` is `time.Time` at midnight UTC. |
-| `timestamptz` | `qt` \| `stdlib` | `stdlib` | `stdlib` is `time.Time`, which cannot hold `infinity` (reading such a row fails). `qt` is `qt.Timestamptz`, which can, and also reads and writes `-infinity`. |
+| `timestamptz` | `qt` \| `stdlib` | `qt` | `qt` is `qt.Timestamptz`, which can hold `infinity` and `-infinity`. `stdlib` is `time.Time`, which cannot hold `infinity` (reading such a row fails). |
 | `array_nulls` | bool | `false` | `true` types every array element as `qt.Null[T]`, so a `NULL` element can be read. PostgreSQL never says whether an array may hold NULLs, so with the default (`[]T`) the row that holds one fails to read. Costs a wrapper per element. |
 | `ids` | `int` \| `string` | `int` | `string` types every single-column integer primary key, and every foreign key pointing at one, as the table's `qt.ID`: an opaque 11-character string in JSON and URLs. The database columns do not change. See [§1.5](#15-opaque-ids). |
 | `nullable` | `null` | `null` | How nullable columns appear: `qt.Null[T]`. No other value is accepted: a `*T` cannot tell NULL from "not loaded", which is what `Null[T]` exists to prevent. |
@@ -152,7 +152,7 @@ view, foreign table, function or procedure, except:
 `'*'` cannot be mixed with names, and `exclude_schemas` only applies to `'*'`.
 
 The schemas actually found are written into `schema.lock` and into the
-generated package, so `qlx gen -from-lock` and `qlx check` need no server.
+generated package, so `qlx gen -from-lock` needs no server.
 `qlx verify` resolves `'*'` again on the live database: a schema added there
 counts as drift.
 
@@ -190,8 +190,9 @@ picks a winner.
 3. `-from-lock`, which regenerates from the committed `schema.lock` and touches
    no server at all.
 
-`check` reads only `schema.lock`. `doctor`, `verify` and `prepare` also look at
-the schema source or a live database (see the table in §2.1).
+`check` reads `schema.lock` to verify generated code, and checks that `schema.lock`
+matches the configured schema source (`database_url` or `migrations`). `doctor`,
+`verify` and `prepare` also look at the schema source or a live database (see the table in §2.1).
 
 ### 1.8 What `targets` means
 
@@ -249,9 +250,9 @@ qlx init | gen | check | verify | doctor | watch | prepare | rows | sql2go | reg
 | Command | Config file | Reads | Notes |
 |---|---|---|---|
 | `init` | no | writes `qlx.yaml`, `migrations/001_init.sql` | `-package` (default `db`), `-out` (default: the package), `-dir` (default `.`). Refuses to overwrite. |
-| `gen` | yes | `database_url`, else `migrations`, else `schema.lock` with `-from-lock` | Writes `schema.lock` and the package; only changed files are rewritten. |
-| `check` | yes | `schema.lock` | Regenerates in memory and compares bytes with the package on disk. Use it in CI. |
-| `verify` | yes | `schema.lock` and a live database | Fails if the database differs from the lock. The URL is `$DATABASE_URL`, else `database_url`. |
+| `gen` | yes | `database_url`, else `migrations`, else `schema.lock` with `-from-lock` | Writes `schema.lock` and the package; only changed files are rewritten. `-from-lock` reads `schema.lock` and does not rewrite it. |
+| `check` | yes | `schema.lock`, generated package, and schema source | Regenerates in memory and compares bytes with the package on disk; verifies that `schema.lock` matches the schema source if one is configured. Use it in CI. |
+| `verify` | yes | `schema.lock` and a live database | Fails if tables in the lock are missing or changed in the live database (additional database tables are ignored). The URL is `$DATABASE_URL`, else `database_url`. |
 | `doctor` | yes | `schema.lock`, and the schema source | Prints `ok` / `FAIL` lines: the lock is valid and generates, and `database_url` answers `SELECT 1` or the server binaries for `migrations` are found. Exits 1 if anything failed. |
 | `watch` | yes | `migrations`, the config file | Regenerates on every change; needs `migrations` (a live `database_url` has nothing to watch). A failed generation is reported and the loop continues. |
 | `prepare` | yes | `-queries file.json` | Prepares each query of a `qtest.Dump` file on a server: `$DATABASE_URL`, else `database_url`, else a throwaway server built from `migrations`. |
@@ -471,7 +472,7 @@ It does not inspect the parts of `Copy*`, `Declare`, `Set`, `Cluster` and
 | Variable | Read by | Meaning |
 |---|---|---|
 | `DATABASE_URL` | `qlx verify`, `qlx prepare` | The database to check. Takes precedence over `database_url` in `qlx.yaml`. (`qlx gen` reads only the config file.) |
-| `PGBIN` | `qlx gen` (migrations), `scripts/with_pg.sh` | Directory with the PostgreSQL server binaries. `pg_bin` in `qlx.yaml` wins. |
+| `PGBIN` | `qlx gen` (migrations), `qlx prepare`, `qlx doctor`, `pgcat`, `scripts/with_pg.sh` | Directory with the PostgreSQL server binaries. `pg_bin` in `qlx.yaml` wins. |
 
 Connection parameters such as `PGHOST`, `PGPASSWORD` or `PGSSLMODE` are read by
 pgx when your DSN leaves them out; they are not QLX settings.
@@ -487,6 +488,8 @@ you work on QLX itself (see [CONTRIBUTING](../CONTRIBUTING.md)).
 | `QLX_PG_HOST`, `QLX_PG_DB`, `QLX_PG_USER`, `QLX_PG_VERSION` | Server used by the root-module tests. `scripts/with_pg.sh` sets them for you. `QLX_PG_VERSION` is the server's major. |
 | `QLX_PG_URLS` | For `scripts/release.sh`: one server per major, `"16=postgres://... 17=postgres://... ..."`, to merge the catalog ledger. |
 | `QLX_RELEASE` | `1` turns the "ledger lists every targeted major" check from a warning into a failure. Set by the release process. |
+| `QLX_GUIDE_OUT` | Path where `guide_examples_test.go` writes rendered SQL for `docs/guide/gen.py`. |
+| `QLX_GRAM_18`, `QLX_GRAM_19` | `gram.y` file paths or URLs for `cmd/pgcat/grammar_test.go`. |
 | `QLX_FUZZ_N`, `QLX_FUZZ_SEED`, `QLX_ODD_N`, `QLX_ODD_SEED`, `QLX_ODD_DIR` | Number of cases, seed and output directory of the fuzz and odd-schema generator tests. A failing run prints its seed. |
 | `QLX_SCHEMA_DIR` | Extra directory of real-world schemas for the `pgxexec` real-schema test. |
 | `QLX_VETTOOL` | Path to a built `qlxvet`, to run the analyzer inside the real-schema test. |

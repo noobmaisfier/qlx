@@ -48,7 +48,7 @@ go vet -vettool="$(go env GOPATH)/bin/qlxvet" \
 | V018 | a result type that does not match the selected columns |
 | V019 | a window function in `WHERE`/`HAVING`/`ON`/`GROUP BY` |
 | V020 | a named window used but not defined |
-| V021 | a table function without `As`, or JSON/XML table without its columns |
+| V021 | a table function without `As`, or JSON/XML table without its columns or alias |
 | V022 | a JSON path variable not passed, or invalid `QUOTES`/`WRAPPER` use |
 | V023 | malformed or misdirected `GRANT`/`REVOKE` parts |
 | V024 | `REFRESH ... CONCURRENTLY` with `NO DATA`, or unnamed `SET CONSTRAINTS` |

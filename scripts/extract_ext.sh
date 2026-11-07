@@ -21,7 +21,9 @@ for pack in "$@"; do
     pgvector) ext=vector ;;
     *)        ext="$pack" ;;
   esac
-  dir="pgcat/ext/${ext//_/}"
+  pkg="${ext//_/}"
+  pkg="${pkg//-/}"
+  dir="pgcat/ext/$pkg"
   old=""
   if [ -f "ledgers/$pack.json" ]; then old="$(mktemp)"; cp "ledgers/$pack.json" "$old"; fi
 

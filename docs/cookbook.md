@@ -20,7 +20,7 @@ st, _ := client.Render(userByID)                    // once, at startup
 row, err := client.One[UserRow](ctx, st, idParam.Bind(42)) // no AST walk at all
 ```
 
-`Register` names the statement for snapshots and `qlx prepare`; `Tagged` puts `/* qlx: user_by_id */` in front so logs and `pg_stat_statements` show the name. `NewStatic0..4` give typed handles.
+`Register` names the statement for snapshots and `qlx prepare`; `Tagged` puts `/* qlx: user_by_id */` in front so logs and `pg_stat_statements` show the name. `pgxexec.NewStatic0..4` give typed handles.
 
 ## Filtering and dynamic conditions
 
@@ -37,28 +37,28 @@ Builders are immutable: always assign the result (the analyzer flags a discarded
 ## Keyset pagination and client-chosen sort
 
 ```go
-byDate, byID := q.KeyDesc(Orders.CreatedAt), q.KeyAsc(Orders.ID) // declared without a value
+byCreated, byID := q.KeyDesc(Users.CreatedAt), q.KeyDesc(Users.ID) // declared without a value
 var after q.Pred                                                  // absent on the first page
 if last != nil {
-    after = q.After(byDate.After(last.CreatedAt), byID.After(last.ID))
+    after = q.After(byCreated.After(last.CreatedAt), byID.After(last.ID))
 }
-q.Select(Orders.ID, Orders.Total).From(Orders).
-    Where(after).                                   // (created_at, id) < ($1, $2)
-    OrderBy(q.KeyOrder(byDate, byID)...).
+q.Select(Users.ID, Users.Email).From(Users).
+    Where(after).                                   // ("created_at", "id") < ($1, $2)
+    OrderBy(q.KeyOrder(byCreated, byID)...).
     Limit(20)
 ```
 
-`.After(v)` types the value like the column. With no key the predicate is absent, so the first page needs no special case. Key columns must be `NOT NULL` and unique together, ending with the primary key; when all directions are equal PostgreSQL sees one row comparison and can use one index range scan.
+`.After(v)` types the value like the column. With no key the predicate is absent, so the first page needs no special case. Key columns must be `NOT NULL` and unique together, ending with the primary key; when all directions are equal PostgreSQL sees one row comparison and can use one index range scan (with mixed directions it renders the equivalent `OR`/`AND` expansion).
 
 A sort string from the client goes through an allowlist, never into the SQL:
 
 ```go
-var orderSorts = q.NewSorts(map[string]q.Orderable{
-    "total":   Orders.Total,
-    "created": Orders.CreatedAt,
-}).Default(Orders.CreatedAt.Desc()).Tiebreak(Orders.ID.Asc())
+var userSorts = q.NewSorts(map[string]q.Orderable{
+    "email":   Users.Email,
+    "created": Users.CreatedAt,
+}).Default(Users.CreatedAt.Desc()).Tiebreak(Users.ID.Asc())
 
-order, err := orderSorts.Parse(r.URL.Query().Get("sort")) // "-total,created"
+order, err := userSorts.Parse(r.URL.Query().Get("sort")) // "-created,email"
 if err != nil { /* 400: errors.Is(err, q.ErrSort) */ }
 sel = sel.OrderBy(order...)
 ```
@@ -155,13 +155,13 @@ An UPDATE or DELETE with neither `Where` nor `All()` does not render.
 
 ## JSON and SQL/JSON
 
-`q.JSONObject`, `q.JSONArray`, `q.JSONExists`, `q.JSONValue[T]`, `q.JSONQuery`, `q.JSONTable` build the standard constructors and `JSON_TABLE`; typed JSONB columns are `qt.JSONB[T]` (set `jsonTypes` in qlx.yaml to map a column to your struct).
+`q.JSONObject`, `q.JSONArray`, `q.JSONExists`, `q.JSONValue[T]`, `q.JSONQuery`, `q.JSONTable` build the standard constructors and `JSON_TABLE`; typed JSONB columns are `qt.JSONB[T]` (set `json_types` in qlx.yaml to map a column to your struct).
 
 ## Scanning results
 
 ```go
 rows, err := client.All[UserRow](ctx, st)           // []UserRow
-one, err := client.One[UserRow](ctx, st)            // exactly one row, else ErrNoRows / ErrTooManyRows
+one, err := client.One[UserRow](ctx, st)            // exactly one row, else pgx.ErrNoRows / pgx.ErrTooManyRows
 opt, err := client.Maybe[UserRow](ctx, st)          // qt.Opt[UserRow]
 for row, err := range client.Each[UserRow](ctx, st) { ... } // streaming
 ```
@@ -197,7 +197,7 @@ Targets are tables of the query, not hand-typed names; `q.Explain(sel, q.PlanAdv
 
 ## Functions and operators from the catalog
 
-Every built-in function and operator is a typed wrapper: `text.Lower`, `num.AbsInt8`, `array.ArrayAppend` under `pgcat/<area>`, or the flat `pg` facade (`pg.Lower`). Nullable-argument overloads end in `N`. Extension packs live under `pgcat/ext/<pack>` (hstore, ltree, citext, pg_trgm).
+Every built-in function and operator is a typed wrapper: `text.Lower`, `num.AbsInt8`, `array.ArrayAppend` under `pgcat/<area>`, or the flat `pg` facade (`pg.Lower`). Nullable-argument overloads end in `N`. Extension packs live under `pgcat/ext/<pack>` (hstore, ltree, citext, pgtrgm).
 
 What the wrappers give you, by shape:
 
@@ -240,7 +240,7 @@ d.AddDays(30).Before(qt.Today(time.UTC))           // calendar arithmetic, no zo
 d.Time()                                           // midnight UTC, when a time.Time is needed
 qt.DateFromTime(t)                                 // drop the clock of a time.Time
 qt.TimeOfDayOf(13, 45, 0, 0).On(d, loc)            // combine into a time.Time
-Posts.PostedOn.Gte(d)                              // a TimeCol, like any timestamp column
+Users.CreatedAt.Gte(d)                             // a TimeCol, like any timestamp column
 ```
 
 `infinity` and `-infinity` are `qt.DateInfinity` and `qt.DateNegInfinity`. To keep `time.Time` for dates, set `date: stdlib` in `qlx.yaml`.
