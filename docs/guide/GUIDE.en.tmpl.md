@@ -879,7 +879,7 @@ overrides:
     family: num
 ```
 
-`family` chooses the column's operators: `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (date comparisons), otherwise `col` (equality, `IN`, `IS NULL`). A type you bring must know how to read and write itself with pgx (`Scan`/`Value` or the `pgtype` interfaces).
+`family` chooses the column's operators: `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (date comparisons), otherwise `col` (equality, `IN`, `IS NULL`). A type you bring must know how to read and write itself with pgx (`Scan`/`Value` or the `pgtype` interfaces). A slice or map type (`[]string`, `map[string]string`) is not wrapped in `qt.Null`, like the built-in arrays: a nullable column holds `nil` for NULL.
 
 A few clarifications:
 

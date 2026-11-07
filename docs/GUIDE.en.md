@@ -1056,7 +1056,7 @@ err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{IsoLevel: pgx.Serializable},
     })
 ```
 
-`Retry{Attempts, Base, OnRetry}`: number of attempts (5 by default), first delay (10 ms, doubled with jitter), and a callback to count retries in your metrics. Only `40001` and `40P01` are retried.
+`Retry{Attempts, Base, Max, OnRetry}`: number of attempts (5 by default), first delay (10 ms, doubled with jitter, capped at `Max`, 5 s by default), and a callback to count retries in your metrics. Only `40001` and `40P01` are retried.
 
 ### 9.2 Pipeline: several queries, one round trip
 
@@ -1308,7 +1308,7 @@ overrides:
     family: num
 ```
 
-`family` chooses the column's operators: `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (date comparisons), otherwise `col` (equality, `IN`, `IS NULL`). A type you bring must know how to read and write itself with pgx (`Scan`/`Value` or the `pgtype` interfaces).
+`family` chooses the column's operators: `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (date comparisons), otherwise `col` (equality, `IN`, `IS NULL`). A type you bring must know how to read and write itself with pgx (`Scan`/`Value` or the `pgtype` interfaces). A slice or map type (`[]string`, `map[string]string`) is not wrapped in `qt.Null`, like the built-in arrays: a nullable column holds `nil` for NULL.
 
 A few clarifications:
 

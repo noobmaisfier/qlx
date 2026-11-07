@@ -2,6 +2,8 @@ package codegen
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/noobmaisfier/qlx/internal/packs"
 
 	"github.com/noobmaisfier/qlx/internal/catalog"
@@ -192,7 +194,10 @@ func (m *mapper) override(t catalog.Type) (goType, bool) {
 			continue
 		}
 		path, name := splitImport(o.Type)
-		g := goType{expr: name, fam: famCol, nullOK: true}
+		// A slice or map is already nil-able: like the built-in arrays it
+		// stays unwrapped, and a nullable column holds nil for NULL.
+		sliceLike := strings.HasPrefix(o.Type, "[]") || strings.HasPrefix(o.Type, "map[")
+		g := goType{expr: name, fam: famCol, nullOK: !sliceLike}
 		if path != "" {
 			g.imports = []string{path}
 		}

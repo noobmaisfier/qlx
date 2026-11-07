@@ -1060,7 +1060,7 @@ err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{IsoLevel: pgx.Serializable},
     })
 ```
 
-`Retry{Attempts, Base, OnRetry}` : nombre d'essais (5 par défaut), premier délai (10 ms, doublé avec gigue), et un rappel pour compter les reprises dans vos métriques. Seuls `40001` et `40P01` sont rejoués.
+`Retry{Attempts, Base, Max, OnRetry}` : nombre d'essais (5 par défaut), premier délai (10 ms, doublé avec gigue, plafonné à `Max`, 5 s par défaut), et un rappel pour compter les reprises dans vos métriques. Seuls `40001` et `40P01` sont rejoués.
 
 ### 9.2 Pipeline : plusieurs requêtes, un aller-retour
 
@@ -1312,7 +1312,7 @@ overrides:
     family: num
 ```
 
-`family` choisit les opérateurs de la colonne : `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (comparaisons de dates), sinon `col` (égalité, `IN`, `IS NULL`). Un type que vous apportez doit savoir se lire et s'écrire avec pgx (`Scan`/`Value` ou les interfaces de `pgtype`).
+`family` choisit les opérateurs de la colonne : `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (comparaisons de dates), sinon `col` (égalité, `IN`, `IS NULL`). Un type que vous apportez doit savoir se lire et s'écrire avec pgx (`Scan`/`Value` ou les interfaces de `pgtype`). Un type slice ou map (`[]string`, `map[string]string`) n'est pas enveloppé dans `qt.Null`, comme les tableaux natifs : une colonne nullable contient `nil` pour NULL.
 
 Quelques précisions :
 

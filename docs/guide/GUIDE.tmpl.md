@@ -883,7 +883,7 @@ overrides:
     family: num
 ```
 
-`family` choisit les opérateurs de la colonne : `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (comparaisons de dates), sinon `col` (égalité, `IN`, `IS NULL`). Un type que vous apportez doit savoir se lire et s'écrire avec pgx (`Scan`/`Value` ou les interfaces de `pgtype`).
+`family` choisit les opérateurs de la colonne : `num` (`Gt`, `Add`, `Sum`...), `text` (`Like`, `Upper`...), `time` (comparaisons de dates), sinon `col` (égalité, `IN`, `IS NULL`). Un type que vous apportez doit savoir se lire et s'écrire avec pgx (`Scan`/`Value` ou les interfaces de `pgtype`). Un type slice ou map (`[]string`, `map[string]string`) n'est pas enveloppé dans `qt.Null`, comme les tableaux natifs : une colonne nullable contient `nil` pour NULL.
 
 Quelques précisions :
 

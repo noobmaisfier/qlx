@@ -626,7 +626,8 @@ For the result type itself:
   three-column query;
 - a single column uses a scalar: `int64`, `string`, `qt.Null[T]`, ...
 - `sql.Scanner` or a type with pgx `Scan`/`Value` methods also works as a
-  field when you wrap a PostgreSQL type yourself.
+  field when you wrap a PostgreSQL type yourself;
+- custom types mapped via `overrides:` whose Go type is a slice or map (`[]T`, `map[...]`) use `nil` for NULL and stay unwrapped, exactly like built-in arrays (`[]T`) and `bytea` (`[]byte`). Other custom overrides are wrapped in `qt.Null[T]` when nullable. See [Configuration](docs/configuration.md#13-overrides-and-json-columns).
 
 Every `qt` scalar type is usable as a field when your column has that type; run
 `go doc github.com/noobmaisfier/qlx/qt` for the complete list. Generated code
@@ -635,7 +636,7 @@ above in row structs.
 
 ## Opaque IDs (opt-in)
 
-Integer keys stay `int64` by default. Set `ids: string` in `qlx.yaml` to turn
+Integer keys stay `int64` by default. Set `ids: string` in `qlx.yaml` (see [Configuration](docs/configuration.md)) to turn
 ID obfuscation on:
 
 ```yaml
@@ -740,6 +741,7 @@ GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 ## Documentation
 
 - [User guide](docs/GUIDE.en.md) ([français](docs/GUIDE.md)): from zero to an application.
+- [Configuration](docs/configuration.md): full reference for `qlx.yaml`, runtime options, and flags.
 - [Cookbook](docs/cookbook.md): pagination, queues, soft delete, tenancy.
 - [SQL to Go](docs/sql-to-go.md): the SQL you know, written in QLX.
 - [Mapping rows](docs/mapping.md): structs, tuples, joins, nested data.
