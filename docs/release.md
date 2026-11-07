@@ -1,214 +1,206 @@
 # Releasing QLX
 
 This is the maintainer procedure for a versioned release. It is written for the
-repository as it is today: four publishable modules, a local Go workspace, and a
-module proxy that makes a published version permanent.
+repository's multi-module architecture: four publishable modules (`qlx`, `pgxexec`,
+`otelqlx`, `analyzer`), an internal test/benchmark module (`bench`), and a local Go
+workspace (`go.work`).
 
-Read the whole page before starting. The order of the steps matters, and two of
-them are hard to undo once a tag is public.
+Read the whole page before starting. The order of steps matters: because sub-modules
+depend on a published `qlx` version without using `replace` directives, the root module
+must be tagged and pushed before sub-modules can reference it.
 
-## What a release is
+---
 
-One version number reaches four tags, all on the same commit:
+## Architecture of a release
 
-| Tag | Module |
-| --- | --- |
-| `vX.Y.Z` | `github.com/noobmaisfier/qlx` (root) |
-| `analyzer/vX.Y.Z` | `github.com/noobmaisfier/qlx/analyzer` |
-| `pgxexec/vX.Y.Z` | `github.com/noobmaisfier/qlx/pgxexec` |
-| `otelqlx/vX.Y.Z` | `github.com/noobmaisfier/qlx/otelqlx` |
+The repository publishes four Go modules under coordinated version tags:
 
-`bench` is internal and is never tagged or published. A Go submodule is resolved
-by `<module path>/vX.Y.Z`, so a bare `vX.Y.Z` does **not** publish `analyzer`,
-`pgxexec` or `otelqlx`.
+| Tag format | Module path | Content |
+| --- | --- | --- |
+| `vX.Y.Z` | `github.com/noobmaisfier/qlx` | Root query builder and core packages |
+| `pgxexec/vX.Y.Z` | `github.com/noobmaisfier/qlx/pgxexec` | pgx v5 execution engine |
+| `otelqlx/vX.Y.Z` | `github.com/noobmaisfier/qlx/otelqlx` | OpenTelemetry instrumentation |
+| `analyzer/vX.Y.Z` | `github.com/noobmaisfier/qlx/analyzer` | `qlxvet` static analysis tool |
 
-The four tags share one commit so that a user who requires `vX.Y.Z` and a user
-who requires `pgxexec/vX.Y.Z` get the same tree. The GitHub release is attached
-to the root tag only; the submodule tags need no release object.
+`bench` is internal and is never published or tagged.
+
+### How `go.work` and publishable `go.mod` interact
+
+During day-to-day development, `go.work` at the root lists all modules. This allows
+`pgxexec`, `otelqlx` and `analyzer` to resolve `github.com/noobmaisfier/qlx` locally
+from your checkout without needing `replace` directives in their `go.mod` files.
+
+When users run `go get github.com/noobmaisfier/qlx/pgxexec`, Go does **not** read
+`go.work`. It reads only `pgxexec/go.mod`. Therefore, each sub-module's `go.mod` must
+require a real, published tag of `qlx`.
+
+To make this work cleanly without circular dependency workarounds:
+1. **Release the root module first** (`vX.Y.Z`).
+2. **Point sub-modules at that published tag** via `scripts/release-modules.sh`, then tag them (`pgxexec/vX.Y.Z`, etc.).
+
+---
 
 ## Preconditions
 
-- `main` is green on the CI matrix (PostgreSQL 16–19, pgx min and latest) and
-  the working tree is clean.
-- Go 1.27 or later and `gh` are installed and authenticated.
-- `proxy.golang.org` is reachable. Every check below assumes the real proxy is
-  what users will see.
-- One reachable PostgreSQL server per targeted major, through `QLX_PG_URLS`,
-  if the catalog has to be re-extracted.
-- No `go.work` effect leaks into the checks: run module commands with
-  `GOWORK=off`, otherwise a local workspace hides a stale `go.mod` or a missing
-  `go.sum` entry.
+- `main` is green on the CI matrix (PostgreSQL 16–19, pgx min and latest).
+- Working tree is clean (`git status` shows nothing unstaged or untracked).
+- Go 1.27 or later and GitHub CLI (`gh`) are installed and authenticated.
+- One reachable PostgreSQL server per targeted major (16–19) if the catalog ledger needs refreshing.
 
-## 1. Prepare the tree
+---
 
-The generator step can change the tree, so it runs before the version commits and
-before any tag.
+## Phase 1: Prepare and release the root module (`vX.Y.Z`)
+
+### 1.1 Run code generation and ledger update
+
+If database catalogs need refreshing across majors:
 
 ```bash
 QLX_PG_URLS="16=postgres://… 17=postgres://… 18=postgres://… 19=postgres://…" \
   scripts/release.sh
 ```
 
-Without `QLX_PG_URLS` the script keeps the committed `pgcat.json`; that is only
-valid when it already lists every targeted major. The script merges the ledgers,
-regenerates `pgcat/`, `pg/` and `docs/pgcat`, runs `go mod tidy` in the modules
-that have dependencies, checks the root module, and rejects `gofmt` differences.
-Commit whatever it changes, in its own commit, before continuing.
+Without `QLX_PG_URLS`, the script uses the committed `pgcat.json` ledger as-is.
+The script regenerates `pgcat/`, docs, checks `root` module isolation, and verifies formatting.
 
-Do not run `scripts/release.sh` again after tagging: `go mod tidy` can rewrite
-`go.sum`, which changes the tree the tag points at.
+### 1.2 Verify the test suite
 
-## 2. Verify the tree you are about to tag
+Run tests with the workspace active:
 
 ```bash
 gofmt -l .
 go vet ./...
 go test ./...
+(cd pgxexec  && go test ./...)
+(cd otelqlx  && go test ./...)
+(cd analyzer && go test ./...)
+(cd bench    && go test -run TestBudgets)
 
-for m in analyzer pgxexec otelqlx bench; do
-  (cd "$m" && GOWORK=off go test ./...)
-done
-
-scripts/with_pg.sh go test ./...       # repeat with PGBIN set to each major
+scripts/with_pg.sh go test ./...
 ```
 
-`GOWORK=off` is not optional here: with a local workspace the modules resolve
-the root through `use`, not through the version in `go.mod`, so a broken bump
-would pass. CI runs the same matrix on the push; the local run is what avoids
-spending a published version on a fixable mistake.
+### 1.3 Bump the release version in documentation
 
-## 3. Bump the version
+Update `README.md` to reference `vX.Y.Z` in:
+- The "Current release:" status callout.
+- The "Modules" table.
 
-Two commits, in this order:
-
-1. **`Bump current release to vX.Y.Z`** — `README.md` only: the
-   `Current release:` line near the top and the list of published module tags
-   further down. Keep the two in step.
-2. **`Bump internal module references to vX.Y.Z`** — the `require` lines in
-   `pgxexec/go.mod`, `otelqlx/go.mod` and `bench/go.mod`, plus the new `go.sum`
-   entries described next.
-
-The root module has no `go.sum` and no dependencies; `scripts/check_root.sh`
-enforces that.
-
-### The `go.sum` chicken-and-egg
-
-The new `go.sum` lines are hashes of the tagged tree, and the tag has to exist
-before they can be computed:
+Commit the changes:
 
 ```bash
-git tag -a vX.Y.Z            -m "qlx vX.Y.Z"
-git tag -a analyzer/vX.Y.Z   -m "analyzer vX.Y.Z"
-git tag -a pgxexec/vX.Y.Z    -m "pgxexec vX.Y.Z"
-git tag -a otelqlx/vX.Y.Z    -m "otelqlx vX.Y.Z"
-```
-
-Resolve the local tag instead of the network, then record the hashes:
-
-```bash
-# ~/.gitconfig.release
-# [url "file:///absolute/path/to/qlx"]
-#     insteadOf = https://github.com/noobmaisfier/qlx
-# [protocol "file"]
-#     allow = always
-
-for m in pgxexec otelqlx bench; do
-  (cd "$m" && GOWORK=off GOPROXY=direct GOSUMDB=off \
-    GOPRIVATE='github.com/noobmaisfier/*' \
-    GIT_CONFIG_GLOBAL=~/.gitconfig.release \
-    go mod download github.com/noobmaisfier/qlx)
-done
-```
-
-That writes the `h1:` and `/go.mod h1:` pairs into each module's `go.sum`. Add
-them to the *module-reference* commit, amend it, then re-create the tags so they
-point at the amended commit:
-
-```bash
-git add pgxexec/go.sum otelqlx/go.sum bench/go.sum
-git commit --amend --no-edit
-git tag -f -a vX.Y.Z          -m "qlx vX.Y.Z"
-git tag -f -a analyzer/vX.Y.Z -m "analyzer vX.Y.Z"
-git tag -f -a pgxexec/vX.Y.Z  -m "pgxexec vX.Y.Z"
-git tag -f -a otelqlx/vX.Y.Z  -m "otelqlx vX.Y.Z"
-```
-
-Why this is stable: the Go module zip for the root module excludes directories
-that contain their own `go.mod`. Editing `pgxexec/go.sum` does not change the
-root hash. Editing any file outside those submodules does. If that happens
-after the tag, start this step again with re-created tags — and if the tags are
-already pushed, you cannot: ship a new patch version instead.
-
-Amended commits and moved tags are acceptable **only before the first push**.
-Never `git tag -f` a tag that has been pushed, and never force-push a tag.
-
-## 4. Push tags first, then `main`
-
-```bash
-git push origin vX.Y.Z analyzer/vX.Y.Z pgxexec/vX.Y.Z otelqlx/vX.Y.Z
+git add README.md (plus any generated files from step 1.1)
+git commit -m "Bump current release to vX.Y.Z"
 git push origin main
 ```
 
-Tags first: CI on `main` resolves the bumped modules through the proxy, and the
-proxy needs the tags to exist. `main` first would start a red run for a tree
-that is fine.
+### 1.4 Tag and push the root module
 
-Both pushes are the point of no return. Once `proxy.golang.org` has fetched a
-version, that version is immutable: the proxy caches the zip and its hashes
-forever. A wrong `vX.Y.Z` cannot be replaced; the only remedy is a new patch
-release, and `retract` in `go.mod` for users who already picked it up.
-
-## 5. Create the GitHub release
-
-Only the root tag gets a release object:
+Tag the root module with `vX.Y.Z` and push it to GitHub:
 
 ```bash
-gh release create vX.Y.Z --title vX.Y.Z --notes-file /tmp/release-notes.md --latest
+git tag -a vX.Y.Z -m "qlx vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
-Write the notes for users, not for maintainers: what changed, in behaviour, and
-the module tags at the bottom. It is the only user-facing summary of the
-version.
+At this point, the root module version `vX.Y.Z` is officially published on GitHub and visible to Go module proxies.
 
-## 6. Verify what users will see
+---
+
+## Phase 2: Update and release sub-modules
+
+### 2.1 Run `scripts/release-modules.sh`
+
+Now that `vX.Y.Z` exists on `origin`, run the automated sub-module release script:
 
 ```bash
-gh run list --branch main --limit 3
-gh run watch <run-id> --exit-status
+scripts/release-modules.sh vX.Y.Z
+```
 
-# fetch the published version through the real proxy, from a scratch module
+This script:
+1. Validates that `vX.Y.Z` exists locally and on `origin`.
+2. Sets `GOWORK=off` and `GOPROXY=direct` (bypassing proxy caching delays).
+3. Updates `pgxexec/go.mod` and `otelqlx/go.mod` to require `github.com/noobmaisfier/qlx@vX.Y.Z`.
+4. Runs `go mod tidy` in each sub-module, downloading the newly published `qlx@vX.Y.Z` and recording real hashes in `go.sum`.
+5. Compiles and vets each sub-module standalone (`GOWORK=off`), verifying that what users download builds cleanly.
+
+### 2.2 Commit sub-module dependency bumps
+
+Commit the updated `go.mod` and `go.sum` files for the sub-modules to `main`:
+
+```bash
+git add pgxexec otelqlx analyzer
+git commit -m "Bump internal module references to vX.Y.Z"
+git push origin main
+```
+
+### 2.3 Tag and push sub-modules
+
+Tag each sub-module using its path prefix, and push the tags:
+
+```bash
+for m in pgxexec otelqlx analyzer; do
+  git tag -a "$m/vX.Y.Z" -m "$m vX.Y.Z"
+done
+
+git push origin pgxexec/vX.Y.Z otelqlx/vX.Y.Z analyzer/vX.Y.Z
+```
+
+---
+
+## Phase 3: GitHub Release and verification
+
+### 3.1 Create the GitHub release
+
+Only the root tag gets a GitHub release object:
+
+```bash
+gh release create vX.Y.Z --title "vX.Y.Z" --notes-file /tmp/release-notes.md --latest
+```
+
+Write notes summarizing user-facing changes and bug fixes, and list the four published tags.
+
+### 3.2 Watch CI workflows
+
+1. The push to `main` triggers standard CI (`ci.yml`).
+2. Pushing the tags triggers the `modules.yml` workflow, which tests all sub-modules with `GOWORK=off` against the published versions.
+
+Verify in GitHub Actions that both workflows pass:
+
+```bash
+gh run list --limit 5
+```
+
+### 3.3 Verify external installation
+
+Verify that an external consumer can install and download the release without `go.work`:
+
+```bash
 mkdir -p /tmp/qlx-verify && cd /tmp/qlx-verify && go mod init verify
+
+# Test fetching root and sub-modules through the proxy
 GOWORK=off GOPROXY=https://proxy.golang.org \
   go mod download -json github.com/noobmaisfier/qlx@vX.Y.Z
 
-# prove the module is installable the way a user installs it
+GOWORK=off GOPROXY=https://proxy.golang.org \
+  go mod download -json github.com/noobmaisfier/qlx/pgxexec@vX.Y.Z
+
+# Test binary installation
 GOBIN=/tmp/qlxbin GOWORK=off GOPROXY=https://proxy.golang.org \
   go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@vX.Y.Z
 ```
 
-Compare the `Sum` from `go mod download` with the `h1:` line committed in
-`go.sum`; they must be identical. A mismatch after the push means the tag and
-the committed hash describe different trees: do not reuse the version.
+---
 
-## Checklist
+## Release checklist
 
-- [ ] `main` green, tree clean, `gh` authenticated.
-- [ ] `scripts/release.sh` run; generated changes committed.
-- [ ] Tests pass in every module with `GOWORK=off`, on each major.
-- [ ] `README.md` says `vX.Y.Z` in both places.
-- [ ] Module `require` lines say `vX.Y.Z`; `go.sum` has the matching hashes.
-- [ ] Four annotated tags on the same commit.
-- [ ] Tags pushed, then `main`.
-- [ ] GitHub release created from the root tag.
-- [ ] CI green on `main`.
-- [ ] `go install …@vX.Y.Z` succeeds through the proxy and the hash matches.
-
-## Known rough edges
-
-- Steps 3 and 4 are manual. Nothing in the repository refuses to tag a dirty
-  tree, a stale `README.md`, or a tag that already exists.
-- The hash calculation needs a temporary `insteadOf` Git config. It is only
-  needed because the tag is not on the network yet; the alternative is pushing
-  the tag first and risking a bad published version.
-- The release notes are hand-written. Nothing compares them with the commits
-  since the previous tag.
+- [ ] `main` is green, working tree clean.
+- [ ] `scripts/release.sh` run (catalog & docs updated).
+- [ ] Full test suite passes across targeted PostgreSQL majors.
+- [ ] `README.md` bumped to `vX.Y.Z` and committed.
+- [ ] Root tag pushed: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+- [ ] `scripts/release-modules.sh vX.Y.Z` executed cleanly.
+- [ ] Sub-module `go.mod` / `go.sum` committed and pushed to `main`.
+- [ ] Sub-module tags pushed (`pgxexec/vX.Y.Z`, `otelqlx/vX.Y.Z`, `analyzer/vX.Y.Z`).
+- [ ] GitHub release created for `vX.Y.Z`.
+- [ ] CI `modules.yml` green on tag push.
+- [ ] Standalone test with `go install` succeeds through the Go proxy.

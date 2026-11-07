@@ -1,0 +1,24 @@
+name: modules
+# Builds pgxexec, otelqlx and analyzer the way a user gets them: without go.work,
+# against the published qlx version named in their go.mod. The regular jobs use
+# go.work (the local qlx), so they cannot catch a go.mod that names a version
+# that is missing or too old. Runs when a tag is pushed, and by hand.
+on:
+  push:
+    tags: ["v*", "pgxexec/v*", "otelqlx/v*", "analyzer/v*"]
+  workflow_dispatch:
+jobs:
+  standalone:
+    runs-on: ubuntu-latest
+    env:
+      GOWORK: "off"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27.x" }
+      - name: build and vet each module against its published qlx
+        run: |
+          for m in pgxexec otelqlx analyzer; do
+            echo "== $m"
+            (cd "$m" && go build ./... && go vet ./...)
+          done

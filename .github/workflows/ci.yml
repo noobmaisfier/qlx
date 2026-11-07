@@ -59,7 +59,10 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -d qlx_test -f fixture/schema.sql
       - name: pin pgx
         run: |
-          if [ "${{ matrix.pgx }}" = min ]; then cd pgxexec && go get github.com/jackc/pgx/v5@v5.7.0; fi
+          if [ "${{ matrix.pgx }}" = min ]; then
+            go work edit -replace github.com/jackc/pgx/v5=github.com/jackc/pgx/v5@v5.7.0
+            (cd pgxexec && go mod download)
+          fi
       - run: go vet ./...
       - run: go test ./... -count=1
       - run: cd pgxexec && go test ./... -count=1

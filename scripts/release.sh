@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Prepares a release tree: merged catalog ledger of every targeted major,
-# regenerated packages and docs, go.sum in every module that has dependencies. Needs network access
+# regenerated packages and docs, go.sum of bench. The sub-modules are finished by release-modules.sh. Needs network access
 # for `go mod tidy`, and one reachable server per major in QLX_PG_URLS.
 #
 #   QLX_PG_URLS="16=postgres://u@h16/db 17=postgres://u@h17/db 18=... 19=..." scripts/release.sh
@@ -34,9 +34,11 @@ go run ./cmd/pgcat docs -ledger pgcat.json -o docs/pgcat -pkg pg
 
 # The root module has no dependencies and no go.sum: `go mod tidy` there would
 # also read the files behind the sql2go build tag and add pg_query_go.
-for m in pgxexec analyzer bench otelqlx; do
-  (cd "$m" && go mod tidy)
-done
+# pgxexec, otelqlx and analyzer require a published qlx version, so they are
+# tidied after the root module is tagged, by scripts/release-modules.sh. bench
+# keeps its replace and is never published.
+(cd bench && go mod tidy)
 scripts/check_root.sh
 gofmt -l . | grep -v '^$' && { echo "gofmt differences above"; exit 1; } || true
-echo "release tree ready: now run scripts/with_pg.sh go test ./... on each major"
+echo "release tree ready: now run scripts/with_pg.sh go test ./... on each major,"
+echo "commit, tag the root module (vX.Y.Z), then run scripts/release-modules.sh vX.Y.Z"

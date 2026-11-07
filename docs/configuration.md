@@ -311,12 +311,20 @@ be safe to run again.
 
 ### 3.5 Caches
 
-QLX renders each statement **shape** once and reuses the SQL. There are two
-caches:
+QLX renders each statement **shape** once and reuses the rendered SQL.
+
+> **What is a "shape"?** A shape is the query's structural skeleton with values replaced by placeholders (`$1`, `$2`, ...). It is **not** a query execution or request count:
+> - `WHERE id = 1` and `WHERE id = 2` produce the exact same shape (`WHERE id = $1`).
+> - A query executed a billion times with different parameter values occupies **only one entry** in the cache.
+> - Lists with variable lengths do not multiply shapes: `col.Any(slice)` and `col.In(slice)` both render `= ANY($1)`, keeping the shape identical regardless of slice length.
+>
+> 32,768 shapes is therefore immense: a typical production application has a few hundred distinct query structures. 32,768 easily accommodates applications with complex dynamic filtering ($n$ optional filters yield at most $2^n$ shapes for that endpoint). The ceiling is not preallocated: storing a few hundred shapes costs only a few kilobytes, and reaching the full ceiling takes only ~8–15 MB.
+
+There are two caches:
 
 | | Size | Notes |
 |---|---|---|
-| `qlx.DefaultShapes` | 4096 shapes, per process | Used by `Resolve` and by every `pgxexec.Client` unless it has its own. |
+| `qlx.DefaultShapes` | 32,768 shapes, per process | Used by `Resolve` and by every `pgxexec.Client` unless it has its own. |
 | `qlx.NewShapeCache(max)` | `max`, at least 32 | A private cache; give it to a client with `ConnectOptions.Shapes`. |
 | `qlx.NewCache(max)` | `max`, at least 1 | The older LRU keyed by a shape value you provide. |
 

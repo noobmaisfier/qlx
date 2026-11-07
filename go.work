@@ -1,0 +1,14 @@
+// Local development only: consumers of the modules never read this file.
+// It makes pgxexec, otelqlx and analyzer build against the qlx in this
+// checkout, so the "require github.com/noobmaisfier/qlx vX" in their go.mod
+// does not have to exist as a published tag yet. bench keeps its own replace.
+// To test what a user gets, run with GOWORK=off (see scripts/release-modules.sh).
+go 1.27
+
+use (
+	.
+	./analyzer
+	./bench
+	./otelqlx
+	./pgxexec
+)

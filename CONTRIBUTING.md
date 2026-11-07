@@ -146,6 +146,25 @@ scripts/with_pg.sh go test ./...        # against a real server
 (cd bench       && go test -run TestBudgets)
 ```
 
+### `go.work`
+
+The repository is several Go modules (root, `pgxexec`, `otelqlx`, `analyzer`,
+`bench`). `go.work` at the root ties them together so that, while you work,
+`pgxexec` and the others build against the `qlx` in your checkout. It is
+committed on purpose and is only for people working in this repository: a
+user running `go get` never reads it. If a `go.work.sum` appears, commit it too.
+
+Because of it, the tests do not prove that a published `go.mod` is right. To
+see what a user gets, run a module with the workspace off:
+
+```bash
+(cd pgxexec && GOWORK=off go build ./...)
+```
+
+This works only once the `qlx` version named in that `go.mod` is tagged. The
+`modules` workflow does it on every tag, and `scripts/release-modules.sh`
+does it for the three published sub-modules during a release.
+
 Changes that can behave differently across majors should be run on more than
 one server (16 and 19 at least). Say in the pull request which majors you ran.
 

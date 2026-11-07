@@ -26,8 +26,8 @@
 #
 # Differences from GitHub are deliberate and listed by `--help`: the toolchain
 # is your local `go` (not setup-go, not `tip`), and nothing is cached between
-# runs. Everything that touches the repository is restored: the pgx pin and the
-# sql2go `go get` write go.mod/go.sum and put them back through a trap.
+# runs. Everything that touches the repository is restored: the pgx pin writes
+# go.work and the sql2go `go get` writes go.mod/go.sum; a trap puts them back.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -185,13 +185,15 @@ job_test() {
 			prepare_dbs "qlx-ci-test-$tag"
 			export_pg "$port" "$pg"
 
-			# CI pins the floor version inside pgxexec, then runs everything.
+			# CI pins the floor version through go.work (a replace), then runs everything.
 			local bak="$TMP/pgx-$tag"
 			if [ "$pgx" = min ]; then
 				mkdir -p "$bak"
-				cp pgxexec/go.mod pgxexec/go.sum "$bak" 2>/dev/null || true
-				EXIT_HOOKS+=("restore_file '$bak' pgxexec/go.mod; restore_file '$bak' pgxexec/go.sum")
-				if ! (cd pgxexec && go get "github.com/jackc/pgx/v5@$PGX_MIN" >/dev/null 2>&1); then
+				cp go.work "$bak"
+				cp go.work.sum "$bak" 2>/dev/null || true
+				EXIT_HOOKS+=("restore_file '$bak' go.work; restore_file '$bak' go.work.sum")
+				if ! { go work edit -replace "github.com/jackc/pgx/v5=github.com/jackc/pgx/v5@$PGX_MIN" &&
+					(cd pgxexec && go mod download) >/dev/null 2>&1; }; then
 					echo "  cannot pin pgx $PGX_MIN" >&2
 					rc=1
 				fi

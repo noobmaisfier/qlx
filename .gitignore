@@ -6,7 +6,3 @@
 /cmd/qlx/qlx
 *.exe
 *.test
-
-# Local Go workspace (development only)
-go.work
-go.work.sum
