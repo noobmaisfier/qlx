@@ -176,6 +176,33 @@ func (b *builder) need(version int, what string) {
 func (b *builder) pushScope(keys ...string) { b.scopes = append(b.scopes, keys) }
 func (b *builder) popScope()                { b.scopes = b.scopes[:len(b.scopes)-1] }
 
+// renderFromItem renders one FROM, JOIN, USING item. A LATERAL subquery may
+// refer only to the items before it, so while it renders the innermost scope
+// is cut to visible (PostgreSQL refuses the others with "invalid reference to
+// FROM-clause entry"; the check here gives ErrScope instead of a server error).
+func (b *builder) renderFromItem(it FromItem, visible []string) {
+	if d, ok := it.(Derived); ok && d.lateral && len(b.scopes) > 0 {
+		top := len(b.scopes) - 1
+		full := b.scopes[top]
+		b.scopes[top] = visible
+		defer func() { b.scopes[top] = full }()
+	}
+	it.renderFrom(b)
+}
+
+// withVisible runs f with the innermost scope cut to visible.
+func (b *builder) withVisible(visible []string, f func()) {
+	if len(b.scopes) == 0 {
+		f()
+		return
+	}
+	top := len(b.scopes) - 1
+	full := b.scopes[top]
+	b.scopes[top] = visible
+	defer func() { b.scopes[top] = full }()
+	f()
+}
+
 func (b *builder) inScope(key string) bool {
 	for i := len(b.scopes) - 1; i >= 0; i-- {
 		for _, k := range b.scopes[i] {

@@ -226,19 +226,7 @@ type TxMode struct {
 func Begin(m TxMode) Command {
 	return cmd(func(b *builder) {
 		b.write("BEGIN")
-		if m.Isolation != "" {
-			b.write(" ISOLATION LEVEL " + string(m.Isolation))
-		}
-		if m.ReadOnly {
-			b.write(" READ ONLY")
-		}
-		if m.Deferrable {
-			if m.Isolation != Serializable || !m.ReadOnly {
-				b.fail(fmt.Errorf("%w: DEFERRABLE only applies to SERIALIZABLE READ ONLY transactions", ErrShape))
-				return
-			}
-			b.write(" DEFERRABLE")
-		}
+		renderTxMode(b, m)
 	})
 }
 

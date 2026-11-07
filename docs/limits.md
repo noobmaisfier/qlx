@@ -11,6 +11,8 @@ QLX moves as much as it can into the Go compiler, then into render time, then in
 | Aggregate in `WHERE`; `OLD` outside `RETURNING` | compiler (distinct types) |
 | UPDATE/DELETE without `Where`/`All`; bare column next to an aggregate without `GroupBy` | render time, and the analyzer earlier (V002, V007) |
 | Column of a table that is not in the query's FROM/JOIN | render time (`ErrScope`), and the analyzer (V006) |
+| A `LATERAL` item or an `ON` clause that names a table appearing later in `FROM`/`JOIN`/`USING` (the target table of `UPDATE`/`DELETE` is not visible to a `LATERAL` item either) | render time (`ErrScope`) |
+| A typed-string enum built from arbitrary text (`LockMode("...")`, `CopyFormat("...")`, ...) | render time (`ErrShape`): every such type is checked against its closed set |
 | INSERT that skips a required column | render time, and the analyzer (V008) |
 | A function or clause newer than the target server | render time (`ErrUnsupportedByServer`), and the analyzer against `-targets` (V009) |
 | Discarded builder, ignored render error, duplicate or late `Register` | analyzer (V001, V003–V005) |
@@ -33,7 +35,7 @@ QLX moves as much as it can into the Go compiler, then into render time, then in
 - A finding about something that is **present** (a column assigned twice, `Limit` and `FetchFirst` together, `Explain(stmt, IO)` without `Analyze`) holds for any chain and is always reported.
 - A finding about something **absent** (an UPDATE with no `Set`, an INSERT with no row) is reported only when the chain is handed straight to something: an argument, a composite literal, or a return from a function whose result is `qlx.Statement`. A builder stored in a variable, or returned as a builder type (a helper that returns `SelectQuery` or `TableFunc`), may be completed later by the caller, so it is left alone, exactly like V002.
 
-When the analyzer cannot resolve an argument (a spread `args...`, a helper function that builds assignments, an alias whose name is not a constant or comes from a parameter or a reassigned variable, a subquery used as a table), the check stays silent rather than guess. `//qlx:ignore <reason>` suppresses one finding; `-audit` lists every suppression.
+When the analyzer cannot resolve an argument (a spread `args...`, a helper function that builds assignments, an alias whose name is not a constant or comes from a parameter or a reassigned variable, a subquery used as a table), the check stays silent rather than guess. `//qlx:ignore <reason>` suppresses one finding; `-audit` lists every suppression. The analyzer does not inspect the missing parts of `Copy*`, `Declare`, `Set`, `Cluster` or `Reindex` statements; `Render` reports them.
 
 Version gates (V009) read the sentence `Requires PostgreSQL N.` (or `Removed in PostgreSQL N.`) from the doc comment of the function or method, which the generator writes for every catalog wrapper and which hand-written gated APIs carry too (`TestVersionGatedAPIIsDocumented` keeps it that way). `EXPLAIN` options, `Checkpoint(opts...)` and `WithHeader(n > 1)` are checked by call shape.
 

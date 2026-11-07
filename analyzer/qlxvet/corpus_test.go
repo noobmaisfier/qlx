@@ -33,7 +33,7 @@ var negativeTests = map[string]bool{
 	"cache_test.go": true, "cmds_more_test.go": true, "commands_test.go": true, "fk_test.go": true,
 	"fuzz_pg_test.go": true, "golden_test.go": true, "grouping_test.go": true, "jsonctor_test.go": true,
 	"name_test.go": true, "planadvice_test.go": true, "shapecache_test.go": true, "sqljson_test.go": true,
-	"tablefunc_test.go": true, "xml_test.go": true,
+	"tablefunc_test.go": true, "xml_test.go": true, "aliasing_test.go": true, // build statements the renderer refuses on purpose
 	"dump_test.go": true, "qtest_test.go": true, // package qtest: Register inside tests, duplicate names
 	"prepare_test.go": true, // pgcat: calls every wrapper, whatever the targets, to PREPARE it
 }

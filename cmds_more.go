@@ -87,15 +87,7 @@ func deferWord(d bool) string {
 func SetTransaction(m TxMode) Command {
 	return cmd(func(b *builder) {
 		b.write("SET TRANSACTION")
-		if m.Isolation != "" {
-			b.write(" ISOLATION LEVEL " + string(m.Isolation))
-		}
-		if m.ReadOnly {
-			b.write(" READ ONLY")
-		}
-		if m.Deferrable {
-			b.write(" DEFERRABLE")
-		}
+		renderTxMode(b, m)
 	})
 }
 

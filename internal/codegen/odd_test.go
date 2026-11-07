@@ -78,6 +78,10 @@ CREATE TABLE %[1]s.status_ (id int primary key, s %[1]s.status);
 CREATE TYPE %[1]s."user" AS ENUM ('a');
 CREATE TABLE %[1]s.users (id int primary key, u %[1]s."user", us %[1]s.status[]);`, s)
 		}},
+		oddCase{"empty_enum", func(s string) string { // an enum with no label is legal in PostgreSQL
+			return fmt.Sprintf(`CREATE TYPE %[1]s.nothing AS ENUM ();
+CREATE TABLE %[1]s.has_nothing (id int primary key, e %[1]s.nothing, ea %[1]s.nothing[]);`, s)
+		}},
 		oddCase{"every_type", func(s string) string {
 			return fmt.Sprintf(`CREATE DOMAIN %[1]s.posint AS int CHECK (VALUE > 0);
 CREATE TYPE %[1]s.pair AS (a int, b text);

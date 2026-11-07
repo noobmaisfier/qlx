@@ -46,6 +46,9 @@ const (
 
 // WithFormat sets FORMAT. JSON is output-only and needs PostgreSQL 19.
 func WithFormat(f CopyFormat) CopyOption {
+	if !f.valid() {
+		return badCopyOption("FORMAT", string(f))
+	}
 	o := kw(dirBoth, 0, "FORMAT "+string(f))
 	if f == CopyJSON {
 		o.dir, o.min = dirToOnly, PG19
@@ -66,8 +69,18 @@ var (
 	QuoteSingle    = Delim{"''''"}
 )
 
-func WithDelimiter(d Delim) CopyOption { return kw(dirBoth, 0, "DELIMITER "+d.lit) }
-func WithQuote(d Delim) CopyOption     { return kw(dirBoth, 0, "QUOTE "+d.lit) }
+func WithDelimiter(d Delim) CopyOption {
+	if d.lit == "" { // the zero Delim{} is not one of the provided values
+		return badCopyOption("DELIMITER", "")
+	}
+	return kw(dirBoth, 0, "DELIMITER "+d.lit)
+}
+func WithQuote(d Delim) CopyOption {
+	if d.lit == "" {
+		return badCopyOption("QUOTE", "")
+	}
+	return kw(dirBoth, 0, "QUOTE "+d.lit)
+}
 
 // WithNull sets the NULL marker string (printable ASCII only).
 func WithNull(s string) CopyOption {
@@ -102,6 +115,9 @@ const (
 
 // WithOnError sets ON_ERROR (COPY FROM only).
 func WithOnError(m OnErrorMode) CopyOption {
+	if !m.valid() {
+		return badCopyOption("ON_ERROR", string(m))
+	}
 	min := 0
 	switch m {
 	case OnErrorIgnore:
@@ -130,6 +146,9 @@ const (
 
 // WithLogVerbosity sets LOG_VERBOSITY (COPY FROM only).
 func WithLogVerbosity(v LogVerbosity) CopyOption {
+	if !v.valid() {
+		return badCopyOption("LOG_VERBOSITY", string(v))
+	}
 	min := 0
 	switch v {
 	case LogVerbose:
@@ -506,6 +525,10 @@ func LockTable(mode LockMode, noWait bool, ts ...Table) Command {
 			b.fail(fmt.Errorf("%w: LOCK TABLE needs a table", ErrShape))
 			return
 		}
+		if !mode.valid() {
+			badEnum(b, "lock mode", string(mode))
+			return
+		}
 		b.write("LOCK TABLE ")
 		joinParts(b, len(ts), func(i int) { ts[i].tableRef().renderFrom(b) })
 		b.write(" IN " + string(mode) + " MODE")
@@ -599,6 +622,10 @@ func (g GrantStmt) render(b *builder) {
 		b.write("GRANT ")
 	}
 	for i, p := range g.privs {
+		if !p.valid() {
+			badEnum(b, "privilege", string(p))
+			return
+		}
 		if i > 0 {
 			b.write(", ")
 		}

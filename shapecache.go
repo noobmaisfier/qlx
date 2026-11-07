@@ -131,7 +131,7 @@ func (c *ShapeCache) Resolve(d Dialect, s Statement, binds ...Binding) (string, 
 	key := shapeKey{b.version, b.h1, b.h2}
 	nslots := len(b.slots)
 	if b.err != nil || nslots > 65535 {
-		hashBuilders.Put(b)
+		releaseHashBuilder(b)
 		return c.miss(d, s, binds) // report the real error from a full render
 	}
 	sh := &c.shards[key.h1%shapeShards]
@@ -139,16 +139,21 @@ func (c *ShapeCache) Resolve(d Dialect, s Statement, binds ...Binding) (string, 
 	e, ok := sh.m[key]
 	sh.mu.RUnlock()
 	if !ok || e.nslots != nslots {
-		hashBuilders.Put(b)
+		releaseHashBuilder(b)
 		return c.miss(d, s, binds)
 	}
 	c.hits.Add(1)
 	args, err := argsFrom(b.slots, binds)
-	for i := range b.slots {
-		b.slots[i] = slot{} // do not keep user values alive in the pool
-	}
-	hashBuilders.Put(b)
+	releaseHashBuilder(b)
 	return e.sql, args, err
+}
+
+// releaseHashBuilder returns a builder to the pool without the argument
+// values of the statement it just hashed: the pool must not keep user data
+// alive (a long-lived builder would pin the last statement's values).
+func releaseHashBuilder(b *builder) {
+	clear(b.slots)
+	hashBuilders.Put(b)
 }
 
 // miss renders in full, stores the shape and returns its SQL and arguments.

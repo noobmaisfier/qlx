@@ -272,7 +272,11 @@ func emitEnum(f *file, nm *namer, goName string, t catalog.Type, s *catalog.Sche
 	}
 	f.p(")\n\n")
 	f.p("// %sValues lists every label in sort order.\nvar %sValues = []%s{%s}\n\n", goName, goName, goName, strings.Join(names, ", "))
-	f.p("// Valid reports whether v is a label of the enum.\nfunc (v %s) Valid() bool {\n\tswitch v {\n\tcase %s:\n\t\treturn true\n\t}\n\treturn false\n}\n\n", goName, strings.Join(names, ", "))
+	if len(names) == 0 { // PostgreSQL allows ENUM (): no label is valid, and "case :" would not parse
+		f.p("// Valid reports whether v is a label of the enum.\nfunc (%s) Valid() bool { return false }\n\n", goName)
+	} else {
+		f.p("// Valid reports whether v is a label of the enum.\nfunc (v %s) Valid() bool {\n\tswitch v {\n\tcase %s:\n\t\treturn true\n\t}\n\treturn false\n}\n\n", goName, strings.Join(names, ", "))
+	}
 	f.p("// %sType is the type symbol, for casts.\nvar %sType = qlx.NewPgType[%s](%q, %q)\n\n", goName, goName, goName, t.Schema, t.Name)
 }
 

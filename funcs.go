@@ -537,6 +537,10 @@ type extractNode struct {
 }
 
 func (n extractNode) render(b *builder) {
+	if !n.field.valid() {
+		badEnum(b, "EXTRACT field", string(n.field))
+		return
+	}
 	b.write("EXTRACT(" + string(n.field) + " FROM ")
 	n.n.render(b)
 	b.write(")")

@@ -154,6 +154,10 @@ func (x XMLParseBuilder) StripWhitespace() XMLParseBuilder { x.ws = " STRIP WHIT
 type xmlParseNode struct{ x XMLParseBuilder }
 
 func (n xmlParseNode) render(b *builder) {
+	if !n.x.kind.valid() {
+		badEnum(b, "XML kind", string(n.x.kind))
+		return
+	}
 	b.write("XMLPARSE(" + string(n.x.kind) + " ")
 	n.x.text.render(b)
 	b.write(n.x.ws + ")")
@@ -254,6 +258,10 @@ type xmlSerializeNode struct {
 }
 
 func (n xmlSerializeNode) render(b *builder) {
+	if !n.s.kind.valid() {
+		badEnum(b, "XML kind", string(n.s.kind))
+		return
+	}
 	b.write("XMLSERIALIZE(" + string(n.s.kind) + " ")
 	n.s.x.render(b)
 	b.write(" AS " + n.as + n.s.indent + ")")

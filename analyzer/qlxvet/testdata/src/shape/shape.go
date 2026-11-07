@@ -153,3 +153,10 @@ func nulls() {
 	use(q.Update(Users).Set(Users.Nickname.ToNull(), Users.Tier.ToNull()).Where(Users.ID.Eq(1)))                // want `V030 Users.Tier is declared NOT NULL`
 	use(q.InsertInto(Users).Row(Users.Email.To("a")).OnConflict(Users.Email).DoUpdate(Users.Nickname.ToNull())) // fine
 }
+
+// An alias whose name is not a constant is not resolved to a table: the
+// grouping check must stay silent for it, not dereference a missing table.
+func dynamicAlias(name string) {
+	use(q.Select(Users.As(name).Email, q.CountAll()).From(Users).GroupBy(Users.As(name).Tier)) // fine: unknown table, silence
+	use(q.Select(Users.As(name).Email, q.CountAll()).From(Users).GroupBy(Orders.Status))       // want `V006`
+}

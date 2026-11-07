@@ -22,6 +22,10 @@ type patNode struct {
 }
 
 func (n patNode) render(b *builder) {
+	if !PatternKind(n.op).valid() {
+		badEnum(b, "pattern operator", n.op)
+		return
+	}
 	wrapIfCompound(b, n.l)
 	b.write(" " + n.op + " ")
 	b.arg(n.pattern)
@@ -283,6 +287,10 @@ type quantNode struct {
 }
 
 func (n quantNode) render(b *builder) {
+	if !CmpOp(n.op).valid() {
+		badEnum(b, "comparison operator", n.op)
+		return
+	}
 	wrapIfCompound(b, n.l)
 	b.write(" " + n.op + " " + n.q + " (")
 	n.sub.render(b)

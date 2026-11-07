@@ -229,10 +229,11 @@ func (q SelectQuery) render(b *builder) {
 
 	if q.from != nil {
 		b.write(" FROM ")
-		q.from.renderFrom(b)
-		for _, j := range q.joins {
+		nc := len(q.ctes)
+		b.renderFromItem(q.from, keys[:nc]) // a LATERAL first item sees nothing of this FROM
+		for ji, j := range q.joins {
 			b.write(" " + j.kind + " ")
-			j.item.renderFrom(b)
+			b.renderFromItem(j.item, keys[:nc+1+ji])
 			if j.kind != "CROSS JOIN" {
 				if !j.on.valid() {
 					b.fail(fmt.Errorf("%w: %s needs a condition", ErrShape, j.kind))
@@ -240,7 +241,8 @@ func (q SelectQuery) render(b *builder) {
 				}
 				b.write(" ON ")
 				b.noWindow++
-				j.on.n.render(b)
+				// an ON clause sees the items up to and including its own join
+				b.withVisible(keys[:nc+2+ji], func() { j.on.n.render(b) })
 				b.noWindow--
 			}
 		}

@@ -484,7 +484,9 @@ func (q UpdateQuery) render(b *builder) {
 	})
 	if len(q.from) > 0 {
 		b.write(" FROM ")
-		joinParts(b, len(q.from), func(i int) { q.from[i].renderFrom(b) })
+		keys := scopeKeysOf(q.ctes, q.table, q.from) // table, ctes, items
+		// the target table is not visible to a LATERAL item in FROM
+		joinParts(b, len(q.from), func(i int) { b.renderFromItem(q.from[i], keys[1:1+len(q.ctes)+i]) })
 	}
 	if !renderWhere(b, q.where) && !q.all {
 		b.fail(fmt.Errorf("%w: UPDATE of %s without WHERE; add Where or call All()", ErrShape, q.table.Name))
@@ -536,7 +538,8 @@ func (q DeleteQuery) render(b *builder) {
 	q.table.renderFrom(b)
 	if len(q.using) > 0 {
 		b.write(" USING ")
-		joinParts(b, len(q.using), func(i int) { q.using[i].renderFrom(b) })
+		keys := scopeKeysOf(q.ctes, q.table, q.using)
+		joinParts(b, len(q.using), func(i int) { b.renderFromItem(q.using[i], keys[1:1+len(q.ctes)+i]) })
 	}
 	if !renderWhere(b, q.where) && !q.all {
 		b.fail(fmt.Errorf("%w: DELETE from %s without WHERE; add Where or call All()", ErrShape, q.table.Name))

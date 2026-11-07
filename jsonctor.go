@@ -185,6 +185,10 @@ func (n isJSONNode) render(b *builder) {
 	if n.not {
 		b.write("NOT ")
 	}
+	if !n.kind.valid() {
+		badEnum(b, "JSON kind", string(n.kind))
+		return
+	}
 	b.write("JSON" + string(n.kind))
 	if n.unique {
 		b.write(" WITH UNIQUE KEYS")
