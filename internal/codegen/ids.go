@@ -76,8 +76,8 @@ func (m *mapper) idFor(nm *namer, t catalog.Table, col string, depth int) *idInf
 			return info
 		}
 		info := &idInfo{owner: key, space: key}
-		info.marker = nm.take(camel(t.Name)+"IDSpace", camel(t.Schema))
-		info.alias = nm.take(singular(camel(t.Name))+"ID", camel(t.Schema))
+		info.marker = nm.take(nm.local(t.Schema, t.Name)+"IDSpace", camel(t.Schema))
+		info.alias = nm.take(nm.localSingular(t.Schema, t.Name)+"ID", camel(t.Schema))
 		m.idInfos[key] = info
 		return info
 	}

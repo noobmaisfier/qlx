@@ -41,11 +41,11 @@ var familyNames = map[family]string{
 // the generated package (sql2go) agree with it symbol for symbol.
 func Names(s *catalog.Schema, cfg Config) []TableName {
 	m := newMapper(s, cfg, func(string) {})
-	nm := newNamer()
+	nm := newNamer(cfg)
 	exclude := m.exclude
 	for _, t := range s.Types {
 		if t.Kind == "e" {
-			m.enumNames[t.OID] = nm.take(camel(t.Name), camel(t.Schema))
+			m.enumNames[t.OID] = nm.take(nm.local(t.Schema, t.Name), camel(t.Schema))
 		}
 	}
 	// emitEnum reserves one constant name per label; replay that too, or a

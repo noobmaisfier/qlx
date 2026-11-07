@@ -100,7 +100,7 @@ CREATE TABLE orders (
 ```yaml
 package: db                 # generated Go package
 out: db                     # output directory
-schemas: [public]           # schemas read
+schemas: [public]           # schemas read; ['*'] = every schema with tables or functions (+ exclude_schemas)
 migrations: migrations      # *.sql applied in filename order (or database_url: postgres://...)
 targets: [18, 19]           # PostgreSQL versions the code must support
 uuid: std                   # std = uuid.UUID, bytes = [16]byte
@@ -852,7 +852,9 @@ The generator turns SQL names into exported Go identifiers:
 | `api_url` | `APIURL` | recognized initialisms: `id url uuid api ip http https json jsonb html sql xml uri ttl cpu os db tls ssl ssh csv pdf ui` |
 | table `users` | `Users` (symbol), `UsersT` (type), `User` (row) | the row is the singular: `ies` → `y`, `sses/xes/ches/shes` → without `es`, `ss/us/is` unchanged, otherwise without the final `s` |
 | column `type` | `Type` | a reserved package word gets the suffix `Col`; two columns that give the same name are numbered |
-| colliding table | schema suffix, then `Row` or a number | so that two schemas do not overwrite the same symbol |
+| table of a non-principal schema (more than one schema) | always prefixed: `BillingUsers`, row `BillingUser` | the first schema of `schemas` keeps plain names; a name never depends on what else is in the database |
+| two tables ending up with the same name | error at generation | no silent winner; rename one or `exclude` it |
+| table named like its row | row gets `Row` (`AuditLogRow`) | so that the table symbol and the row type do not clash |
 
 The row struct keeps the SQL name in its tags: `ID int64 `db:"id"``, `UserID int64 `db:"user_id"``. That tag is what drives reading by name (§10.10), not the Go name.
 

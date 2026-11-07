@@ -144,7 +144,7 @@ func Generate(s *catalog.Schema, cfg Config) (*Result, error) {
 	}
 	res := &Result{Files: map[string][]byte{}}
 	m := newMapper(s, cfg, func(w string) { res.Warnings = append(res.Warnings, w) })
-	nm := newNamer()
+	nm := newNamer(cfg)
 	exclude := m.exclude
 
 	// Enums first: columns refer to their Go names.
@@ -157,7 +157,7 @@ func Generate(s *catalog.Schema, cfg Config) (*Result, error) {
 		}
 	}
 	for _, t := range enums {
-		m.enumNames[t.OID] = nm.take(camel(t.Name), camel(t.Schema))
+		m.enumNames[t.OID] = nm.take(nm.local(t.Schema, t.Name), camel(t.Schema))
 	}
 	for _, t := range enums {
 		emitEnum(ef, nm, m.enumNames[t.OID], t, s)
@@ -181,6 +181,9 @@ func Generate(s *catalog.Schema, cfg Config) (*Result, error) {
 		g.all = byKey
 		byKey[t.Schema+"."+t.Name] = g
 		gens = append(gens, g)
+	}
+	if nm.err != nil {
+		return res, nm.err
 	}
 	for _, g := range gens {
 		t := g.t

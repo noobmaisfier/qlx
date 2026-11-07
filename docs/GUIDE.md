@@ -100,7 +100,7 @@ CREATE TABLE orders (
 ```yaml
 package: db                 # paquet Go généré
 out: db                     # répertoire de sortie
-schemas: [public]           # schémas lus
+schemas: [public]           # schémas lus ; ['*'] = tous les schémas avec tables ou fonctions (+ exclude_schemas)
 migrations: migrations      # *.sql appliqués dans l'ordre des noms (ou database_url: postgres://...)
 targets: [18, 19]           # versions PostgreSQL que le code doit supporter
 uuid: std                   # std = uuid.UUID, bytes = [16]byte
@@ -1285,7 +1285,9 @@ Le générateur transforme les noms SQL en identifiants Go exportés :
 | `api_url` | `APIURL` | initialismes reconnus : `id url uuid api ip http https json jsonb html sql xml uri ttl cpu os db tls ssl ssh csv pdf ui` |
 | table `users` | `Users` (symbole), `UsersT` (type), `User` (ligne) | la ligne est le singulier : `ies` → `y`, `sses/xes/ches/shes` → sans `es`, `ss/us/is` inchangés, sinon sans `s` final |
 | colonne `type` | `Type` | un mot réservé du paquet reçoit le suffixe `Col` ; deux colonnes qui donnent le même nom sont numérotées |
-| table en collision | suffixe du schéma, puis `Row` ou un numéro | pour que deux schémas n'écrasent pas un même symbole |
+| table d'un schéma non principal (plusieurs schémas) | toujours préfixée : `BillingUsers`, ligne `BillingUser` | le premier schéma de `schemas` garde les noms simples ; un nom ne dépend jamais du reste de la base |
+| deux tables qui aboutissent au même nom | erreur à la génération | pas de gagnant silencieux ; renommer l'une ou l'`exclude` |
+| table nommée comme sa ligne | la ligne reçoit `Row` (`AuditLogRow`) | pour que le symbole de table et le type de ligne ne se heurtent pas |
 
 La struct de ligne garde le nom SQL dans ses tags : `ID int64 `db:"id"``, `UserID int64 `db:"user_id"``. C'est ce tag qui sert à la lecture par nom (§10.10), pas le nom Go.
 

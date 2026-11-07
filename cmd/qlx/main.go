@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -37,6 +38,8 @@ type File struct {
 	DatabaseURL string `json:"database_url,omitempty"` // read the schema from a live server
 	Migrations  string `json:"migrations,omitempty"`   // or build it from *.sql files on a throwaway server
 	PGBin       string `json:"pg_bin,omitempty"`       // directory with postgres, initdb, pg_ctl
+	// ExcludeSchemas removes schemas from schemas: ["*"]. It has no meaning with a list of names.
+	ExcludeSchemas []string `json:"exclude_schemas,omitempty"`
 }
 
 func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
@@ -187,6 +190,12 @@ func loadConfig(path string) (File, error) {
 	if len(f.Schemas) == 0 {
 		f.Schemas = []string{"public"}
 	}
+	if wantsAll(f.Schemas) && len(f.Schemas) != 1 {
+		return f, fmt.Errorf(`%s: schemas: "*" means every schema and cannot be combined with other names`, path)
+	}
+	if len(f.ExcludeSchemas) > 0 && !(len(f.Schemas) == 1 && f.Schemas[0] == catalog.AllSchemas) {
+		return f, fmt.Errorf(`%s: exclude_schemas only applies to schemas: ["*"]`, path)
+	}
 	if f.Package == "" {
 		f.Package = "db"
 	}
@@ -194,6 +203,25 @@ func loadConfig(path string) (File, error) {
 		f.Out = f.Package
 	}
 	return f, nil
+}
+
+// wantsAll reports whether the schemas setting asks for every schema.
+func wantsAll(schemas []string) bool { return slices.Contains(schemas, catalog.AllSchemas) }
+
+// schemasFor resolves the schemas setting against a server (see
+// catalog.ResolveSchemas). A list of names comes back unchanged.
+func schemasFor(f File, c pgtool.Conn) ([]string, error) {
+	return catalog.ResolveSchemas(c, f.Schemas, f.ExcludeSchemas)
+}
+
+// withLockSchemas gives the generator the schemas the lock was built from,
+// when the config says "*": the generated package must list names, and the
+// lock is what says which ones there were.
+func withLockSchemas(f File, s *catalog.Schema) File {
+	if wantsAll(f.Schemas) {
+		f.Schemas = catalog.PublicFirst(s.Schemas)
+	}
+	return f
 }
 
 func rel(base, p string) string {
@@ -207,7 +235,12 @@ func rel(base, p string) string {
 func readSource(f File, base string) (*catalog.Schema, error) {
 	switch {
 	case f.DatabaseURL != "":
-		return catalog.Load(pgtool.FromURL(f.DatabaseURL), f.Schemas)
+		conn := pgtool.FromURL(f.DatabaseURL)
+		schemas, err := schemasFor(f, conn)
+		if err != nil {
+			return nil, err
+		}
+		return catalog.Load(conn, schemas)
 	case f.Migrations != "":
 		srv, err := pgtool.StartEphemeral(f.PGBin)
 		if err != nil {
@@ -217,7 +250,11 @@ func readSource(f File, base string) (*catalog.Schema, error) {
 		if err := srv.Conn().ApplySQLDir(rel(base, f.Migrations)); err != nil {
 			return nil, fmt.Errorf("applying migrations: %w", err)
 		}
-		return catalog.Load(srv.Conn(), f.Schemas)
+		schemas, err := schemasFor(f, srv.Conn())
+		if err != nil {
+			return nil, err
+		}
+		return catalog.Load(srv.Conn(), schemas)
 	}
 	return nil, errors.New(`no schema source: set "database_url" or "migrations" in qlx.json, or use -from-lock`)
 }
@@ -252,7 +289,7 @@ func cmdGen(f File, base string, fromLock bool, out io.Writer) error {
 		}
 		s = sealed
 	}
-	res, err := codegen.Generate(s, f.Config)
+	res, err := codegen.Generate(s, withLockSchemas(f, s).Config)
 	if err != nil {
 		return err
 	}
@@ -340,7 +377,7 @@ func cmdCheck(f File, base string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	res, err := codegen.Generate(s, f.Config)
+	res, err := codegen.Generate(s, withLockSchemas(f, s).Config)
 	if err != nil {
 		return err
 	}
@@ -400,7 +437,12 @@ func cmdVerify(f File, base string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	live, err := catalog.Load(pgtool.FromURL(url), f.Schemas)
+	conn := pgtool.FromURL(url)
+	schemas, err := schemasFor(f, conn)
+	if err != nil {
+		return err
+	}
+	live, err := catalog.Load(conn, schemas)
 	if err != nil {
 		return err
 	}
@@ -441,7 +483,7 @@ func cmdDoctor(f File, base string, out io.Writer) error {
 		say(false, "%v", err)
 	} else {
 		say(true, "%s valid: PostgreSQL %d, %d tables, %d enums, %d functions", f.Lock, s.Major(), len(s.Tables), len(s.Enums), len(s.Funcs))
-		if res, err := codegen.Generate(s, f.Config); err != nil {
+		if res, err := codegen.Generate(s, withLockSchemas(f, s).Config); err != nil {
 			say(false, "generation: %v", err)
 		} else {
 			report(out, res)

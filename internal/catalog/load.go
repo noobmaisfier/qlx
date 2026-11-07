@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/noobmaisfier/qlx/internal/pgtool"
@@ -133,6 +134,74 @@ SELECT json_build_object(
    ) ORDER BY fn.schema, fn.name, fn.oid) FROM fn), '[]'::json)
 )::text;
 `
+
+// AllSchemas is the value of the schemas setting that means "every schema".
+const AllSchemas = "*"
+
+// resolveSQL lists the schemas that hold something QLX generates for: tables,
+// views, materialized views, foreign tables, functions or procedures. System
+// schemas (pg_*, information_schema) and schemas that belong to an extension
+// (PostGIS's topology, for one) are left out. An empty schema is left out too:
+// it would add nothing, and a second schema changes how every name is built.
+const resolveSQL = `
+SELECT n.nspname FROM pg_namespace n
+WHERE left(n.nspname, 3) <> 'pg_' AND n.nspname <> 'information_schema'
+  AND NOT EXISTS (SELECT 1 FROM pg_depend d
+                  WHERE d.classid = 'pg_namespace'::regclass AND d.objid = n.oid AND d.deptype = 'e')
+  AND (EXISTS (SELECT 1 FROM pg_class c WHERE c.relnamespace = n.oid AND c.relkind IN ('r', 'p', 'v', 'm', 'f') AND NOT c.relispartition)
+    OR EXISTS (SELECT 1 FROM pg_proc p WHERE p.pronamespace = n.oid AND p.prokind IN ('f', 'p')))
+ORDER BY 1`
+
+// ResolveSchemas turns the schemas setting into a list of names. A list of
+// names is returned as it is. ["*"] becomes every schema that holds tables or
+// functions (see resolveSQL) except those in exclude. "*" cannot be mixed with
+// names, and exclude only applies to "*".
+func ResolveSchemas(c pgtool.Conn, schemas, exclude []string) ([]string, error) {
+	all := false
+	for _, sc := range schemas {
+		if sc == AllSchemas {
+			all = true
+		}
+	}
+	if !all {
+		if len(exclude) > 0 {
+			return nil, fmt.Errorf(`exclude_schemas only applies to schemas: ["*"]`)
+		}
+		return schemas, nil
+	}
+	if len(schemas) != 1 {
+		return nil, fmt.Errorf(`schemas: "*" means every schema and cannot be combined with other names`)
+	}
+	out, err := c.Query(resolveSQL)
+	if err != nil {
+		return nil, fmt.Errorf("listing schemas: %w", err)
+	}
+	skip := map[string]bool{}
+	for _, e := range exclude {
+		skip[e] = true
+	}
+	var got []string
+	for _, line := range strings.Split(string(out), "\n") {
+		if name := strings.TrimSpace(line); name != "" && !skip[name] {
+			got = append(got, name)
+		}
+	}
+	if len(got) == 0 {
+		return nil, fmt.Errorf(`schemas: "*" matched no schema with tables or functions`)
+	}
+	return PublicFirst(got), nil
+}
+
+// PublicFirst puts "public" at the head of a list of schemas and keeps the
+// rest in order. The first schema of the config is the principal one (its
+// objects keep plain Go names), and for "*" that should be public.
+func PublicFirst(schemas []string) []string {
+	out := slices.Clone(schemas)
+	if i := slices.Index(out, "public"); i > 0 {
+		out = slices.Insert(slices.Delete(out, i, i+1), 0, "public")
+	}
+	return out
+}
 
 // Load reads the model for the given schemas from a live server.
 func Load(c pgtool.Conn, schemas []string) (*Schema, error) {

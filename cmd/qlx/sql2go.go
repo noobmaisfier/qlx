@@ -46,7 +46,7 @@ func cmdSQL2Go(f File, base string, inline, q, pkg string, files []string, in io
 	if strings.TrimSpace(input) == "" {
 		return fmt.Errorf("sql2go: no SQL given (use -e, a file, or stdin)")
 	}
-	res, err := sql2go.FromSQL(input, codegen.Names(s, f.Config), sql2go.Options{Q: q, Pkg: pkg})
+	res, err := sql2go.FromSQL(input, codegen.Names(s, withLockSchemas(f, s).Config), sql2go.Options{Q: q, Pkg: pkg})
 	if err != nil {
 		return err
 	}

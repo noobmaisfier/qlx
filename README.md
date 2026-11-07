@@ -58,7 +58,14 @@ defer client.Close()
 The generated tables `db.Users`, `db.Orders`, ... are shown as `Users`,
 `Orders`, ... below. Because they are ordinary Go values, gopls autocompletes
 `db.Users.` to its typed columns and their methods, and reports a wrong operand
-while you type. A first query, scanned into a row type:
+while you type.
+
+With multiple schemas (`schemas: [public, billing]` or `['*']`), the first
+schema is the principal schema and keeps plain Go names (`Users`); every other
+schema is always prefixed (`BillingUsers`), so names never change when a schema
+is added (see [Configuration](docs/configuration.md#16-several-schemas)).
+
+A first query, scanned into a row type:
 
 ```go
 //qlx:row

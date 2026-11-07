@@ -38,9 +38,11 @@ func newTableGen(m *mapper, nm *namer, t catalog.Table, multiSchema bool, jsonTy
 	if multiSchema {
 		prefix = camel(t.Schema)
 	}
-	g.sym = nm.take(camel(t.Name), camel(t.Schema))
+	base := nm.local(t.Schema, t.Name)
+	nm.claimTable(base, t.Schema, t.Name)
+	g.sym = nm.take(base, camel(t.Schema))
 	g.tname = nm.take(g.sym+"T", "")
-	row := singular(camel(t.Name))
+	row := nm.localSingular(t.Schema, t.Name)
 	g.row = nm.take(row, "Row")
 	_ = prefix
 	for _, c := range t.Columns {

@@ -61,7 +61,7 @@ func emitFuncs(f *file, m *mapper, nm *namer, s *catalog.Schema, res *Result) {
 				suffix += camel(tt.Name)
 			}
 		}
-		goName := nm.take(camel(fn.Name), suffix)
+		goName := nm.take(nm.local(fn.Schema, fn.Name), suffix)
 		if fn.Kind == "p" {
 			f.p("// %s is the procedure %s.\nfunc %s(%s) qlx.Command {\n\treturn qlx.Call(qlx.Procedure{Schema: %q, Name: %q}%s)\n}\n\n",
 				goName, qual, goName, strings.Join(params, ", "), fn.Schema, fn.Name, joinArgs(args))

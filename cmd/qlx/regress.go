@@ -29,7 +29,7 @@ func cmdRegress(f File, base, dir, ledgerPath, casesPath, baseline, pkg string, 
 	if err != nil {
 		return err
 	}
-	names := codegen.Names(s, f.Config)
+	names := codegen.Names(s, withLockSchemas(f, s).Config)
 	paths, _ := filepath.Glob(filepath.Join(dir, "*.sql"))
 	if len(paths) == 0 {
 		return fmt.Errorf("regress: no .sql files in %s", dir)

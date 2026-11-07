@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -106,9 +107,60 @@ func singular(s string) string {
 }
 
 // namer hands out unique top-level identifiers.
-type namer struct{ used map[string]bool }
+//
+// With more than one schema, the first one in the config is the principal
+// schema: its objects keep their plain names (Users) and the objects of every
+// other schema are always prefixed with the schema (BillingUsers), whether or
+// not a name would collide. A name therefore depends only on the object and
+// on the config, never on what else exists in the database: adding a schema,
+// or a table to another schema, cannot make Users mean another table.
+type namer struct {
+	used      map[string]bool
+	principal string
+	multi     bool
+	tableSym  map[string]string // table symbol -> the schema.table that owns it
+	err       error
+}
 
-func newNamer() *namer { return &namer{used: map[string]bool{}} }
+func newNamer(cfg Config) *namer {
+	n := &namer{used: map[string]bool{}, tableSym: map[string]string{}}
+	if len(cfg.Schemas) > 1 {
+		n.multi, n.principal = true, cfg.Schemas[0]
+	}
+	return n
+}
+
+// prefix is what an object of this schema is prefixed with: nothing for the
+// principal schema, and for the only schema of a single-schema config.
+func (n *namer) prefix(schema string) string {
+	if n.multi && schema != n.principal {
+		return camel(schema)
+	}
+	return ""
+}
+
+// local is the Go name of a database object called name in schema.
+func (n *namer) local(schema, name string) string { return n.prefix(schema) + camel(name) }
+
+// localSingular is local, singular: the name of one row.
+func (n *namer) localSingular(schema, name string) string {
+	return n.prefix(schema) + singular(camel(name))
+}
+
+// claimTable records that the table symbol sym belongs to schema.table. Two
+// tables of different schemas that end up with the same name are an error: the
+// generator does not pick a winner, because the winner would depend on order.
+func (n *namer) claimTable(sym, schema, table string) {
+	owner := schema + "." + table
+	prev, ok := n.tableSym[sym]
+	if !ok {
+		n.tableSym[sym] = owner
+		return
+	}
+	if n.err == nil && strings.SplitN(prev, ".", 2)[0] != schema {
+		n.err = fmt.Errorf("tables %s and %s would both be called %s in Go: rename one, or leave one out with exclude", prev, owner, sym)
+	}
+}
 
 func (n *namer) take(name string, fallbackSuffix string) string {
 	cand := name
