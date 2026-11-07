@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 )
 
@@ -41,10 +42,26 @@ func (c Conn) command(args ...string) *exec.Cmd {
 // Query runs SQL (read from stdin, so psql variables and long text are fine)
 // and returns the unaligned, tuples-only output, trimmed.
 func (c Conn) Query(sql string) ([]byte, error) {
+	return c.QueryVars(sql, nil)
+}
+
+// QueryVars is Query with psql variables. Refer to a variable as :'name' in
+// the SQL and psql replaces it with the value as a quoted literal, so a caller
+// never builds a string literal from a value itself.
+func (c Conn) QueryVars(sql string, vars map[string]string) ([]byte, error) {
 	if _, err := exec.LookPath("psql"); err != nil {
 		return nil, ErrNoPsql
 	}
-	cmd := c.command("-A", "-t", "-f", "-")
+	names := make([]string, 0, len(vars))
+	for name := range vars {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	args := []string{"-A", "-t", "-f", "-"}
+	for _, name := range names {
+		args = append(args, "-v", name+"="+vars[name])
+	}
+	cmd := c.command(args...)
 	cmd.Stdin = strings.NewReader(sql)
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb

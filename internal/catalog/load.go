@@ -27,15 +27,25 @@ JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdroppe
 WHERE c.relkind IN ('r', 'p', 'v', 'm', 'f') AND n.nspname = ANY($1::text[]) AND NOT c.relispartition
 GROUP BY 1 ORDER BY 1`
 
-func textArray(schemas []string) (string, error) {
+// textArray renders the schema list as an SQL text[] expression and the psql
+// variables that carry the names. The expression only names variables; psql
+// quotes their values, so no schema name is ever concatenated into a string
+// literal here. identRe still restricts what the config may contain.
+func textArray(schemas []string) (string, map[string]string, error) {
+	if len(schemas) == 0 {
+		return "ARRAY[]::text[]", nil, nil
+	}
 	parts := make([]string, len(schemas))
+	vars := make(map[string]string, len(schemas))
 	for i, s := range schemas {
 		if !identRe.MatchString(s) {
-			return "", fmt.Errorf("schema name %q: only letters, digits, _ and $ are supported in the config", s)
+			return "", nil, fmt.Errorf("schema name %q: only letters, digits, _ and $ are supported in the config", s)
 		}
-		parts[i] = "'" + s + "'"
+		name := fmt.Sprintf("schema_%d", i)
+		vars[name] = s
+		parts[i] = ":'" + name + "'"
 	}
-	return "ARRAY[" + strings.Join(parts, ",") + "]::text[]", nil
+	return "ARRAY[" + strings.Join(parts, ",") + "]::text[]", vars, nil
 }
 
 const loadSQL = `
@@ -126,11 +136,11 @@ SELECT json_build_object(
 
 // Load reads the model for the given schemas from a live server.
 func Load(c pgtool.Conn, schemas []string) (*Schema, error) {
-	arr, err := textArray(schemas)
+	arr, vars, err := textArray(schemas)
 	if err != nil {
 		return nil, err
 	}
-	out, err := c.Query(fmt.Sprintf(loadSQL, arr))
+	out, err := c.QueryVars(fmt.Sprintf(loadSQL, arr), vars)
 	if err != nil {
 		return nil, fmt.Errorf("introspection failed: %w", err)
 	}
@@ -138,7 +148,7 @@ func Load(c pgtool.Conn, schemas []string) (*Schema, error) {
 	if err := json.Unmarshal(out, &s); err != nil {
 		return nil, fmt.Errorf("introspection returned unexpected JSON: %w", err)
 	}
-	fp, err := c.Query(strings.ReplaceAll(FingerprintSQL, "$1::text[]", arr))
+	fp, err := c.QueryVars(strings.ReplaceAll(FingerprintSQL, "$1::text[]", arr), vars)
 	if err != nil {
 		return nil, fmt.Errorf("fingerprint query failed: %w", err)
 	}
