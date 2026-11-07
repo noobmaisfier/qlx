@@ -191,6 +191,15 @@ func (q SelectQuery) render(b *builder) {
 		b.fail(fmt.Errorf("%w: WithTies needs FetchFirst and OrderBy", ErrShape))
 		return
 	}
+	for _, c := range [...]struct {
+		what string
+		v    *int64
+	}{{"Limit", q.limit}, {"Offset", q.offset}, {"FetchFirst", q.fetch}} {
+		if c.v != nil && *c.v < 0 {
+			b.fail(fmt.Errorf("%w: %s must not be negative (got %d)", ErrShape, c.what, *c.v))
+			return
+		}
+	}
 	renderWith(b, q.ctes)
 
 	keys := make([]string, 0, len(q.ctes)+len(q.joins)+1) // one allocation, not one per append

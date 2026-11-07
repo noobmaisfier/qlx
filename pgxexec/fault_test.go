@@ -319,6 +319,24 @@ func TestRetryPolicy(t *testing.T) {
 			}
 		}
 	})
+	t.Run("backoff is capped and bad values fall back", func(t *testing.T) {
+		// Attempts large enough for base<<i to overflow; Max keeps each wait short.
+		calls := 0
+		f := fail("40001")
+		start := time.Now()
+		err := pgxexec.InTx(ctx, p, pgx.TxOptions{}, pgxexec.Retry{Attempts: 70, Base: time.Millisecond, Max: 2 * time.Millisecond},
+			func(ctx context.Context, tx pgx.Tx) error { calls++; return f(ctx, tx) })
+		if err == nil || calls != 70 || time.Since(start) > 20*time.Second {
+			t.Fatalf("calls=%d err=%v after %v", calls, err, time.Since(start))
+		}
+		// A negative Attempts used to skip fn and return nil.
+		calls = 0
+		_ = pgxexec.InTx(ctx, p, pgx.TxOptions{}, pgxexec.Retry{Attempts: -1, Base: -1},
+			func(ctx context.Context, tx pgx.Tx) error { calls++; return nil })
+		if calls != 1 {
+			t.Fatalf("negative Attempts: fn ran %d times", calls)
+		}
+	})
 	t.Run("context ends during backoff", func(t *testing.T) {
 		cctx, cancel := context.WithTimeout(ctx, 80*time.Millisecond)
 		defer cancel()

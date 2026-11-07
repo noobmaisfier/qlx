@@ -650,7 +650,7 @@ err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{IsoLevel: pgx.Serializable},
     })
 ```
 
-`Retry{Attempts, Base, OnRetry}`: number of attempts (5 by default), first delay (10 ms, doubled with jitter), and a callback to count retries in your metrics. Only `40001` and `40P01` are retried.
+`Retry{Attempts, Base, Max, OnRetry}`: number of attempts (5 by default), first delay (10 ms, doubled with jitter, capped at `Max`, 5 s by default), and a callback to count retries in your metrics. Only `40001` and `40P01` are retried.
 
 ### 9.2 Pipeline: several queries, one round trip
 

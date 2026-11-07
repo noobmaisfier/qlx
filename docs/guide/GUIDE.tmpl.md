@@ -654,7 +654,7 @@ err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{IsoLevel: pgx.Serializable},
     })
 ```
 
-`Retry{Attempts, Base, OnRetry}` : nombre d'essais (5 par défaut), premier délai (10 ms, doublé avec gigue), et un rappel pour compter les reprises dans vos métriques. Seuls `40001` et `40P01` sont rejoués.
+`Retry{Attempts, Base, Max, OnRetry}` : nombre d'essais (5 par défaut), premier délai (10 ms, doublé avec gigue, plafonné à `Max`, 5 s par défaut), et un rappel pour compter les reprises dans vos métriques. Seuls `40001` et `40P01` sont rejoués.
 
 ### 9.2 Pipeline : plusieurs requêtes, un aller-retour
 

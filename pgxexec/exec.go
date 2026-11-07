@@ -59,6 +59,7 @@ type TxStarter interface {
 type Retry struct {
 	Attempts int           // total tries; 0 means 5
 	Base     time.Duration // first backoff; 0 means 10ms
+	Max      time.Duration // longest backoff; 0 means 5s (or Base, if larger)
 	// OnRetry, when set, is called before each retry with the attempt that
 	// failed (1-based) and its error; use it to count retries as a metric.
 	OnRetry func(attempt int, err error)
@@ -68,11 +69,18 @@ type Retry struct {
 // reports a serialization failure or deadlock. fn must be safe to run again.
 func InTx(ctx context.Context, db TxStarter, opts pgx.TxOptions, r Retry, fn func(ctx context.Context, tx pgx.Tx) error) error {
 	attempts, base := r.Attempts, r.Base
-	if attempts == 0 {
+	if attempts <= 0 {
 		attempts = 5
 	}
-	if base == 0 {
+	if base <= 0 {
 		base = 10 * time.Millisecond
+	}
+	maxWait := r.Max
+	if maxWait <= 0 {
+		maxWait = 5 * time.Second
+	}
+	if maxWait < base {
+		maxWait = base
 	}
 	var err error
 	for i := 0; i < attempts; i++ {
@@ -83,7 +91,11 @@ func InTx(ctx context.Context, db TxStarter, opts pgx.TxOptions, r Retry, fn fun
 		if r.OnRetry != nil && i < attempts-1 {
 			r.OnRetry(i+1, err)
 		}
-		sleep := base << i
+		sleep := base
+		for j := 0; j < i && sleep < maxWait; j++ {
+			sleep *= 2
+		}
+		sleep = min(sleep, maxWait)
 		sleep += time.Duration(rand.Int64N(int64(sleep)/2 + 1))
 		select {
 		case <-ctx.Done():

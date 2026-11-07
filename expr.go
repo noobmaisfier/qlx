@@ -367,9 +367,24 @@ func (e Expr[T]) outName() string {
 	}
 	return ""
 }
-func (e Expr[T]) Eq(v T) Pred           { return Pred{cmpNode{l: e.n, op: "=", r: argNode{v}}} }
+
+// Eq compares with =. A nullable value that holds NULL (qt.None) renders
+// IS NULL, as In does: "= NULL" is never true and would silently match nothing.
+func (e Expr[T]) Eq(v T) Pred {
+	if isNullArg(v) {
+		return Pred{isNullNode{n: e.n}}
+	}
+	return Pred{cmpNode{l: e.n, op: "=", r: argNode{v}}}
+}
 func (e Expr[T]) EqX(o Operand[T]) Pred { return Pred{cmpNode{l: e.n, op: "=", r: o.exprNode()}} }
-func (e Expr[T]) Ne(v T) Pred           { return Pred{cmpNode{l: e.n, op: "<>", r: argNode{v}}} }
+
+// Ne is the opposite: a NULL value renders IS NOT NULL.
+func (e Expr[T]) Ne(v T) Pred {
+	if isNullArg(v) {
+		return Pred{isNullNode{n: e.n, not: true}}
+	}
+	return Pred{cmpNode{l: e.n, op: "<>", r: argNode{v}}}
+}
 func (e Expr[T]) NeX(o Operand[T]) Pred { return Pred{cmpNode{l: e.n, op: "<>", r: o.exprNode()}} }
 func (e Expr[T]) IsNull() Pred          { return Pred{isNullNode{n: e.n}} }
 func (e Expr[T]) IsNotNull() Pred       { return Pred{isNullNode{n: e.n, not: true}} }
@@ -395,6 +410,16 @@ func (e Expr[T]) In(vs ...T) Pred {
 		return Or(Pred{anyNode{l: e.n, arr: keep}}, isNull)
 	}
 	return Pred{anyNode{l: e.n, arr: vs}}
+}
+
+// isNullArg reports whether v is a nullable value (qt.Null[T] and the like)
+// that currently holds NULL. Eq and Ne then render IS NULL / IS NOT NULL, as
+// In does, because "= NULL" is never true and would silently match nothing.
+func isNullArg(v any) bool {
+	if _, ok := v.(argValuer); !ok {
+		return false
+	}
+	return normalizeArg(v) == nil
 }
 
 // splitNullElems separates the NULL elements of a slice of nullable values
