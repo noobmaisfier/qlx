@@ -122,7 +122,7 @@ no cache between runs.
 | `analyzer/` | `go/analysis` analyzer, codes V001 and up (own module) |
 | `otelqlx/`, `bench/` | OpenTelemetry adapter; benchmarks and budgets (own modules) |
 | `fixture/` | the small hand-written schema package most tests use |
-| `docs/` | guide, cookbook, limits, decisions, hand-off notes |
+| `docs/` | guide, cookbook, limits, decisions, release procedure, hand-off notes |
 
 `docs/decisions.md` records why things are the way they are, and
 `docs/limits.md` records what is deliberately not checked. Read both before
@@ -198,8 +198,8 @@ go run ./cmd/pgcat versions -ledger ledgers/x.json -like pgcat.json
 ```
 
 A ledger must list every targeted major (16–19), otherwise the wrappers it
-produces have no bound on the majors it never saw. `versions -like` and
-`scripts/retag.sh` enforce it. A function that appears or disappears between
+produces have no bound on the majors it never saw. `pgcat versions -like`
+enforces it. A function that appears or disappears between
 majors carries `since`/`until` and the generated wrapper carries the matching
 gate and doc sentence.
 
@@ -301,6 +301,14 @@ A suppression is `//qlx:ignore <reason>`; a reason is mandatory (V010) and
   is not obvious. Keep generated changes in their own commit when practical.
 - Do not add a dependency to the root module. If you think one is needed, open
   an issue first.
+
+## Releasing
+
+A version reaches four modules at once, and the proxy makes a published version
+permanent. Before creating a tag, read [docs/release.md](docs/release.md): it
+covers the `go.sum` step that needs the tag to exist, the order of the pushes,
+and the checks that must pass on the exact tree being tagged. The checks in
+"Running the checks" are a subset.
 
 ## Reporting bugs
 

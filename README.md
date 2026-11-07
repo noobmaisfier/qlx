@@ -746,6 +746,7 @@ GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 - [Limits](docs/limits.md): what each tier can and cannot catch.
 - [Migrating](docs/migration.md): from squirrel, goqu, bun, jet and raw pgx.
 - [Decisions](docs/decisions.md) and [watch list](docs/watchlist.md).
+- [Releasing](docs/release.md): the maintainer procedure for a versioned release.
 - [Generated function reference](docs/pgcat/README.md).
 
 ## Known limits
