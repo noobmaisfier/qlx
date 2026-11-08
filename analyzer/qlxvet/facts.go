@@ -1,10 +1,13 @@
 package qlxvet
 
 import (
+	"bytes"
+	"encoding/gob"
 	"go/ast"
 	"go/token"
 	"go/types"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -24,6 +27,53 @@ type TableFact struct {
 
 func (*TableFact) AFact()           {}
 func (f *TableFact) String() string { return "table " + f.Name }
+
+// tableFactWire is the deterministic encoding of TableFact. Go's gob encoder
+// writes maps in iteration order, and the analysis checker requires facts to
+// encode identically twice; fields are therefore sorted before encoding.
+type tableFactWire struct {
+	Name     string
+	Required []string
+	PK       []string
+	Fields   []string
+	Cols     []string
+}
+
+// GobEncode encodes the fact with a stable field order.
+func (f *TableFact) GobEncode() ([]byte, error) {
+	fields := make([]string, 0, len(f.Cols))
+	for field := range f.Cols {
+		fields = append(fields, field)
+	}
+	sort.Strings(fields)
+	cols := make([]string, len(fields))
+	for i, field := range fields {
+		cols[i] = f.Cols[field]
+	}
+	var buf bytes.Buffer
+	err := gob.NewEncoder(&buf).Encode(tableFactWire{
+		Name:     f.Name,
+		Required: f.Required,
+		PK:       f.PK,
+		Fields:   fields,
+		Cols:     cols,
+	})
+	return buf.Bytes(), err
+}
+
+// GobDecode decodes a fact written by GobEncode.
+func (f *TableFact) GobDecode(data []byte) error {
+	var w tableFactWire
+	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&w); err != nil {
+		return err
+	}
+	f.Name, f.Required, f.PK = w.Name, w.Required, w.PK
+	f.Cols = make(map[string]string, len(w.Fields))
+	for i, field := range w.Fields {
+		f.Cols[field] = w.Cols[i]
+	}
+	return nil
+}
 
 // VersionFact is exported for every function or method whose doc comment carries the
 // "Requires PostgreSQL N." / "Removed in PostgreSQL N." sentences the
