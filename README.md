@@ -875,6 +875,7 @@ GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 - [Cookbook](docs/cookbook.md): pagination, queues, soft delete, tenancy.
 - [SQL to Go](docs/sql-to-go.md): the SQL you know, written in QLX.
 - [Mapping rows](docs/mapping.md): structs, tuples, joins, nested data.
+- [Extension helpers](docs/qext.md): full-text search, pgvector, pg_trgm, PostGIS, ltree, hstore.
 - [Limits](docs/limits.md): what each tier can and cannot catch.
 - [Migrating](docs/migration.md): from squirrel, goqu, bun, jet and raw pgx.
 - [Decisions](docs/decisions.md) and [watch list](docs/watchlist.md).
