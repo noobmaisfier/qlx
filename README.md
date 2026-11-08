@@ -379,7 +379,7 @@ articles, err := client.All[ArticleRow](ctx,
     q.Select(
         Articles.ID,
         textsearch.Rank(doc, query).As("rank"),
-        textsearch.Headline("english", Articles.Body, query,
+        textsearch.Headline("english", q.Coalesce(Articles.Body, ""), query,
             textsearch.Highlight{StartSel: "<mark>", StopSel: "</mark>", MaxWords: 30}).As("excerpt"),
     ).
         From(Articles).
@@ -401,7 +401,8 @@ articles, err := client.All[ArticleRow](ctx,
   `SetEfSearch(100)` and `SetProbes(10)` are transaction-local.
 - **pg_trgm.** `trgm.Similar(Users.Name, "jon")` is `name % $1`;
   `WordSimilar` is `$1 <% name`, better for a short query against long text.
-  `Distance` (`<->`) and both operators can use a GIN/GiST trigram index;
+  `Similar` and `WordSimilar` can use a GIN or GiST trigram index; `Distance`
+  (`<->`) needs a GiST index (GIN cannot answer nearest-neighbour order).
   `Similarity` is for display only. Thresholds are set with
   `SetSimilarityThreshold(0.4)` / `SetWordSimilarityThreshold(0.5)`.
 - **PostGIS.** These helpers work on `geography`: distances are metres on the

@@ -47,8 +47,10 @@ like the others. `SetEfSearch` and `SetProbes` are transaction-local settings.
 
 ## pg_trgm
 
-Also operator-based, so a GIN/GIST trigram index applies. `WordSimilar` suits a
-short query against long text. The threshold helpers are transaction-local.
+Also operator-based. `Similar`/`WordSimilar` (`%`, `<%`) can use a GIN or GIST
+trigram index; `Distance` (`<->`) needs GIST, because GIN cannot answer
+nearest-neighbour ordering. `WordSimilar` suits a short query against long text.
+The threshold helpers are transaction-local.
 
 ## PostGIS
 
