@@ -3,6 +3,7 @@ package qlx
 import (
 	"encoding/binary"
 	"fmt"
+	"hash/maphash"
 	"sync"
 	"sync/atomic"
 )
@@ -26,12 +27,21 @@ import (
 // an entry only when they would render identical SQL; literals that the
 // renderer writes inline are part of the text, hence of the hash.
 
+// There is nothing to invalidate. The rendered SQL is a function of the
+// statement and of Dialect.Version alone, and both are part of the key; the
+// database schema never enters it. A migration therefore cannot make an entry
+// stale. Entries leave only by eviction or Reset.
+//
+// The hash is seeded per process, so which statements collide cannot be
+// predicted or crafted from outside.
+
 // ShapeCache is a bounded process-wide cache of rendered shapes.
 type ShapeCache struct {
-	shards [shapeShards]shapeShard
-	hits   atomic.Int64
-	misses atomic.Int64
-	evicts atomic.Int64
+	shards   [shapeShards]shapeShard
+	hits     atomic.Int64
+	misses   atomic.Int64
+	evicts   atomic.Int64
+	oversize atomic.Int64
 
 	thrash atomic.Pointer[func(ShapeStats)]
 	warned atomic.Bool
@@ -57,7 +67,7 @@ const shapeShards = 32
 
 type shapeShard struct {
 	mu  sync.RWMutex
-	m   map[shapeKey]shapeEntry
+	m   map[shapeKey]*shapeEntry
 	max int
 }
 
@@ -69,7 +79,17 @@ type shapeKey struct {
 type shapeEntry struct {
 	sql    string
 	nslots int
+	ref    atomic.Bool // second-chance bit: set by a hit, cleared by the evictor
 }
+
+// maxCachedSQL is the longest statement text the cache keeps. A longer one
+// (an IN list of thousands of placeholders) is rendered every time, so a few
+// huge shapes cannot hold the memory of thousands of ordinary ones; it is
+// counted in ShapeStats.Oversize.
+const maxCachedSQL = 16 << 10
+
+// evictScan bounds how many entries an eviction inspects.
+const evictScan = 16
 
 // DefaultShapes is the cache used by Resolve and by the pgxexec client. Its
 // size is per process; see NewShapeCache for a private one. The ceiling is
@@ -85,7 +105,7 @@ func NewShapeCache(max int) *ShapeCache {
 	}
 	c := &ShapeCache{}
 	for i := range c.shards {
-		c.shards[i] = shapeShard{m: map[shapeKey]shapeEntry{}, max: max / shapeShards}
+		c.shards[i] = shapeShard{m: map[shapeKey]*shapeEntry{}, max: max / shapeShards}
 	}
 	return c
 }
@@ -94,10 +114,29 @@ func NewShapeCache(max int) *ShapeCache {
 // builds an unbounded number of shapes, which values alone cannot do: the
 // structure has to vary (a select list, join set, ORDER BY or predicate set
 // chosen at run time). Lists are one shape whatever their length: In and Any
-// both render "= ANY($1)".
+// both render "= ANY($1)". Oversize counts statements too long to cache (see
+// maxCachedSQL); a growing value has the same cause.
 type ShapeStats struct {
 	Hits, Misses, Evictions int64
 	Size                    int
+	Oversize                int64
+}
+
+// Reset empties the cache and zeroes its counters. It is for tests and for a
+// long-lived process that wants a clean start after a burst of shapes. The
+// OnThrash callback stays registered and may fire again.
+func (c *ShapeCache) Reset() {
+	for i := range c.shards {
+		sh := &c.shards[i]
+		sh.mu.Lock()
+		clear(sh.m)
+		sh.mu.Unlock()
+	}
+	c.hits.Store(0)
+	c.misses.Store(0)
+	c.evicts.Store(0)
+	c.oversize.Store(0)
+	c.warned.Store(false)
 }
 
 // Stats reports the counters.
@@ -109,7 +148,7 @@ func (c *ShapeCache) Stats() ShapeStats {
 		n += len(sh.m)
 		sh.mu.RUnlock()
 	}
-	return ShapeStats{c.hits.Load(), c.misses.Load(), c.evicts.Load(), n}
+	return ShapeStats{c.hits.Load(), c.misses.Load(), c.evicts.Load(), n, c.oversize.Load()}
 }
 
 var hashBuilders = sync.Pool{New: func() any { return &builder{hash: true, slots: make([]slot, 0, 16)} }}
@@ -143,6 +182,9 @@ func (c *ShapeCache) Resolve(d Dialect, s Statement, binds ...Binding) (string, 
 		return c.miss(d, s, binds)
 	}
 	c.hits.Add(1)
+	if !e.ref.Load() { // read first: a write per hit would bounce the cache line
+		e.ref.Store(true)
+	}
 	args, err := argsFrom(b.slots, binds)
 	releaseHashBuilder(b)
 	return e.sql, args, err
@@ -165,29 +207,69 @@ func (c *ShapeCache) miss(d Dialect, s Statement, binds []Binding) (string, []an
 	if err != nil {
 		return "", nil, err
 	}
-	if hb.err == nil && len(hb.slots) == len(st.slots) {
+	switch {
+	case hb.err != nil || len(hb.slots) != len(st.slots):
+		// not cacheable: the shape cannot be told apart from the render
+	case len(st.SQL) > maxCachedSQL:
+		c.oversize.Add(1)
+		c.notifyThrash()
+	default:
 		key := shapeKey{hb.version, hb.h1, hb.h2}
 		sh := &c.shards[key.h1%shapeShards]
 		sh.mu.Lock()
-		if _, exists := sh.m[key]; !exists {
-			if len(sh.m) >= sh.max {
-				for k := range sh.m { // evict an arbitrary entry
-					delete(sh.m, k)
+		old, exists := sh.m[key]
+		if exists && old.nslots == len(st.slots) && old.sql == st.SQL {
+			// another goroutine stored the same shape first
+		} else {
+			// A different entry under this key means a hash collision, or an
+			// entry that no longer matches: the fresh render wins.
+			if !exists && len(sh.m) >= sh.max {
+				if sh.evict() {
 					c.evicts.Add(1)
-					break
 				}
 			}
-			sh.m[key] = shapeEntry{sql: st.SQL, nslots: len(st.slots)}
+			sh.m[key] = &shapeEntry{sql: st.SQL, nslots: len(st.slots)}
 		}
 		sh.mu.Unlock()
 		if c.evicts.Load() > 0 {
-			if fn := c.thrash.Load(); fn != nil && c.warned.CompareAndSwap(false, true) {
-				(*fn)(c.Stats())
-			}
+			c.notifyThrash()
 		}
 	}
 	args, err := st.Args(binds...)
 	return st.SQL, args, err
+}
+
+// evict removes one entry, preferring one that no hit has touched since the
+// last pass (second chance): the walk clears the bit of each recently used
+// entry it skips. After evictScan inspections it takes the last one seen, so
+// the cost stays bounded. The caller holds the shard lock.
+func (sh *shapeShard) evict() bool {
+	var last shapeKey
+	seen := false
+	n := 0
+	for k, e := range sh.m {
+		last, seen = k, true
+		if e.ref.Load() {
+			e.ref.Store(false)
+			if n++; n < evictScan {
+				continue
+			}
+			break
+		}
+		delete(sh.m, k)
+		return true
+	}
+	if seen {
+		delete(sh.m, last)
+	}
+	return seen
+}
+
+// notifyThrash calls the OnThrash callback once per registration.
+func (c *ShapeCache) notifyThrash() {
+	if fn := c.thrash.Load(); fn != nil && c.warned.CompareAndSwap(false, true) {
+		(*fn)(c.Stats())
+	}
 }
 
 func argsFrom(slots []slot, binds []Binding) ([]any, error) {
@@ -250,11 +332,17 @@ func (s Stmt) render(b *builder) {
 // ---- hashing --------------------------------------------------------------
 
 const (
-	hashSeed1 = 14695981039346656037 // FNV-1a offset
-	hashSeed2 = 0x9E3779B97F4A7C15
-	prime1    = 1099511628211
-	prime2    = 0xFF51AFD7ED558CCD
+	prime1 = 1099511628211
+	prime2 = 0xFF51AFD7ED558CCD
 )
+
+// The seeds start from the FNV-1a offset and a golden-ratio constant and are
+// xored with per-process random values, so no two processes hash alike and a
+// collision cannot be built ahead of time. Entries never leave the process.
+var hashSeed1, hashSeed2 = func() (uint64, uint64) {
+	var s maphash.Seed = maphash.MakeSeed()
+	return 14695981039346656037 ^ maphash.String(s, "qlx/1"), 0x9E3779B97F4A7C15 ^ maphash.String(s, "qlx/2")
+}()
 
 func (b *builder) mixByte(c byte) {
 	b.h1 = (b.h1 ^ uint64(c)) * prime1

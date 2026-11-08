@@ -395,12 +395,30 @@ There are two caches:
 | `qlx.NewShapeCache(max)` | `max`, at least 32 | A private cache; give it to a client with `ConnectOptions.Shapes`. |
 | `qlx.NewCache(max)` | `max`, at least 1 | The older LRU keyed by a shape value you provide. |
 
-`Stats()` returns hits, misses, evictions and size. A steadily growing eviction
-count means the program builds an unbounded number of shapes (an `IN` list per
-call, a column list taken from input): use `Expr.Any` with a slice instead.
-`ShapeCache.OnThrash(fn)` calls `fn` once, the first time the cache has to
-evict, with the counters at that moment: log from it and return. Pass `nil` to
-remove it.
+`Stats()` returns hits, misses, evictions, size and, for the shape cache,
+`Oversize`. A steadily growing eviction count means the program builds an
+unbounded number of shapes (an `IN` list per call, a column list taken from
+input): use `Expr.Any` with a slice instead. `ShapeCache.OnThrash(fn)` calls
+`fn` once, the first time the cache has to evict, with the counters at that
+moment: log from it and return. Pass `nil` to remove it.
+
+Behavior worth knowing:
+
+- **Nothing to invalidate.** The SQL depends only on the statement and on
+  `Dialect.Version`, never on the database schema, so a migration cannot make an
+  entry stale. Entries leave by eviction or `ShapeCache.Reset()` (empties the
+  cache and zeroes the counters; for tests and after a burst of shapes).
+- **Eviction** is second chance: an entry that was hit since the last pass is
+  skipped, so hot statements survive pressure from one-off shapes.
+- **Long statements are not cached.** A statement text over 16 KiB (an `IN`
+  list of thousands of placeholders) is rendered every call and counted in
+  `Oversize`, so a few huge shapes cannot take the memory of thousands of
+  ordinary ones. It has the same cause and cure as evictions.
+- **The hash is seeded per process**, so which statements collide cannot be
+  predicted from outside.
+- `qlx.NewCache`: the shape value must be comparable (a slice or map returns
+  an error wrapping `ErrShape`); goroutines that miss on the same shape share
+  one render; `Misses` counts successful renders.
 
 ### 3.6 OpenTelemetry: `otelqlx`
 

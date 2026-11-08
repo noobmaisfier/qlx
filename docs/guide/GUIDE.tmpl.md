@@ -603,7 +603,7 @@ les chemins les plus chauds.
 Vous n'avez rien à faire. La première fois qu'une *forme* de requête passe (même structure, valeurs différentes), elle est rendue et validée ; ensuite, un hachage de la forme retrouve le SQL et seules les valeurs sont collectées. Environ 1 à 4 µs et 11 à 32 allocations pour une requête de taille courante, contre 7 µs et 70 pour un rendu complet.
 
 ```go
-client.Shapes.Stats()   // Hits, Misses, Evictions, Size
+client.Shapes.Stats()   // Hits, Misses, Evictions, Size, Oversize
 ```
 
 Pour garder le nombre de formes borné : passez les listes avec `col.Any(slice)` (une forme pour toute longueur). Varier la structure elle-même est permis et correct : un rapport construit par l'utilisateur ou un ensemble de colonnes dynamique est rendu une fois par forme, puis réutilisé. Quand `Evictions` grimpe, augmentez le plafond pour ce client (`Shapes: qlx.NewShapeCache(n)`) ou rendez une fois les formes les plus chaudes avec `client.Render`.

@@ -3,7 +3,10 @@ package qlx_test
 import (
 	"errors"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	q "github.com/noobmaisfier/qlx"
 	. "github.com/noobmaisfier/qlx/fixture"
@@ -72,4 +75,67 @@ func qtOpt(set bool) qt.Opt[string] {
 		return qt.Of("pro")
 	}
 	return qt.Unset[string]()
+}
+
+func TestCacheRejectsNonComparableShape(t *testing.T) {
+	c := q.NewCache(4)
+	_, err := c.Render(q.Dialect{Version: q.PG19}, []string{"a"}, func() q.Statement { return q.Select(Users.ID).From(Users) })
+	if !errors.Is(err, q.ErrShape) {
+		t.Fatalf("err = %v, want ErrShape instead of a panic", err)
+	}
+}
+
+func TestCacheErrorsAreNotCountedAsMisses(t *testing.T) {
+	c := q.NewCache(4)
+	d := q.Dialect{Version: q.PG19}
+	bad := func() q.Statement { return q.Update(Orders).Set(Orders.Status.To("x")) } // no WHERE
+	for i := 0; i < 2; i++ {
+		if _, err := c.Render(d, "bad", bad); err == nil {
+			t.Fatal("expected an error")
+		}
+	}
+	if s := c.Stats(); s.Misses != 0 || s.Size != 0 {
+		t.Fatalf("stats %+v", s)
+	}
+}
+
+func TestCacheSharesConcurrentRenders(t *testing.T) {
+	c := q.NewCache(4)
+	d := q.Dialect{Version: q.PG19}
+	var builds atomic.Int32
+	gate := make(chan struct{})
+	var wg sync.WaitGroup
+	for i := 0; i < 16; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := c.Render(d, "one", func() q.Statement {
+				builds.Add(1)
+				<-gate // hold the first render until the others are waiting
+				return q.Select(Users.ID).From(Users)
+			})
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	time.Sleep(50 * time.Millisecond)
+	close(gate)
+	wg.Wait()
+	if n := builds.Load(); n != 1 {
+		t.Fatalf("built %d times, want 1", n)
+	}
+}
+
+func TestCachePanicInBuildReleasesWaiters(t *testing.T) {
+	c := q.NewCache(4)
+	d := q.Dialect{Version: q.PG19}
+	func() {
+		defer func() { _ = recover() }()
+		_, _ = c.Render(d, "p", func() q.Statement { panic("boom") })
+	}()
+	// the slot was freed: a later call renders normally
+	if _, err := c.Render(d, "p", func() q.Statement { return q.Select(Users.ID).From(Users) }); err != nil {
+		t.Fatal(err)
+	}
 }

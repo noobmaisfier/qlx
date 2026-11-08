@@ -1005,7 +1005,7 @@ hottest paths.
 You have nothing to do. The first time a query *shape* goes through (same structure, different values), it is rendered and validated; after that, a hash of the shape finds the SQL and only the values are collected. About 1 to 4 µs and 11 to 32 allocations for a typical-size query, versus 7 µs and 70 for a full render.
 
 ```go
-client.Shapes.Stats()   // Hits, Misses, Evictions, Size
+client.Shapes.Stats()   // Hits, Misses, Evictions, Size, Oversize
 ```
 
 To keep the number of shapes bounded: pass lists with `col.Any(slice)` (one shape for any length). Varying the structure itself is allowed and correct: a user-built report or a dynamic column set renders once per distinct shape, then reuses it. When `Evictions` keeps growing, raise the ceiling for that client (`Shapes: qlx.NewShapeCache(n)`) or render the hottest shapes once with `client.Render`.

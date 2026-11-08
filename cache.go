@@ -3,6 +3,7 @@ package qlx
 import (
 	"container/list"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -18,9 +19,18 @@ type Cache struct {
 	max       int
 	ll        *list.List
 	m         map[cacheKey]*list.Element
+	flight    map[cacheKey]*flight
 	hits      atomic.Int64
 	misses    atomic.Int64
 	evictions atomic.Int64
+}
+
+// flight is a render in progress; goroutines that miss on the same key wait
+// for it instead of rendering the same shape again.
+type flight struct {
+	done chan struct{}
+	st   Stmt
+	err  error
 }
 
 type cacheKey struct {
@@ -44,12 +54,18 @@ func NewCache(max int) *Cache {
 	if max < 1 {
 		max = 1
 	}
-	return &Cache{max: max, ll: list.New(), m: map[cacheKey]*list.Element{}}
+	return &Cache{max: max, ll: list.New(), m: map[cacheKey]*list.Element{}, flight: map[cacheKey]*flight{}}
 }
 
 // Render returns the cached statement for the shape, building and rendering
-// it with build on a miss. Errors are not cached. shape must be comparable.
+// it with build on a miss. Errors are not cached. shape must be comparable;
+// otherwise Render returns an error wrapping ErrShape. Goroutines that miss on
+// the same shape at the same time share one render. Misses counts renders, so
+// a build that fails is not counted.
 func (c *Cache) Render(d Dialect, shape any, build func() Statement) (Stmt, error) {
+	if shape != nil && !reflect.TypeOf(shape).Comparable() {
+		return Stmt{}, fmt.Errorf("%w: cache shape of type %T is not comparable", ErrShape, shape)
+	}
 	key := cacheKey{d.version(), shape}
 	c.mu.Lock()
 	if el, ok := c.m[key]; ok {
@@ -59,17 +75,34 @@ func (c *Cache) Render(d Dialect, shape any, build func() Statement) (Stmt, erro
 		c.hits.Add(1)
 		return st, nil
 	}
+	if f, ok := c.flight[key]; ok {
+		c.mu.Unlock()
+		<-f.done
+		if f.err == nil {
+			c.hits.Add(1)
+		}
+		return f.st, f.err
+	}
+	f := &flight{done: make(chan struct{})}
+	c.flight[key] = f
 	c.mu.Unlock()
-	c.misses.Add(1)
+
+	// Whatever happens in build, waiters must be released and the slot freed.
+	defer func() {
+		c.mu.Lock()
+		delete(c.flight, key)
+		c.mu.Unlock()
+		close(f.done)
+	}()
+	f.err = fmt.Errorf("%w: cache build did not finish", ErrShape) // replaced below unless build panics
 	st, err := Render(d, build())
 	if err != nil {
+		f.err = err
 		return Stmt{}, err
 	}
+	c.misses.Add(1)
+	f.st, f.err = st, nil
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	if el, ok := c.m[key]; ok { // another goroutine got there first
-		return el.Value.(*cacheEntry).st, nil
-	}
 	c.m[key] = c.ll.PushFront(&cacheEntry{key, st})
 	for c.ll.Len() > c.max {
 		last := c.ll.Back()
@@ -77,6 +110,7 @@ func (c *Cache) Render(d Dialect, shape any, build func() Statement) (Stmt, erro
 		delete(c.m, last.Value.(*cacheEntry).key)
 		c.evictions.Add(1)
 	}
+	c.mu.Unlock()
 	return st, nil
 }
 
