@@ -350,6 +350,73 @@ ORDER BY "items"."embedding" <=> $2 ASC LIMIT $3
 
 Operators include `<=>` (cosine distance, `OpLtEqGt`), `<->` (L2 distance, `OpLtMinusGt`), and `<#>` (negative inner product, `OpLtHashGt`). `qt.HalfVector` (FP16) and `qt.SparseVector` are also supported.
 
+### Extension helpers (`qext/*`)
+
+The `qext` packages are a small hand-written layer over the generated
+`pgcat/ext/*` wrappers. Each helper returns an ordinary `qlx.Expr` or `qlx.Pred`,
+so it composes with the rest of the query, and every value stays a bound
+parameter. No new dependency is needed; the extension itself must already exist
+in the database.
+
+| Package | Extension | Helpers |
+| --- | --- | --- |
+| `qext/textsearch` | built in | `Web`, `Plain`, `Phrase`, `Syntax`, `Document`, `Weighted`, `Match`, `Search`, `SearchIf`, `Rank`, `RankCover`, `Headline` |
+| `qext/pgvector` | pgvector | `L2`, `Cosine`, `NegativeInnerProduct`, `L1` (vector and halfvec), `SetEfSearch`, `SetProbes` |
+| `qext/trgm` | pg_trgm | `Similar`, `WordSimilar`, `SimilarIf`, `Distance`, `Similarity`, threshold settings |
+| `qext/postgis` | PostGIS | `Point`, `WithinMeters`, `DistanceMeters`, `GeoJSON` (geography, WGS84) |
+| `qext/ltree` | ltree | `IsDescendant`, `IsAncestor`, `Matches`, `Depth` |
+| `qext/hstore` | hstore | `Get`, `HasKey`, `Contains`, `Merge` |
+
+```go
+import "github.com/noobmaisfier/qlx/qext/textsearch"
+
+doc := textsearch.Document("english",
+    textsearch.Weighted(textsearch.A, Articles.Title),
+    textsearch.Weighted(textsearch.B, Articles.Body)) // NULL body counts as empty
+query := textsearch.Web("english", q.Val(input))     // quotes, or, -word; never a syntax error
+
+articles, err := client.All[ArticleRow](ctx,
+    q.Select(
+        Articles.ID,
+        textsearch.Rank(doc, query).As("rank"),
+        textsearch.Headline("english", Articles.Body, query,
+            textsearch.Highlight{StartSel: "<mark>", StopSel: "</mark>", MaxWords: 30}).As("excerpt"),
+    ).
+        From(Articles).
+        Where(textsearch.SearchIf(doc, "english", filter.Text)). // absent when unset or blank
+        OrderBy(textsearch.Rank(doc, query).Desc()).
+        Limit(20))
+```
+
+- **Text search.** `Web` is for user input; `Plain` ANDs words; `Phrase` matches
+  adjacent words; `Syntax` accepts the full `tsquery` syntax and can raise an
+  error on bad input. `RankCover` is `ts_rank_cd` (proximity-aware).
+  `Highlight` options are passed as data, and a small `MaxWords` alone lowers
+  `MinWords` with it. For an index, store the document in a generated
+  `tsvector` column and search that column: a GIN index only matches the exact
+  indexed expression.
+- **pgvector.** `pgvector.Cosine(Items.Embedding, target)` (and `L2`, `L1`,
+  `NegativeInnerProduct`) uses the operator, never `*_distance`, so an
+  HNSW/IVFFlat index applies. Smaller is closer for all four; order ascending.
+  `SetEfSearch(100)` and `SetProbes(10)` are transaction-local.
+- **pg_trgm.** `trgm.Similar(Users.Name, "jon")` is `name % $1`;
+  `WordSimilar` is `$1 <% name`, better for a short query against long text.
+  `Distance` (`<->`) and both operators can use a GIN/GiST trigram index;
+  `Similarity` is for display only. Thresholds are set with
+  `SetSimilarityThreshold(0.4)` / `SetWordSimilarityThreshold(0.5)`.
+- **PostGIS.** These helpers work on `geography`: distances are metres on the
+  spheroid, `Point(lon, lat)` takes longitude first, and `WithinMeters` uses the
+  public `st_dwithin` (not the internal `_st_dwithin`), so a GIST index applies.
+  `GeoJSON(col, 6)` limits the output to six decimals.
+- **ltree.** `IsDescendant(path, of)` is `path <@ of`; `IsAncestor` is `@>`;
+  `Matches(path, "*.physics.*")` casts the query to `lquery`; `Depth` is
+  `nlevel(path)`.
+- **hstore.** `Get` returns `qt.Null[string]` (NULL when the key is missing);
+  `HasKey`, `Contains` and `Merge` map to `exist`, `@>` and `||` (`b` wins on a
+  duplicate key).
+
+See [docs/qext.md](docs/qext.md) for the full notes and index guidance.
+
 ### INSERT, upsert, RETURNING
 
 ```go
