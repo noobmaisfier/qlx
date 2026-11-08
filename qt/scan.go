@@ -2,11 +2,56 @@ package qt
 
 import (
 	"database/sql/driver"
+	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// errIntervalRange reports an interval field that does not fit its Go type.
+// The parsers reject it instead of wrapping around.
+var errIntervalRange = errors.New("qt: interval out of range")
+
+// addInt64 adds two counts, failing instead of overflowing.
+func addInt64(a, b int64) (int64, error) {
+	if b > 0 && a > math.MaxInt64-b || b < 0 && a < math.MinInt64-b {
+		return 0, errIntervalRange
+	}
+	return a + b, nil
+}
+
+// scaleInt64 multiplies a count by a positive factor, failing instead of
+// overflowing.
+func scaleInt64(n, factor int64) (int64, error) {
+	if n > math.MaxInt64/factor || n < math.MinInt64/factor {
+		return 0, errIntervalRange
+	}
+	return n * factor, nil
+}
+
+// intervalInt32 narrows a count to the int32 fields of Interval, failing
+// instead of truncating.
+func intervalInt32(n int64) (int32, error) {
+	if n < math.MinInt32 || n > math.MaxInt32 {
+		return 0, errIntervalRange
+	}
+	return int32(n), nil
+}
+
+// intervalFloat converts a fractional count to int64, rounding when asked,
+// and fails instead of producing an implementation-defined value.
+func intervalFloat(f, scale float64, round bool) (int64, error) {
+	v := f * scale
+	if round {
+		v = math.Round(v)
+	}
+	if math.IsNaN(v) || v < float64(math.MinInt64) || v >= float64(math.MaxInt64) {
+		return 0, errIntervalRange
+	}
+	return int64(v), nil
+}
 
 // Scan and Value for the value types whose PostgreSQL form is not a plain Go
 // scalar. They implement sql.Scanner and driver.Valuer, which pgx honors, so
@@ -104,6 +149,7 @@ func ParseInterval(s string) (Interval, error) {
 		return parseISOInterval(s)
 	}
 	var out Interval
+	var months, days int64
 	fields := strings.Fields(s)
 	for k := 0; k < len(fields); k++ {
 		f := fields[k]
@@ -112,7 +158,10 @@ func ParseInterval(s string) (Interval, error) {
 			if err != nil {
 				return Interval{}, err
 			}
-			out.Micros += us
+			out.Micros, err = addInt64(out.Micros, us)
+			if err != nil {
+				return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
+			}
 			continue
 		}
 		n, err := strconv.ParseInt(f, 10, 64)
@@ -120,16 +169,30 @@ func ParseInterval(s string) (Interval, error) {
 			return Interval{}, fmt.Errorf("qt: bad interval %q", s)
 		}
 		k++
+		var add int64
 		switch strings.TrimSuffix(fields[k], "s") {
 		case "year":
-			out.Months += int32(n * 12)
+			add, err = scaleInt64(n, 12)
+			if err == nil {
+				months, err = addInt64(months, add)
+			}
 		case "mon":
-			out.Months += int32(n)
+			months, err = addInt64(months, n)
 		case "day":
-			out.Days += int32(n)
+			days, err = addInt64(days, n)
 		default:
 			return Interval{}, fmt.Errorf("qt: unknown interval unit %q in %q", fields[k], s)
 		}
+		if err != nil {
+			return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
+		}
+	}
+	var err error
+	if out.Months, err = intervalInt32(months); err != nil {
+		return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
+	}
+	if out.Days, err = intervalInt32(days); err != nil {
+		return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
 	}
 	return out, nil
 }
@@ -158,6 +221,7 @@ func parseClock(f string) (int64, error) {
 
 func parseISOInterval(s string) (Interval, error) {
 	var out Interval
+	var months, days int64
 	inTime := false
 	num := ""
 	for _, r := range s[1:] {
@@ -172,25 +236,57 @@ func parseISOInterval(s string) (Interval, error) {
 				return Interval{}, fmt.Errorf("qt: bad ISO interval %q", s)
 			}
 			num = ""
+			var add int64
 			switch {
 			case r == 'Y' && !inTime:
-				out.Months += int32(f * 12)
+				add, err = intervalFloat(f, 12, false)
+				if err == nil {
+					months, err = addInt64(months, add)
+				}
 			case r == 'M' && !inTime:
-				out.Months += int32(f)
+				add, err = intervalFloat(f, 1, false)
+				if err == nil {
+					months, err = addInt64(months, add)
+				}
 			case r == 'W' && !inTime:
-				out.Days += int32(f * 7)
+				add, err = intervalFloat(f, 7, false)
+				if err == nil {
+					days, err = addInt64(days, add)
+				}
 			case r == 'D' && !inTime:
-				out.Days += int32(f)
+				add, err = intervalFloat(f, 1, false)
+				if err == nil {
+					days, err = addInt64(days, add)
+				}
 			case r == 'H' && inTime:
-				out.Micros += int64(f * 3600e6)
+				add, err = intervalFloat(f, 3600e6, false)
+				if err == nil {
+					out.Micros, err = addInt64(out.Micros, add)
+				}
 			case r == 'M' && inTime:
-				out.Micros += int64(f * 60e6)
+				add, err = intervalFloat(f, 60e6, false)
+				if err == nil {
+					out.Micros, err = addInt64(out.Micros, add)
+				}
 			case r == 'S' && inTime:
-				out.Micros += int64(f*1e6 + 0.5)
+				add, err = intervalFloat(f, 1e6, true)
+				if err == nil {
+					out.Micros, err = addInt64(out.Micros, add)
+				}
 			default:
 				return Interval{}, fmt.Errorf("qt: bad ISO interval %q", s)
 			}
+			if err != nil {
+				return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
+			}
 		}
+	}
+	var err error
+	if out.Months, err = intervalInt32(months); err != nil {
+		return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
+	}
+	if out.Days, err = intervalInt32(days); err != nil {
+		return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
 	}
 	return out, nil
 }

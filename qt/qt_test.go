@@ -50,4 +50,16 @@ func TestIntervalParse(t *testing.T) {
 	if _, err := qt.ParseInterval("3 fortnights"); err == nil {
 		t.Error("unknown unit accepted")
 	}
+	for _, in := range []string{
+		"2147483648 mons",
+		"2147483648 days",
+		"178956971 years",
+		"P2147483648M",
+		"P2147483648D",
+		"P999999999999999999999999999999Y",
+	} {
+		if _, err := qt.ParseInterval(in); err == nil {
+			t.Errorf("%q: overflowing interval accepted", in)
+		}
+	}
 }
