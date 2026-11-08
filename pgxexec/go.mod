@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	github.com/jackc/pgx/v5 v5.12.0
-	github.com/noobmaisfier/qlx v0.41.0
+	github.com/noobmaisfier/qlx v0.41.1
 )
 
 require (
