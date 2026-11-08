@@ -374,16 +374,19 @@ func ParseTimeTZ(s string) (TimeTZ, error) {
 	if len(parts) > 3 {
 		return TimeTZ{}, bad
 	}
-	var secs int32
-	mult := []int32{3600, 60, 1}
+	var secs int64
+	mult := []int64{3600, 60, 1}
 	for i, p := range parts {
-		n, err := strconv.Atoi(p)
-		if err != nil || n < 0 || n > 59 && i > 0 {
+		n, err := strconv.ParseInt(p, 10, 64)
+		if err != nil || n < 0 || n > 59 && i > 0 || i == 0 && n > math.MaxInt32/3600 {
 			return TimeTZ{}, bad
 		}
-		secs += int32(n) * mult[i]
+		secs += n * mult[i]
 	}
-	return TimeTZ{Time: clock, Offset: sign * secs}, nil
+	if secs > math.MaxInt32 {
+		return TimeTZ{}, bad
+	}
+	return TimeTZ{Time: clock, Offset: sign * int32(secs)}, nil
 }
 
 // MarshalText and UnmarshalText make TimeTZ a JSON string.
