@@ -3,7 +3,7 @@ module github.com/noobmaisfier/qlx/otelqlx
 go 1.27
 
 require (
-	github.com/noobmaisfier/qlx v0.30.0
+	github.com/noobmaisfier/qlx v0.41.0
 	go.opentelemetry.io/otel v1.47.0
 	go.opentelemetry.io/otel/metric v1.47.0
 	go.opentelemetry.io/otel/sdk v1.47.0
