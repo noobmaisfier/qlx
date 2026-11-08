@@ -14,6 +14,7 @@ import (
 	q "github.com/noobmaisfier/qlx"
 	. "github.com/noobmaisfier/qlx/fixture"
 	"github.com/noobmaisfier/qlx/pg"
+	"github.com/noobmaisfier/qlx/qext/textsearch"
 	"github.com/noobmaisfier/qlx/qt"
 )
 
@@ -307,8 +308,23 @@ func exTagged() q.Statement {
 	return q.Tagged("users.by_tier", q.Select(Users.ID).From(Users).Where(Users.Tier.Eq("pro")))
 }
 
+// ex: qext-textsearch
+func exQextTextsearch() q.Statement {
+	doc := textsearch.Document("english",
+		textsearch.Weighted(textsearch.A, Users.Email),
+		textsearch.Weighted(textsearch.B, Users.Nickname))
+	query := textsearch.Web("english", q.Val("ada"))
+	return q.Select(Users.ID, textsearch.Rank(doc, query).As("rank")).
+		From(Users).
+		Where(textsearch.Search(doc, "english", q.Val("ada"))).
+		OrderBy(textsearch.Rank(doc, query).Desc()).
+		Limit(20)
+}
+
 // ex: set-config
-func exSetConfig() q.Statement { return q.SetConfig("app.tenant", "42", true) }
+func exSetConfig() q.Statement {
+	return q.SetConfig("app.tenant", "42", true)
+}
 
 var guideExamples = map[string]func() q.Statement{
 	"select-basic": exSelectBasic, "where-operators": exWhereOperators, "where-or-not": exWhereOrNot,
@@ -322,7 +338,7 @@ var guideExamples = map[string]func() q.Statement{
 	"insert-row": exInsertRow, "insert-rows": exInsertRows, "insert-select": exInsertSelect, "upsert": exUpsert,
 	"insert-do-nothing": exInsertDoNothing, "update": exUpdate, "update-from": exUpdateFrom, "param-typing": exParamTyping, "left-join-nullable": exLeftJoinNullable, "returning-old-new": exReturningOldNew,
 	"delete": exDelete, "delete-using": exDeleteUsing, "merge": exMerge, "explain": exExplain,
-	"tagged": exTagged, "set-config": exSetConfig,
+	"tagged": exTagged, "set-config": exSetConfig, "qext-textsearch": exQextTextsearch,
 }
 
 // TestGuideExamples renders every example on PostgreSQL 18; with

@@ -1136,21 +1136,7 @@ _, err = pgxexec.Exec(ctx, tx, st) // tx: the pgx.Tx of the current transaction
 `set_config` with a **bound** value: the tenant identifier is never concatenated into the SQL.
 
 ```go
- return q.SetConfig("app.tenant", "42", true) }
-
-var guideExamples = map[string]func() q.Statement{
-	"select-basic": exSelectBasic, "where-operators": exWhereOperators, "where-or-not": exWhereOrNot,
-	"where-any-slice": exWhereAnySlice, "where-dynamic": exWhereDynamic, "compare-expressions": exCompareExpressions,
-	"join-kinds": exJoinKinds, "join-fk": exJoinFK, "join-self": exJoinSelf,
-	"aggregates": exAggregates, "aggregate-modifiers": exAggregateModifiers, "rollup": exRollup,
-	"window": exWindow, "cte": exCTE,
-	"subquery-exists": exSubqueryExists, "subquery-in": exSubqueryIn, "subquery-lateral": exSubqueryLateral,
-	"set-operations": exSetOperations, "case-coalesce": exCaseCoalesce, "arithmetic-functions": exArithmeticFunctions,
-	"cast": exCast, "locking": exLocking, "generate-series": exGenerateSeries,
-	"insert-row": exInsertRow, "insert-rows": exInsertRows, "insert-select": exInsertSelect, "upsert": exUpsert,
-	"insert-do-nothing": exInsertDoNothing, "update": exUpdate, "update-from": exUpdateFrom, "param-typing": exParamTyping, "left-join-nullable": exLeftJoinNullable, "returning-old-new": exReturningOldNew,
-	"delete": exDelete, "delete-using": exDeleteUsing, "merge": exMerge, "explain": exExplain,
-	"tagged": exTagged, "set-config": exSetConfig,
+q.SetConfig("app.tenant", "42", true)
 ```
 
 ```sql
@@ -1493,7 +1479,7 @@ Written by hand in the main package, because they have a shape of their own: `Co
 
 Not generated: functions of type `internal`/`cstring`/`trigger` (reserved for the server), type input/output functions, operator implementations (use the operator), rare statistics types (`pg_ddl_command`, BRIN summaries). A missing function is reported; it is not worked around with raw SQL (§15).
 
-Extensions: `pgcat/ext/hstore`, `ltree`, `citext`, `pgtrgm` (enable them in `extensions:` to get the column types too). For pgvector and PostGIS: `pgcat extract -ext pgvector` on a real server produces the ledger, `pgcat gen` the wrapper.
+Extensions: `pgcat/ext/vector` (pgvector 0.8.7), `pgcat/ext/hstore`, `ltree`, `citext`, `pgtrgm` and `postgis` (PostGIS 3.7.0) — all shipped ledgers are merged for 16–19 (enable them in `extensions:` to get the column types too). A literal must be cast to the extension type before reaching an overloaded function: `q.Cast(q.Val(qt.Vector{1, 2}), q.NewPgType[qt.Vector]("public", "vector"))`. PostGIS wraps 624 functions and 52 operators (window functions such as `ST_ClusterDBSCAN` end in `Over`); the `geometry` and `geography` types are mapped, and values travel as extended hex WKB.
 
 ### 11.2 Operators
 
@@ -1502,6 +1488,47 @@ Operators are wrappers like functions (`text.` for `||`, `jsonb.` for `->`, `arr
 ### 11.3 PostgreSQL versions
 
 A construct newer than your oldest target is a render error that names the version (`IGNORE NULLS` in PG 19, `RETURNING OLD/NEW` in PG 18, `JSON_SERIALIZE` in PG 17...). The error wraps `qlx.ErrUnsupportedByServer`. With `targets: [18, 19]`, whatever is 19-only is rejected at build time by the analyzer (V009) and at render time on an 18 server.
+
+### 11.4 Extension helpers (`qext/*`)
+
+The `qext` packages are a small hand-written layer over the generated `pgcat/ext/*` wrappers, for the queries applications write most often. Each helper returns an ordinary `qlx.Expr` or `qlx.Pred`, so it composes with the rest of the query, and values stay bound parameters. No extra dependency; the extension must already exist in the database.
+
+| Package | Extension | Helpers |
+| --- | --- | --- |
+| `qext/textsearch` | built in | `Web`, `Plain`, `Phrase`, `Syntax`, `Document`, `Weighted`, `Match`, `Search`, `SearchIf`, `Rank`, `RankCover`, `Headline` |
+| `qext/pgvector` | pgvector | `L2`, `Cosine`, `NegativeInnerProduct`, `L1` (vector and halfvec), `SetEfSearch`, `SetProbes` |
+| `qext/trgm` | pg_trgm | `Similar`, `WordSimilar`, `SimilarIf`, `Distance`, `Similarity`, thresholds |
+| `qext/postgis` | PostGIS | `Point`, `WithinMeters`, `DistanceMeters`, `GeoJSON` (geography, WGS84) |
+| `qext/ltree` | ltree | `IsDescendant`, `IsAncestor`, `Matches`, `Depth` |
+| `qext/hstore` | hstore | `Get`, `HasKey`, `Contains`, `Merge` |
+
+```go
+doc := textsearch.Document("english",
+	textsearch.Weighted(textsearch.A, Users.Email),
+	textsearch.Weighted(textsearch.B, Users.Nickname))
+query := textsearch.Web("english", q.Val("ada"))
+return q.Select(Users.ID, textsearch.Rank(doc, query).As("rank")).
+	From(Users).
+	Where(textsearch.Search(doc, "english", q.Val("ada"))).
+	OrderBy(textsearch.Rank(doc, query).Desc()).
+	Limit(20)
+```
+
+```sql
+SELECT "users"."id", "pg_catalog"."ts_rank"(("pg_catalog"."setweight"("pg_catalog"."to_tsvector"($1::regconfig, "users"."email"), $2::"char") OPERATOR("pg_catalog".||) "pg_catalog"."setweight"("pg_catalog"."to_tsvector"($3::regconfig, coalesce("users"."nickname", $4)), $5::"char")), "pg_catalog"."websearch_to_tsquery"($6::regconfig, $7::text)) AS "rank" FROM "public"."users" WHERE (("pg_catalog"."setweight"("pg_catalog"."to_tsvector"($8::regconfig, "users"."email"), $9::"char") OPERATOR("pg_catalog".||) "pg_catalog"."setweight"("pg_catalog"."to_tsvector"($10::regconfig, coalesce("users"."nickname", $11)), $12::"char")) OPERATOR("pg_catalog".@@) "pg_catalog"."websearch_to_tsquery"($13::regconfig, $14::text)) ORDER BY "pg_catalog"."ts_rank"(("pg_catalog"."setweight"("pg_catalog"."to_tsvector"($15::regconfig, "users"."email"), $16::"char") OPERATOR("pg_catalog".||) "pg_catalog"."setweight"("pg_catalog"."to_tsvector"($17::regconfig, coalesce("users"."nickname", $18)), $19::"char")), "pg_catalog"."websearch_to_tsquery"($20::regconfig, $21::text)) DESC LIMIT $22
+```
+
+Arguments: `[english 65 english  66 english ada english 65 english  66 english ada english 65 english  66 english ada 20]`
+
+
+- **Full-text search**: `Web` for user input (quotes, `or`, `-word`, never a syntax error), `Plain` to AND words, `Phrase` for adjacent words, `Syntax` for the full `tsquery` syntax. `RankCover` is `ts_rank_cd`. For an index, store the document in a generated `tsvector` column and search that column: a GIN index only recognizes the exact indexed expression.
+- **pgvector**: `Cosine`, `L2`, `L1` and `NegativeInnerProduct` use the operators (never `*_distance`), so an HNSW/IVFFlat index applies; order ascending. `SetEfSearch` and `SetProbes` are transaction-local.
+- **pg_trgm**: `Similar` (`%`), `WordSimilar` (`<%`), `Distance` (`<->`), `SimilarIf` (absent when empty). `Similarity` is for display. Set the thresholds with `SetSimilarityThreshold` and `SetWordSimilarityThreshold`.
+- **PostGIS**: helpers work on `geography` (distances in metres), `Point(lon, lat)`. `WithinMeters` uses the public `st_dwithin` (not `_st_dwithin`), so a GIST index applies.
+- **ltree**: `IsDescendant` (`<@`), `IsAncestor` (`@>`), `Matches` (casts to `lquery`), `Depth` (`nlevel`).
+- **hstore**: `Get` returns `qt.Null[string]`; `HasKey`, `Contains`, `Merge` (`||`, the right side wins).
+
+Details and index pitfalls: [qext.md](qext.md).
 
 ---
 

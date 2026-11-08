@@ -1140,21 +1140,7 @@ _, err = pgxexec.Exec(ctx, tx, st) // tx : le pgx.Tx de la transaction en cours
 `set_config` avec une valeur **liée** : l'identifiant du tenant n'est jamais concaténé dans le SQL.
 
 ```go
- return q.SetConfig("app.tenant", "42", true) }
-
-var guideExamples = map[string]func() q.Statement{
-	"select-basic": exSelectBasic, "where-operators": exWhereOperators, "where-or-not": exWhereOrNot,
-	"where-any-slice": exWhereAnySlice, "where-dynamic": exWhereDynamic, "compare-expressions": exCompareExpressions,
-	"join-kinds": exJoinKinds, "join-fk": exJoinFK, "join-self": exJoinSelf,
-	"aggregates": exAggregates, "aggregate-modifiers": exAggregateModifiers, "rollup": exRollup,
-	"window": exWindow, "cte": exCTE,
-	"subquery-exists": exSubqueryExists, "subquery-in": exSubqueryIn, "subquery-lateral": exSubqueryLateral,
-	"set-operations": exSetOperations, "case-coalesce": exCaseCoalesce, "arithmetic-functions": exArithmeticFunctions,
-	"cast": exCast, "locking": exLocking, "generate-series": exGenerateSeries,
-	"insert-row": exInsertRow, "insert-rows": exInsertRows, "insert-select": exInsertSelect, "upsert": exUpsert,
-	"insert-do-nothing": exInsertDoNothing, "update": exUpdate, "update-from": exUpdateFrom, "param-typing": exParamTyping, "left-join-nullable": exLeftJoinNullable, "returning-old-new": exReturningOldNew,
-	"delete": exDelete, "delete-using": exDeleteUsing, "merge": exMerge, "explain": exExplain,
-	"tagged": exTagged, "set-config": exSetConfig,
+q.SetConfig("app.tenant", "42", true)
 ```
 
 ```sql
@@ -1506,6 +1492,47 @@ Les opérateurs sont des wrappers comme les fonctions (`text.` pour `||`, `jsonb
 ### 11.3 Versions PostgreSQL
 
 Une construction plus récente que votre plus ancienne cible est une erreur de rendu qui nomme la version (`IGNORE NULLS` en PG 19, `RETURNING OLD/NEW` en PG 18, `JSON_SERIALIZE` en PG 17...). L'erreur enveloppe `qlx.ErrUnsupportedByServer`. Avec `targets: [18, 19]`, ce qui est 19-seulement est refusé au build par l'analyseur (V009) et au rendu sur un serveur 18.
+
+### 11.4 Aides d'extension (`qext/*`)
+
+Les paquets `qext` sont une petite couche écrite à la main au-dessus des wrappers générés `pgcat/ext/*`, pour les requêtes les plus courantes. Chaque aide renvoie un `qlx.Expr` ou `qlx.Pred` ordinaire, donc elle se compose avec le reste de la requête, et les valeurs restent des paramètres liés. Aucune dépendance supplémentaire ; l'extension doit déjà exister dans la base.
+
+| Paquet | Extension | Aides |
+| --- | --- | --- |
+| `qext/textsearch` | intégré | `Web`, `Plain`, `Phrase`, `Syntax`, `Document`, `Weighted`, `Match`, `Search`, `SearchIf`, `Rank`, `RankCover`, `Headline` |
+| `qext/pgvector` | pgvector | `L2`, `Cosine`, `NegativeInnerProduct`, `L1` (vector et halfvec), `SetEfSearch`, `SetProbes` |
+| `qext/trgm` | pg_trgm | `Similar`, `WordSimilar`, `SimilarIf`, `Distance`, `Similarity`, seuils |
+| `qext/postgis` | PostGIS | `Point`, `WithinMeters`, `DistanceMeters`, `GeoJSON` (geography, WGS84) |
+| `qext/ltree` | ltree | `IsDescendant`, `IsAncestor`, `Matches`, `Depth` |
+| `qext/hstore` | hstore | `Get`, `HasKey`, `Contains`, `Merge` |
+
+```go
+doc := textsearch.Document("english",
+	textsearch.Weighted(textsearch.A, Users.Email),
+	textsearch.Weighted(textsearch.B, Users.Nickname))
+query := textsearch.Web("english", q.Val("ada"))
+return q.Select(Users.ID, textsearch.Rank(doc, query).As("rank")).
+	From(Users).
+	Where(textsearch.Search(doc, "english", q.Val("ada"))).
+	OrderBy(textsearch.Rank(doc, query).Desc()).
+	Limit(20)
+```
+
+```sql
+SELECT "users"."id", "pg_catalog"."ts_rank"(("pg_catalog"."setweight"("pg_catalog"."to_tsvector"($1::regconfig, "users"."email"), $2::"char") OPERATOR("pg_catalog".||) "pg_catalog"."setweight"("pg_catalog"."to_tsvector"($3::regconfig, coalesce("users"."nickname", $4)), $5::"char")), "pg_catalog"."websearch_to_tsquery"($6::regconfig, $7::text)) AS "rank" FROM "public"."users" WHERE (("pg_catalog"."setweight"("pg_catalog"."to_tsvector"($8::regconfig, "users"."email"), $9::"char") OPERATOR("pg_catalog".||) "pg_catalog"."setweight"("pg_catalog"."to_tsvector"($10::regconfig, coalesce("users"."nickname", $11)), $12::"char")) OPERATOR("pg_catalog".@@) "pg_catalog"."websearch_to_tsquery"($13::regconfig, $14::text)) ORDER BY "pg_catalog"."ts_rank"(("pg_catalog"."setweight"("pg_catalog"."to_tsvector"($15::regconfig, "users"."email"), $16::"char") OPERATOR("pg_catalog".||) "pg_catalog"."setweight"("pg_catalog"."to_tsvector"($17::regconfig, coalesce("users"."nickname", $18)), $19::"char")), "pg_catalog"."websearch_to_tsquery"($20::regconfig, $21::text)) DESC LIMIT $22
+```
+
+Arguments : `[english 65 english  66 english ada english 65 english  66 english ada english 65 english  66 english ada 20]`
+
+
+- **Plein texte** : `Web` pour la saisie utilisateur (guillemets, `or`, `-mot`, jamais d'erreur de syntaxe), `Plain` pour ANDer les mots, `Phrase` pour des mots adjacents, `Syntax` pour la syntaxe `tsquery` complète. `RankCover` est `ts_rank_cd`. Pour un index, stockez le document dans une colonne `tsvector` générée et cherchez cette colonne : un index GIN ne reconnaît que l'expression indexée exacte.
+- **pgvector** : `Cosine`, `L2`, `L1` et `NegativeInnerProduct` utilisent les opérateurs (jamais `*_distance`), donc un index HNSW/IVFFlat s'applique ; tri croissant. `SetEfSearch` et `SetProbes` sont locaux à la transaction.
+- **pg_trgm** : `Similar` (`%`), `WordSimilar` (`<%`), `Distance` (`<->`), `SimilarIf` (filtre absent si vide). `Similarity` est pour l'affichage. Les seuils se règlent avec `SetSimilarityThreshold` et `SetWordSimilarityThreshold`.
+- **PostGIS** : helpers sur `geography` (distances en mètres), `Point(lon, lat)`. `WithinMeters` utilise le `st_dwithin` public (pas `_st_dwithin`), donc un index GIST s'applique.
+- **ltree** : `IsDescendant` (`<@`), `IsAncestor` (`@>`), `Matches` (caste en `lquery`), `Depth` (`nlevel`).
+- **hstore** : `Get` renvoie `qt.Null[string]` ; `HasKey`, `Contains`, `Merge` (`||`, la droite gagne).
+
+Détails et pièges d'index : [qext.md](qext.md).
 
 ---
 
