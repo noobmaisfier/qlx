@@ -1176,7 +1176,7 @@ The table that follows is the type mapping. §10.11 explains how to check all of
 | `uuid` | `uuid.UUID` (or `[16]byte` with `uuid: bytes`) |
 | `date` | `qt.Date` (or `time.Time` with `date: stdlib`) |
 | `time`, `timetz` | `qt.TimeOfDay`, `qt.TimeTZ` |
-| `timestamp` | `qt.LocalTime` |
+| `timestamp` | `qt.LocalTime` (holds `infinity` and `-infinity`: `qt.LocalTimeInfinity`, `IsInfinite()`) |
 | `timestamptz` | `qt.Timestamptz` |
 | `interval` | `qt.Interval` |
 | `json`, `jsonb` | `qt.JSONB[T]` (T: `json.RawMessage` or your struct) |

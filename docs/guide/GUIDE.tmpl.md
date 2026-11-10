@@ -765,7 +765,7 @@ La table qui suit est la correspondance de types. §10.11 dit comment vérifier 
 | `uuid` | `uuid.UUID` (ou `[16]byte` avec `uuid: bytes`) |
 | `date` | `qt.Date` (ou `time.Time` avec `date: stdlib`) |
 | `time`, `timetz` | `qt.TimeOfDay`, `qt.TimeTZ` |
-| `timestamp` | `qt.LocalTime` |
+| `timestamp` | `qt.LocalTime` (porte `infinity` et `-infinity` : `qt.LocalTimeInfinity`, `IsInfinite()`) |
 | `timestamptz` | `qt.Timestamptz` |
 | `interval` | `qt.Interval` |
 | `json`, `jsonb` | `qt.JSONB[T]` (T : `json.RawMessage` ou votre struct) |

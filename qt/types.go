@@ -15,6 +15,33 @@ type LocalTime time.Time
 // Time converts back to time.Time (the zone is meaningless, UTC by convention).
 func (t LocalTime) Time() time.Time { return time.Time(t) }
 
+// PostgreSQL's timestamp runs from 4713 BC to 294276 AD, and has two more
+// values, 'infinity' and '-infinity', that are not instants. LocalTime keeps
+// them as instants outside that range, so it stays a plain time.Time and
+// compares with Before and After: every value later than 294276 AD is +infinity
+// and every one earlier than 4713 BC is -infinity. Use the constants below to
+// write them and IsInfinite or Sign to test for them.
+var (
+	// LocalTimeInfinity is 'infinity'.
+	LocalTimeInfinity = LocalTime(time.Date(294277, 1, 1, 0, 0, 0, 0, time.UTC))
+	// LocalTimeNegInfinity is '-infinity'.
+	LocalTimeNegInfinity = LocalTime(time.Date(-4800, 1, 1, 0, 0, 0, 0, time.UTC))
+)
+
+// Sign is 1 for infinity, -1 for -infinity and 0 for an ordinary timestamp.
+func (t LocalTime) Sign() int {
+	switch y := time.Time(t).Year(); {
+	case y > 294276:
+		return 1
+	case y < -4712: // 4713 BC
+		return -1
+	}
+	return 0
+}
+
+// IsInfinite reports whether t is infinity or -infinity.
+func (t LocalTime) IsInfinite() bool { return t.Sign() != 0 }
+
 // Numeric is an arbitrary-precision decimal kept as its canonical text, so no
 // precision is lost on the way through Go. Swap it for a decimal library with
 // a type override in qlx.yaml.

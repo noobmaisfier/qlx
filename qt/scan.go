@@ -85,20 +85,29 @@ func (t *LocalTime) Scan(src any) error {
 	case time.Time:
 		*t = LocalTime(v)
 	case string:
-		p, err := parseTimestamp(v)
-		if err != nil {
-			return err
-		}
-		*t = LocalTime(p)
+		return t.parse(v)
 	case []byte:
-		p, err := parseTimestamp(string(v))
-		if err != nil {
-			return err
-		}
-		*t = LocalTime(p)
+		return t.parse(string(v))
 	default:
 		return fmt.Errorf("qt: cannot scan %T into LocalTime", src)
 	}
+	return nil
+}
+
+func (t *LocalTime) parse(s string) error {
+	switch s {
+	case "infinity":
+		*t = LocalTimeInfinity
+		return nil
+	case "-infinity":
+		*t = LocalTimeNegInfinity
+		return nil
+	}
+	p, err := parseTimestamp(s)
+	if err != nil {
+		return err
+	}
+	*t = LocalTime(p)
 	return nil
 }
 
@@ -113,6 +122,12 @@ func parseTimestamp(s string) (time.Time, error) {
 
 // Value implements driver.Valuer. The wall-clock time is sent without a zone.
 func (t LocalTime) Value() (driver.Value, error) {
+	switch t.Sign() {
+	case 1:
+		return "infinity", nil
+	case -1:
+		return "-infinity", nil
+	}
 	return time.Time(t).Format("2006-01-02 15:04:05.999999"), nil
 }
 
