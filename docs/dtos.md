@@ -51,6 +51,7 @@ JSON forms, as produced by the code in this repository:
 | `qt.ID[S]` | an opaque 11-character string | the same string; a forged one is an error | yes (section 4) |
 | `qt.Date` | `"2024-02-29"`, or `"infinity"` | the same | yes |
 | `qt.Timestamptz` | `"2024-02-29T01:02:03Z"`, or `"infinity"` | the same | yes; tell clients about `"infinity"` |
+| `qt.LocalTime` | `"2024-02-29T01:02:03.123456"` (no zone), or `"infinity"` | the same, and PostgreSQL's space-separated form | yes; tell clients about `"infinity"` |
 | `qt.Numeric` | `"1.50"`, a string | a string | yes: no float rounding |
 | `qt.TimeOfDay` | `"01:00:00"` | the same | yes |
 | `qt.Interval` | ISO 8601 duration, `"P1Y2M3DT1H"` | the same, and PostgreSQL's own style | yes |
@@ -65,7 +66,7 @@ Rules that follow:
 
 - A response DTO can hold a `qt.Null[string]` directly: it already writes `null` or the value. Convert to `*string` (`Null.Ptr()`) only if the consumers of the DTO want pointers.
 - Never put a generated enum or a text-form type (`qt.Geometry`, `qt.LTree`) in a public contract without deciding that its text form is the contract.
-- `qt.Date` and `qt.Timestamptz` write `"infinity"` and `"-infinity"`. A client that parses every timestamp with a date library fails on those rows. If you never store infinities, clients never see them; if you do, document it. Note that mapping generated table columns to `time.Time` (and opting out of `qt.Timestamptz`) requires setting `timestamptz: stdlib` in `qlx.yaml` (by default, columns are `qt.Timestamptz`).
+- `qt.Date`, `qt.Timestamptz` and `qt.LocalTime` write `"infinity"` and `"-infinity"`. A client that parses every timestamp with a date library fails on those rows. If you never store infinities, clients never see them; if you do, document it. Note that mapping generated table columns to `time.Time` (and opting out of `qt.Timestamptz`) requires setting `timestamptz: stdlib` in `qlx.yaml` (by default, columns are `qt.Timestamptz`).
 
 Example, a DTO that mixes several (**tested**, `qt/json_test.go` covers each form):
 

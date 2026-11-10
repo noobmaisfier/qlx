@@ -42,6 +42,25 @@ func (t LocalTime) Sign() int {
 // IsInfinite reports whether t is infinity or -infinity.
 func (t LocalTime) IsInfinite() bool { return t.Sign() != 0 }
 
+// String is the JSON and text form: "infinity", "-infinity", or an ISO 8601
+// date-time without a zone ("2024-02-29T01:02:03.123456").
+func (t LocalTime) String() string {
+	switch t.Sign() {
+	case 1:
+		return "infinity"
+	case -1:
+		return "-infinity"
+	}
+	return time.Time(t).Format("2006-01-02T15:04:05.999999999")
+}
+
+// MarshalText makes LocalTime a JSON string.
+func (t LocalTime) MarshalText() ([]byte, error) { return []byte(t.String()), nil }
+
+// UnmarshalText is the inverse of MarshalText. It also accepts PostgreSQL's
+// space-separated form and a date alone, as Scan does.
+func (t *LocalTime) UnmarshalText(b []byte) error { return t.parse(string(b)) }
+
 // Numeric is an arbitrary-precision decimal kept as its canonical text, so no
 // precision is lost on the way through Go. Swap it for a decimal library with
 // a type override in qlx.yaml.

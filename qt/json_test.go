@@ -34,6 +34,10 @@ func TestJSONScalarForms(t *testing.T) {
 		{"date infinity", qt.DateInfinity, `"infinity"`},
 		{"timestamptz", qt.TimestamptzOf(time.Date(2024, 2, 29, 1, 2, 3, 0, time.UTC)), `"2024-02-29T01:02:03Z"`},
 		{"timestamptz infinity", qt.TimestamptzInfinity, `"infinity"`},
+		{"local time", qt.LocalTime(time.Date(2024, 2, 29, 1, 2, 3, 123456000, time.UTC)), `"2024-02-29T01:02:03.123456"`},
+		{"local time infinity", qt.LocalTimeInfinity, `"infinity"`},
+		{"local time -infinity", qt.LocalTimeNegInfinity, `"-infinity"`},
+		{"null local time", qt.Some(qt.LocalTimeInfinity), `"infinity"`},
 		{"numeric", qt.Numeric("1.50"), `"1.50"`},
 		{"time of day", qt.TimeOfDayOf(1, 0, 0, 0), `"01:00:00"`},
 		{"interval", qt.Interval{Months: 14, Days: 3, Micros: 3600e6}, `"P1Y2M3DT1H"`},
@@ -66,6 +70,21 @@ func TestJSONScalarFormsBack(t *testing.T) {
 	}
 	if err := json.Unmarshal([]byte(`"infinity"`), &ts); err != nil || !ts.IsInfinite() {
 		t.Errorf("timestamptz infinity: %v %v", ts, err)
+	}
+	var lt qt.LocalTime
+	wantLT := qt.LocalTime(time.Date(2024, 2, 29, 1, 2, 3, 123456000, time.UTC))
+	if err := json.Unmarshal([]byte(`"2024-02-29T01:02:03.123456"`), &lt); err != nil || lt != wantLT {
+		t.Errorf("local time: %v %v", lt, err)
+	}
+	if err := json.Unmarshal([]byte(`"2024-02-29 01:02:03.123456"`), &lt); err != nil || lt != wantLT {
+		t.Errorf("local time, space form: %v %v", lt, err)
+	}
+	if err := json.Unmarshal([]byte(`"infinity"`), &lt); err != nil || !lt.IsInfinite() || lt.Sign() != 1 {
+		t.Errorf("local time infinity: %v %v", lt, err)
+	}
+	var nlt qt.Null[qt.LocalTime]
+	if err := json.Unmarshal([]byte(`"2024-02-29T01:02:03.123456"`), &nlt); err != nil || !nlt.Valid || nlt.V != wantLT {
+		t.Errorf("null local time: %+v %v", nlt, err)
 	}
 	var n qt.Null[netip.Addr]
 	if err := json.Unmarshal([]byte(`null`), &n); err != nil || n.Valid {
