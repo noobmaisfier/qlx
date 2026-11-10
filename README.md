@@ -832,6 +832,50 @@ Every `qt` scalar type is usable as a field when your column has that type; run
 adds no new types: it uses `q.Table`, `q.*Col` on the query side and the types
 above in row structs.
 
+### JSON and validation
+
+Every `qt` type has a JSON form, pinned by `qt/json_test.go`:
+
+| Type | JSON | Notes |
+| --- | --- | --- |
+| `qt.Null[T]` | `null` or the value | an absent key and `null` both give NULL |
+| `qt.Opt[T]` | the value, or `null` when unset | absent means unset; `null` sets `Opt[Null[T]]` only |
+| `qt.ID[S]` | an opaque 11-character string | a string from another key is `qt.ErrBadID` |
+| `qt.Date` | `"2024-02-29"`, `"infinity"` | |
+| `qt.Timestamptz` | `"2024-02-29T01:02:03Z"`, `"infinity"` | |
+| `qt.LocalTime` | `"2024-02-29T01:02:03.123456"`, `"infinity"` | no zone: a `Z` suffix is refused |
+| `qt.TimeOfDay`, `qt.TimeTZ` | a string | |
+| `qt.Numeric` | a string (`"1.50"`) | no float rounding |
+| `qt.Interval` | an ISO 8601 duration (`"P1Y2M3DT1H"`) | also reads PostgreSQL's form |
+| `qt.Range[T]` | `{"lower":...,"upper":...,"lower_inc":...,"upper_inc":...}`, `{"empty":true}`, `null` | an inclusive bound without a bound is rejected |
+| `qt.Multirange[T]` | an array of ranges, `[]`, `null` | `[]` is empty, `null` is SQL NULL |
+| `qt.JSONB[T]` | the document itself | |
+| `qt.Vector`, `qt.HalfVector` | an array of numbers | |
+| `qt.Hstore` | an object; its values may be `null` | |
+| text-form types (`qt.LTree`, `qt.Geometry`, ...) | a string | decide that the text is your public contract |
+| `qt.Char` | a number | convert to `string` at the edge |
+| `[16]byte` (uuid) | an array of 16 numbers | convert to `string` at the edge |
+
+With `go-playground/validator`, `required` does not see inside most `qt` types:
+a zero `Null`, `Opt`, `ID`, `Date`, `Timestamptz` or `Range` passes. Check
+`.Valid` (Null), `IsSet()` (Opt) or `IsZero()` (ID, Date) instead, or register
+one custom rule for every `Opt`:
+
+```go
+v.RegisterValidation("provided", func(fl validator.FieldLevel) bool {
+    s, ok := fl.Field().Interface().(interface{ IsSet() bool })
+    return !ok || s.IsSet()
+})
+```
+
+`LocalTime` is the exception: it behaves like a `time.Time`, so `required` does
+catch its zero value.
+
+For JSON output, use `omitzero`, not `omitempty`: `omitempty` never omits a
+struct. But `omitzero` uses `IsZero`, so it also drops valid values for `Date`
+(1970-01-01), `Timestamptz` (the epoch) and `Range` (the unbounded `(,)`). Use a
+pointer for those when an absent key must mean "no value".
+
 ## Opaque IDs (opt-in)
 
 Integer keys stay `int64` by default. Set `ids: string` in `qlx.yaml` (see [Configuration](docs/configuration.md)) to turn
