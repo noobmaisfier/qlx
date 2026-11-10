@@ -363,6 +363,7 @@ in the database.
 | `qext/textsearch` | built in | `Web`, `Plain`, `Phrase`, `Syntax`, `Document`, `Weighted`, `Match`, `Search`, `SearchIf`, `Rank`, `RankCover`, `Headline` |
 | `qext/pgvector` | pgvector | `L2`, `Cosine`, `NegativeInnerProduct`, `L1` (vector and halfvec), `SetEfSearch`, `SetProbes` |
 | `qext/trgm` | pg_trgm | `Similar`, `WordSimilar`, `SimilarIf`, `Distance`, `Similarity`, threshold settings |
+| `qext/pgcrypto` | pgcrypto | `HashPassword`, `PasswordMatches`, `HMAC`, `Digest`, `RandomBytes`, `Encrypt`, `Decrypt` |
 | `qext/postgis` | PostGIS | `Point`, `WithinMeters`, `DistanceMeters`, `GeoJSON` (geography, WGS84) |
 | `qext/ltree` | ltree | `IsDescendant`, `IsAncestor`, `Matches`, `Depth` |
 | `qext/hstore` | hstore | `Get`, `HasKey`, `Contains`, `Merge` |

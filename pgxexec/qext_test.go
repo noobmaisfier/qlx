@@ -2,6 +2,7 @@ package pgxexec_test
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/noobmaisfier/qlx/pgxexec"
 	hstoreh "github.com/noobmaisfier/qlx/qext/hstore"
 	ltreeh "github.com/noobmaisfier/qlx/qext/ltree"
+	"github.com/noobmaisfier/qlx/qext/pgcrypto"
 	"github.com/noobmaisfier/qlx/qext/pgvector"
 	"github.com/noobmaisfier/qlx/qext/textsearch"
 	"github.com/noobmaisfier/qlx/qext/trgm"
@@ -228,6 +230,52 @@ func TestHstoreHelpers(t *testing.T) {
 		m := hstoreh.Merge(col, qt.Hstore{"b": qt.Some("20"), "c": qt.Some("3")})
 		if v, err := pgxexec.One[qt.Null[string]](ctx, tx, render(t, q.Select(hstoreh.Get(m, "b")))); err != nil || v.V != "20" {
 			t.Errorf("Merge: b = %+v %v", v, err)
+		}
+	})
+}
+
+func TestPGCryptoHelpers(t *testing.T) {
+	p := pool(t)
+	inRollbackTx(t, p, func(ctx context.Context, tx pgx.Tx) {
+		if _, err := tx.Exec(ctx, "CREATE EXTENSION IF NOT EXISTS pgcrypto"); err != nil {
+			t.Skipf("pgcrypto not available: %v", err)
+		}
+		hash, err := pgxexec.One[string](ctx, tx, render(t, q.Select(pgcrypto.HashPassword(q.Val("s3cret"), 4))))
+		if err != nil || !strings.HasPrefix(hash, "$2a$04$") || len(hash) != 60 {
+			t.Fatalf("hash = %q %v", hash, err)
+		}
+		for pw, want := range map[string]bool{"s3cret": true, "S3cret": false, "": false} {
+			got, err := pgxexec.One[bool](ctx, tx, render(t, q.Select(q.Test(pgcrypto.PasswordMatches(q.Val(hash), q.Val(pw))))))
+			if err != nil || got != want {
+				t.Errorf("match %q = %v, want %v (%v)", pw, got, want, err)
+			}
+		}
+
+		mac, err := pgxexec.One[[]byte](ctx, tx, render(t, q.Select(pgcrypto.HMAC(q.Val([]byte("data")), q.Val([]byte("key")), "sha256"))))
+		if err != nil || len(mac) != 32 {
+			t.Errorf("hmac: %x %v", mac, err)
+		}
+		sum, err := pgxexec.One[[]byte](ctx, tx, render(t, q.Select(pgcrypto.Digest(q.Val([]byte("abc")), "sha1"))))
+		if err != nil || fmt.Sprintf("%x", sum) != "a9993e364706816aba3e25717850c26c9cd0d89d" {
+			t.Errorf("digest: %x %v", sum, err)
+		}
+		r1, err := pgxexec.One[[]byte](ctx, tx, render(t, q.Select(pgcrypto.RandomBytes(16))))
+		if err != nil || len(r1) != 16 {
+			t.Errorf("random: %x %v", r1, err)
+		}
+
+		enc, err := pgxexec.One[[]byte](ctx, tx, render(t, q.Select(pgcrypto.Encrypt(q.Val("hello é"), q.Val("k")))))
+		if err != nil || len(enc) == 0 {
+			t.Fatalf("encrypt: %v", err)
+		}
+		plain, err := pgxexec.One[string](ctx, tx, render(t, q.Select(pgcrypto.Decrypt(q.Val(enc), q.Val("k")))))
+		if err != nil || plain != "hello é" {
+			t.Errorf("decrypt = %q %v", plain, err)
+		}
+
+		// Last, because a server error aborts the transaction.
+		if _, err := pgxexec.One[string](ctx, tx, render(t, q.Select(pgcrypto.HashPassword(q.Val("x"), 99)))); err == nil {
+			t.Error("a cost of 99 should be refused by the server")
 		}
 	})
 }

@@ -12,6 +12,7 @@ bound parameters.
 | `qext/textsearch` | built in (full-text search) | `Web`, `Plain`, `Phrase`, `Syntax`, `Document`, `Weighted`, `Match`, `Search`, `SearchIf`, `Rank`, `RankCover`, `Headline` |
 | `qext/pgvector` | pgvector | `L2`, `Cosine`, `NegativeInnerProduct`, `L1` (vector and halfvec), `SetEfSearch`, `SetProbes` |
 | `qext/trgm` | pg_trgm | `Similar`, `WordSimilar`, `SimilarIf`, `Distance`, `Similarity`, threshold settings |
+| `qext/pgcrypto` | pgcrypto | `HashPassword`, `PasswordMatches`, `HMAC`, `Digest`, `RandomBytes`, `Encrypt`, `Decrypt` |
 | `qext/postgis` | PostGIS | `Point`, `WithinMeters`, `DistanceMeters`, `GeoJSON` (geography, WGS84) |
 | `qext/ltree` | ltree | `IsDescendant`, `IsAncestor`, `Matches`, `Depth` |
 | `qext/hstore` | hstore | `Get`, `HasKey`, `Contains`, `Merge` |
@@ -58,6 +59,17 @@ Helpers work on `geography`: distances are meters on the spheroid and
 `WithinMeters` can use a GIST index. `Point` takes longitude first, as PostGIS
 does. It emits the public `st_dwithin`, not the internal `_st_dwithin`, which
 cannot use an index. For geometry work, use `pgcat/ext/postgis`.
+
+## pgcrypto
+
+`HashPassword(pw, cost)` is `crypt(pw, gen_salt('bf', cost))` and
+`PasswordMatches(hash, pw)` is `crypt(pw, hash) = hash`, so passwords stay bound
+parameters, never SQL text. The match cannot use an index: look the row up by
+another column (the email) first. `Encrypt`/`Decrypt` are `pgp_sym_*`; the
+ciphertext differs on every call, so it cannot be compared or indexed. Keys and
+passwords are ordinary parameters: keep parameter logging and statement
+capture off for these statements. Calls are qualified with `public`, where
+`CREATE EXTENSION pgcrypto` installs the functions by default.
 
 ## Notes
 
