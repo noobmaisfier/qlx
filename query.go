@@ -194,6 +194,15 @@ func (s SetQuery) render(b *builder) {
 		b.fail(fmt.Errorf("%w: %s operands have %d and %d columns", ErrShape, s.op, ln, rn))
 		return
 	}
+	for _, c := range [...]struct {
+		what string
+		v    *int64
+	}{{"Limit", s.limit}, {"Offset", s.offset}} {
+		if c.v != nil && *c.v < 0 {
+			b.fail(fmt.Errorf("%w: %s must not be negative (got %d)", ErrShape, c.what, *c.v))
+			return
+		}
+	}
 	renderOperand(b, s.l)
 	b.write(" " + s.op + " ")
 	renderOperand(b, s.r)
@@ -722,7 +731,7 @@ func (s SampledTable) Repeatable(seed int64) SampledTable { s.seed = &seed; retu
 
 func (s SampledTable) scopeKey() string { return s.t.key() }
 func (s SampledTable) renderFrom(b *builder) {
-	if s.m.pct < 0 || s.m.pct > 100 {
+	if !(s.m.pct >= 0 && s.m.pct <= 100) { // also refuses NaN
 		b.fail(fmt.Errorf("%w: TABLESAMPLE percentage %v outside 0..100", ErrShape, s.m.pct))
 		return
 	}

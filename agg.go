@@ -328,6 +328,10 @@ func Following(n int64) FrameBound { return FrameBound{sql: "FOLLOWING", n: &n} 
 
 func (f FrameBound) render(b *builder) {
 	if f.n != nil {
+		if *f.n < 0 {
+			b.fail(fmt.Errorf("%w: frame offset must not be negative (%s %d)", ErrShape, f.sql, *f.n))
+			return
+		}
 		b.arg(*f.n)
 		b.write(" ")
 	}
