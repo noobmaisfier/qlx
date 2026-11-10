@@ -30,6 +30,10 @@ func TestSingularRowNames(t *testing.T) {
 		"News": "News", "Series": "Series", "Data": "Data", "Metadata": "Metadata", "UserData": "UserData",
 		"Abuses": "Abuse", "Causes": "Cause", "Houses": "House", "Responses": "Response", "Databases": "Database",
 		"Status": "Status", "Bus": "Bus", "UserIDs": "UserID", "Shoes": "Shoe",
+		"Movies": "Movie", "Cookies": "Cookie", "UserCaches": "UserCache", "Matches": "Match", "Batches": "Batch",
+		"Menus": "Menu", "Emojis": "Emoji", "Shelves": "Shelf", "Ties": "Tie",
+		"Alias": "Alias", "Canvas": "Canvas", "Atlas": "Atlas", "Bias": "Bias", "Chaos": "Chaos", "Axis": "Axis",
+		"OrderAlias": "OrderAlias",
 	} {
 		if got := singular(in); got != want {
 			t.Errorf("singular(%q) = %q, want %q", in, got, want)

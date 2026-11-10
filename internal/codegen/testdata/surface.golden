@@ -1839,12 +1839,12 @@ var NameNamePkey
 var Spec
 
 == word40/def
-field Alia.Alias int64
-field Alia.Alias2 int32
-field Alia.Other qt.Null[string]
-field AliaPatch.Alias qt.Opt[int64]
-field AliaPatch.Alias2 qt.Opt[int32]
-field AliaPatch.Other qt.Opt[qt.Null[string]]
+field AliasRow.Alias int64
+field AliasRow.Alias2 int32
+field AliasRow.Other qt.Null[string]
+field AliasRowPatch.Alias qt.Opt[int64]
+field AliasRowPatch.Alias2 qt.Opt[int32]
+field AliasRowPatch.Other qt.Opt[qt.Null[string]]
 field AliasT.Alias qlx.NumCol[int64]
 field AliasT.Alias2 qlx.NumCol[int32]
 field AliasT.Other qlx.TextCol[qt.Null[string]]
@@ -1854,12 +1854,12 @@ field ChildRowPatch.ID qt.Opt[int32]
 field ChildRowPatch.Parent qt.Opt[qt.Null[int64]]
 field ChildT.ID qlx.NumCol[int32]
 field ChildT.Parent qlx.NumCol[qt.Null[int64]]
-func (*Alia) ScanTargets() []any
+func (*AliasRow) ScanTargets() []any
 func (*ChildRow) ScanTargets() []any
-func (AliaInsert) Alias2(v int32) AliaInsert
-func (AliaInsert) Assignments() []qlx.Assignment
-func (AliaInsert) Other(v qt.Null[string]) AliaInsert
-func (AliaPatch) Assignments() []qlx.Assignment
+func (AliasRowInsert) Alias2(v int32) AliasRowInsert
+func (AliasRowInsert) Assignments() []qlx.Assignment
+func (AliasRowInsert) Other(v qt.Null[string]) AliasRowInsert
+func (AliasRowPatch) Assignments() []qlx.Assignment
 func (AliasT) All() []qlx.Selectable
 func (AliasT) As(alias string) AliasT
 func (ChildRowInsert) Assignments() []qlx.Assignment
@@ -1868,11 +1868,11 @@ func (ChildRowPatch) Assignments() []qlx.Assignment
 func (ChildT) All() []qlx.Selectable
 func (ChildT) As(alias string) ChildT
 func (ChildT) FKChildParentFkey(to AliasT) qlx.ForeignKey
-func NewAliaInsert(alias int64) AliaInsert
+func NewAliasRowInsert(alias int64) AliasRowInsert
 func NewChildRowInsert(id int32) ChildRowInsert
-type Alia struct
-type AliaInsert struct
-type AliaPatch struct
+type AliasRow struct
+type AliasRowInsert struct
+type AliasRowPatch struct
 type AliasT struct
 type ChildRow struct
 type ChildRowInsert struct

@@ -22,7 +22,9 @@ type line struct {
 // scalars (string, int64, float64, bool, nil).
 func Parse(src []byte) (any, error) {
 	var lines []line
-	for i, raw := range strings.Split(strings.ReplaceAll(string(src), "\r\n", "\n"), "\n") {
+	// Editors on Windows often save a UTF-8 byte order mark; it is not part of the first key.
+	text := strings.TrimPrefix(string(src), "\ufeff")
+	for i, raw := range strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
 		if strings.Contains(raw, "\t") && strings.TrimLeft(raw, " ") != strings.TrimLeft(raw, " \t") {
 			return nil, fmt.Errorf("line %d: tabs cannot indent YAML", i+1)
 		}
@@ -68,9 +70,18 @@ func stripComment(s string) string {
 	for i := 0; i < len(s); i++ {
 		switch c := s[i]; {
 		case c == '\'' && !inD:
-			inS = !inS
+			// A quote opens a quoted scalar only at the start of a token; inside a
+			// plain scalar ("don't") it is an ordinary character.
+			if inS || i == 0 || strings.IndexByte(" \t[,", s[i-1]) >= 0 {
+				inS = !inS
+			}
 		case c == '"' && !inS:
-			if i == 0 || s[i-1] != '\\' {
+			// Escaped when preceded by an odd number of backslashes.
+			n := 0
+			for j := i - 1; j >= 0 && s[j] == '\\'; j-- {
+				n++
+			}
+			if !inD || n%2 == 0 {
 				inD = !inD
 			}
 		case c == '#' && !inS && !inD && (i == 0 || s[i-1] == ' ' || s[i-1] == '\t'):

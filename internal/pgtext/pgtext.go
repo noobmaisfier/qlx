@@ -75,6 +75,10 @@ func Elem(v any) (text string, null bool, err error) {
 	case netip.Prefix:
 		return x.String(), false, nil
 	case fmt.Stringer:
+		// A nil pointer whose type has a value-receiver String would panic.
+		if rv := reflect.ValueOf(v); rv.Kind() == reflect.Pointer && rv.IsNil() {
+			return "", true, nil
+		}
 		return x.String(), false, nil
 	}
 	rv := reflect.ValueOf(v)

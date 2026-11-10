@@ -106,6 +106,21 @@ var irregularSingular = map[string]string{
 	"people": "person", "children": "child", "men": "man", "women": "woman",
 	"mice": "mouse", "geese": "goose", "feet": "foot", "teeth": "tooth", "criteria": "criterion",
 	"phenomena": "phenomenon", "media": "medium", "memoranda": "memorandum",
+	// "ies" and "es" plurals whose singular is not what the suffix rules give.
+	"movies": "movie", "cookies": "cookie", "zombies": "zombie", "selfies": "selfie", "brownies": "brownie",
+	"rookies": "rookie", "ties": "tie", "pies": "pie", "dies": "die", "calories": "calorie",
+	"caches": "cache", "niches": "niche", "headaches": "headache", "avalanches": "avalanche",
+	"shelves": "shelf", "knives": "knife", "wolves": "wolf", "halves": "half",
+	// plurals in "us" and "is" that are not Latin singulars.
+	"menus": "menu", "gurus": "guru", "emus": "emu", "emojis": "emoji", "taxis": "taxi", "wikis": "wiki", "kiwis": "kiwi",
+}
+
+// alreadySingular are names that end in s but are singular: a table is often
+// named in the singular, and the "s" rule would cut the name.
+var alreadySingular = map[string]bool{
+	"alias": true, "canvas": true, "atlas": true, "bias": true, "gas": true, "chaos": true,
+	"kudos": true, "pancreas": true, "texas": true, "christmas": true, "lens": true,
+	"axis": true, "basis": true, "analysis": true,
 }
 
 // uncountable names have no plural form: the row type is the name itself.
@@ -128,7 +143,7 @@ func lastWord(s string) (head, last string) {
 func singular(s string) string {
 	head, last := lastWord(s)
 	l := strings.ToLower(last)
-	if uncountable[l] {
+	if uncountable[l] || alreadySingular[l] {
 		return s
 	}
 	if w, ok := irregularSingular[l]; ok {
