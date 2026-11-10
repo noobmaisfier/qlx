@@ -73,8 +73,11 @@ A Go type is a smaller set than a PostgreSQL type. Where the two differ, QLX pic
 | PostgreSQL value | Default Go type | What happens | How to handle it |
 |---|---|---|---|
 | `timestamptz` `infinity`, `-infinity` | `qt.Timestamptz` (default) | the read fails only when generated with `timestamptz: stdlib` (`time.Time` has no infinity) | `qt.Timestamptz` keeps both infinities and compares with `Equal` |
+| `timestamp` (without time zone) `infinity`, `-infinity` | `qt.LocalTime` (a `time.Time`) | the read fails: `time.Time` has no infinity | override the type: `overrides: {timestamp: {type: github.com/jackc/pgx/v5/pgtype.Timestamp, family: time}}`; `pgtype.Timestamp` carries an `InfinityModifier` |
 | `date` `infinity` | `qt.Date` | represented | `DateInfinity`, `DateNegInfinity` |
 | array with a NULL element (`int4[]`, `inet[]`) | `[]int32`, `[]netip.Addr` | the read fails on that row | config `array_nulls: true` generates `[]qt.Null[T]` |
+| array of a type pgx has no codec for (`money[]`, `timetz[]`, `macaddr8[]`, `tsquery[]`, an enum, a domain, `hstore[]`, `ltree[]`, ...) | `[]qt.Money`, `[]Mood`, `[]qt.LTree`, ... | read and written, provided the connection registered the type: `cannot scan unknown type (OID n) in text format` means it did not | connect with `pgxexec.Connect` or `pgxexec.AfterConnect`; on a connection opened another way, call `pgxexec.RegisterRangeTypes` and `pgxexec.LoadTypes` (also after a migration adds types) |
+| array of multiranges (`int4multirange[]`, `datemultirange[]`, ...) | `[]qt.Multirange[T]` | read and written once the connection registered the range types | same as above |
 | array of two or more dimensions | `[]T` | refused with an error naming the shape (it used to be flattened silently) | read into `pgtype.Array[T]` or `[][]T` |
 | array whose lower bound is not 1 | `[]T` | refused | read into `pgtype.Array[T]` |
 | `uuid` | `uuid.UUID` | represented; has a text form | config `uuid: bytes` generates `[16]byte`, which has no text form: in the simple protocol use `string` for the column (see below) |

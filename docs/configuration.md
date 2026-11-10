@@ -323,7 +323,7 @@ client, err := pgxexec.Connect(ctx, dsn, pgxexec.ConnectOptions{
 |---|---|---|
 | `Mode` | `CacheStatements` | How statements reach the server, see below. |
 | `Tracer` | none | Observes every statement run through `Client.DB`. `pgxexec.Tracers` combines several. |
-| `AfterConnect` | none | Runs on every new connection after the range codecs are registered. Generated code passes its type registration here. |
+| `AfterConnect` | none | Runs on every new connection after the library's own registrations: the range codecs, the catalog types pgx lacks, and the database's enums, domains and extension types with their arrays (`LoadTypes`, one query). Generated code passes its type registration here. |
 | `MinServer` | `0` (no check) | Lowest server major the application supports; `Connect` fails if the server is older. |
 | `Spec` | none | The generated `SchemaSpec`. When set, `Connect` fails if the server is older than the oldest `targets`, and calls `OnAhead` if it is newer than every target (the code still works, but runs ahead of its pinned ledger). |
 | `OnAhead` | none | Called with the server major and the targets when the server is ahead. |

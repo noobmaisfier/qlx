@@ -23,16 +23,19 @@ import (
 // Written from pgx v5's documented RangeScanner/RangeValuer and
 // MultirangeSetter/Getter interfaces; not compiled yet (see package doc).
 func RegisterRangeTypes(m *pgtype.Map) {
+	registerCatalogTypes(m)
 	m.TryWrapEncodePlanFuncs = append([]pgtype.TryWrapEncodePlanFunc{tryWrapRangeEncode, tryWrapMultirangeEncode, tryWrapIntervalEncode}, m.TryWrapEncodePlanFuncs...)
 	m.TryWrapEncodePlanFuncs = append(m.TryWrapEncodePlanFuncs, tryWrapArrayLiteral) // last resort: text form, for the simple protocol
 	m.TryWrapScanPlanFuncs = append([]pgtype.TryWrapScanPlanFunc{tryWrapRangeScan, tryWrapMultirangeScan, tryWrapArrayGuard}, m.TryWrapScanPlanFuncs...)
 }
 
-// AfterConnect is a pgxpool.Config.AfterConnect hook that registers the range
-// types on each new connection.
-func AfterConnect(_ context.Context, c *pgx.Conn) error {
+// AfterConnect is a pgxpool.Config.AfterConnect hook. On each new connection it
+// registers the range types (RegisterRangeTypes) and loads the database's
+// enums, domains and extension types with their arrays (LoadTypes), so arrays
+// of those can be scanned and written.
+func AfterConnect(ctx context.Context, c *pgx.Conn) error {
 	RegisterRangeTypes(c.TypeMap())
-	return nil
+	return LoadTypes(ctx, c)
 }
 
 // ---- intervals ----

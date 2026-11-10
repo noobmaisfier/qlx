@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	qlx "github.com/noobmaisfier/qlx"
+	"github.com/noobmaisfier/qlx/qt"
 )
 
 // Describer is satisfied by *pgx.Conn and pgx.Tx.
@@ -122,6 +123,10 @@ func acceptsNull(target any) bool {
 		return true // not ours to judge
 	}
 	if t.Implements(scannerType) {
+		return true
+	}
+	// qt.Range keeps NULL in a field, and the codec sets it (RangeSetNull)
+	if _, ok := target.(qt.RangeWriter); ok {
 		return true
 	}
 	switch t.Elem().Kind() {

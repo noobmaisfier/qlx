@@ -41,7 +41,42 @@ type Tracer interface {
 }
 
 // Traced wraps a Querier so every Query and Exec goes through t.
-func Traced(db Querier, t Tracer) Querier { return traced{db, t} }
+func Traced(db Querier, t Tracer) Querier {
+	d := traced{db, t}
+	if s, ok := db.(TxStarter); ok {
+		return tracedStarter{d, s}
+	}
+	return d
+}
+
+// tracedStarter keeps BeginTx visible through the wrapper, so code that looks
+// for a TxStarter (InsertMany, InTx) still gets its transaction, and the
+// statements inside it are traced too.
+type tracedStarter struct {
+	traced
+	s TxStarter
+}
+
+func (d tracedStarter) BeginTx(ctx context.Context, opts pgx.TxOptions) (pgx.Tx, error) {
+	tx, err := d.s.BeginTx(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return tracedTx{tx, traced{tx, d.t}}, nil
+}
+
+type tracedTx struct {
+	pgx.Tx
+	q traced
+}
+
+func (x tracedTx) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	return x.q.Query(ctx, sql, args...)
+}
+
+func (x tracedTx) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
+	return x.q.Exec(ctx, sql, args...)
+}
 
 type traced struct {
 	Querier

@@ -88,7 +88,10 @@ func InTx(ctx context.Context, db TxStarter, opts pgx.TxOptions, r Retry, fn fun
 		if err == nil || !retryable(err) {
 			return err
 		}
-		if r.OnRetry != nil && i < attempts-1 {
+		if i == attempts-1 {
+			break // out of attempts: no point sleeping before returning
+		}
+		if r.OnRetry != nil {
 			r.OnRetry(i+1, err)
 		}
 		sleep := base
@@ -99,7 +102,8 @@ func InTx(ctx context.Context, db TxStarter, opts pgx.TxOptions, r Retry, fn fun
 		sleep += time.Duration(rand.Int64N(int64(sleep)/2 + 1))
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			// keep the error that caused the retry: it says why we were waiting
+			return errors.Join(ctx.Err(), err)
 		case <-time.After(sleep):
 		}
 	}
@@ -412,7 +416,42 @@ type observed struct {
 // Observed wraps a Querier so each Query and Exec reports its text, duration
 // and error to obs. For Query the duration covers sending the statement and
 // receiving the first response, not reading the rows.
-func Observed(db Querier, obs Observer) Querier { return observed{db, obs} }
+func Observed(db Querier, obs Observer) Querier {
+	o := observed{db, obs}
+	if s, ok := db.(TxStarter); ok {
+		return observedStarter{o, s}
+	}
+	return o
+}
+
+// observedStarter keeps BeginTx visible through the wrapper, so code that looks
+// for a TxStarter (InsertMany, InTx) still gets its transaction, and the
+// statements inside it are observed too.
+type observedStarter struct {
+	observed
+	s TxStarter
+}
+
+func (d observedStarter) BeginTx(ctx context.Context, opts pgx.TxOptions) (pgx.Tx, error) {
+	tx, err := d.s.BeginTx(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return observedTx{tx, observed{tx, d.obs}}, nil
+}
+
+type observedTx struct {
+	pgx.Tx
+	q observed
+}
+
+func (x observedTx) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	return x.q.Query(ctx, sql, args...)
+}
+
+func (x observedTx) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
+	return x.q.Exec(ctx, sql, args...)
+}
 
 func (o observed) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
 	start := time.Now()

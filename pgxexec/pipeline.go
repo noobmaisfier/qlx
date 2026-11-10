@@ -105,14 +105,15 @@ func (p *Pipeline) Run(ctx context.Context, db BatchSender) error {
 	if err != nil {
 		return err
 	}
+	// Every result is read, even after a failure: after a server error the
+	// remaining reads return that batch error, which fills the later futures
+	// as documented; after a client-side error (too many rows, a scan failure)
+	// the server did run the rest and their results are good.
 	var first error
 	for _, read := range p.reads {
-		if first != nil {
-			// The server stopped at the first failure; draining further
-			// results would only repeat that error.
-			break
+		if err := read(res); first == nil {
+			first = err
 		}
-		first = read(res)
 	}
 	if cerr := res.Close(); first == nil {
 		first = cerr
