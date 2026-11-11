@@ -466,3 +466,45 @@ func TestVerifyRow(t *testing.T) {
 	bad("scalar width", pgxexec.VerifyRow[int64](ctx, c, two), "exactly one column")
 	bad("missing field", pgxexec.VerifyRow[verifyByName](ctx, c, nick), "no field for column")
 }
+
+// The fingerprint must not depend on the search_path of the connection that
+// computes it: the generator hashes under one, the application checks under
+// another, and a type in a schema that happens to be on the path is printed
+// without its schema by format_type.
+func TestFingerprintIgnoresSearchPath(t *testing.T) {
+	p := pool(t)
+	inRollbackTx(t, p, func(ctx context.Context, tx pgx.Tx) {
+		for _, stmt := range []string{
+			"CREATE SCHEMA fp_types", "CREATE SCHEMA fp_app",
+			"CREATE TYPE fp_types.mood AS ENUM ('a', 'b')",
+			"CREATE TABLE fp_app.t (id int, m fp_types.mood, ms fp_types.mood[], n numeric(10,2))",
+		} {
+			if _, err := tx.Exec(ctx, stmt); err != nil {
+				t.Fatalf("%s: %v", stmt, err)
+			}
+		}
+		hash := func(path string) string {
+			t.Helper()
+			if _, err := tx.Exec(ctx, "SET LOCAL search_path = "+path); err != nil {
+				t.Fatal(err)
+			}
+			var fp string
+			err := tx.QueryRow(ctx, "SELECT fp FROM ("+catalog.FingerprintSQL+") x WHERE tbl = 'fp_app.t'", []string{"fp_app"}).Scan(&fp)
+			if err != nil {
+				t.Fatalf("search_path %s: %v", path, err)
+			}
+			return fp
+		}
+		a, b, c := hash("fp_types, fp_app"), hash("fp_app"), hash("pg_catalog")
+		if a != b || b != c {
+			t.Errorf("fingerprint depends on search_path: %s %s %s", a, b, c)
+		}
+		// Precision still counts.
+		if _, err := tx.Exec(ctx, "ALTER TABLE fp_app.t ALTER COLUMN n TYPE numeric(12,2)"); err != nil {
+			t.Fatal(err)
+		}
+		if d := hash("fp_app"); d == a {
+			t.Error("a changed typmod left the fingerprint unchanged")
+		}
+	})
+}

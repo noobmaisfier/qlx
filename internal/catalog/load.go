@@ -18,13 +18,21 @@ var identRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_$]*$`)
 // break a generated query changes it. The same text is embedded in generated
 // code, which is how VerifySchema compares only the tables an application
 // uses. $1 must be bound as a text[] parameter.
+//
+// Types are named by their schema and typname, not by format_type: format_type
+// leaves out the schema of a type visible on the search_path, so the same
+// column hashed differently under the generator's connection and under an
+// application whose search_path does not include (say) the schema that holds
+// citext or an enum.
 const FingerprintSQL = `SELECT n.nspname || '.' || c.relname AS tbl,
-       md5(string_agg(a.attname || ':' || format_type(a.atttypid, a.atttypmod) || ':' ||
+       md5(string_agg(a.attname || ':' || tn.nspname || '.' || t.typname || '(' || a.atttypmod || ')' || ':' ||
            a.attnotnull::text || ':' || a.atthasdef::text || ':' || a.attidentity::text || ':' ||
            a.attgenerated::text, ',' ORDER BY a.attnum)) AS fp
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+JOIN pg_type t ON t.oid = a.atttypid
+JOIN pg_namespace tn ON tn.oid = t.typnamespace
 WHERE c.relkind IN ('r', 'p', 'v', 'm', 'f') AND n.nspname = ANY($1::text[]) AND NOT c.relispartition
 GROUP BY 1 ORDER BY 1`
 

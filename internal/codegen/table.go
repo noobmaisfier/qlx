@@ -29,9 +29,9 @@ type tableGen struct {
 	all     map[string]*tableGen // every generated table, for foreign keys
 }
 
-// Names that a column field must not take: the generated types have these
-// methods, and a field of the same name would not compile.
-var reservedField = map[string]bool{"As": true, "Assignments": true, "All": true}
+// Names that a column field must not take: the generated types (or the
+// embedded qlx.TableRef) have these methods, and a field of the same name would not compile.
+var reservedField = map[string]bool{"As": true, "Assignments": true, "All": true, "ScanTargets": true, "TableSample": true}
 
 func newTableGen(m *mapper, nm *namer, t catalog.Table, multiSchema bool, jsonTypes map[string]string) *tableGen {
 	g := &tableGen{t: t, m: m, usedFld: map[string]bool{}}
