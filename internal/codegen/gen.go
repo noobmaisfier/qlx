@@ -157,7 +157,15 @@ func Generate(s *catalog.Schema, cfg Config) (*Result, error) {
 		}
 	}
 	for _, t := range enums {
-		m.enumNames[t.OID] = nm.take(nm.local(t.Schema, t.Name), camel(t.Schema))
+		// The enum also declares XType and XValues: take them now, so that a
+		// label spelled "type" or "values", another enum or a table cannot
+		// end up with the same name.
+		name := nm.take(nm.local(t.Schema, t.Name), camel(t.Schema))
+		for nm.used[name+"Type"] || nm.used[name+"Values"] {
+			name = nm.take(name+"E", "")
+		}
+		nm.used[name+"Type"], nm.used[name+"Values"] = true, true
+		m.enumNames[t.OID] = name
 	}
 	for _, t := range enums {
 		emitEnum(ef, nm, m.enumNames[t.OID], t, s)

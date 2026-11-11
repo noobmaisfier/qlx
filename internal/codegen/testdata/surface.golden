@@ -4578,6 +4578,68 @@ var UserValues
 var Users
 var UsersUsersPkey
 
+== enum_label_vs_symbols/def
+const MoodSad
+const MoodType2
+const MoodTypeGold97A
+const MoodValid
+const MoodValues2
+field MoodValue.ID int32
+field MoodValue.M qt.Null[Mood]
+field MoodValue.T qt.Null[MoodTypeGold97]
+field MoodValuePatch.ID qt.Opt[int32]
+field MoodValuePatch.M qt.Opt[qt.Null[Mood]]
+field MoodValuePatch.T qt.Opt[qt.Null[MoodTypeGold97]]
+field MoodValuesGold97T.ID qlx.NumCol[int32]
+field MoodValuesGold97T.M qlx.Col[qt.Null[Mood]]
+field MoodValuesGold97T.T qlx.Col[qt.Null[MoodTypeGold97]]
+field ScanTarget.ID int32
+field ScanTarget.ScanTargetsCol qt.Null[int32]
+field ScanTarget.TableSampleCol qt.Null[int32]
+field ScanTargetPatch.ID qt.Opt[int32]
+field ScanTargetPatch.ScanTargetsCol qt.Opt[qt.Null[int32]]
+field ScanTargetPatch.TableSampleCol qt.Opt[qt.Null[int32]]
+field ScanTargetsT.ID qlx.NumCol[int32]
+field ScanTargetsT.ScanTargetsCol qlx.NumCol[qt.Null[int32]]
+field ScanTargetsT.TableSampleCol qlx.NumCol[qt.Null[int32]]
+func (*MoodValue) ScanTargets() []any
+func (*ScanTarget) ScanTargets() []any
+func (Mood) Valid() bool
+func (MoodTypeGold97) Valid() bool
+func (MoodValueInsert) Assignments() []qlx.Assignment
+func (MoodValueInsert) M(v qt.Null[Mood]) MoodValueInsert
+func (MoodValueInsert) T(v qt.Null[MoodTypeGold97]) MoodValueInsert
+func (MoodValuePatch) Assignments() []qlx.Assignment
+func (MoodValuesGold97T) All() []qlx.Selectable
+func (MoodValuesGold97T) As(alias string) MoodValuesGold97T
+func (ScanTargetInsert) Assignments() []qlx.Assignment
+func (ScanTargetInsert) ScanTargetsCol(v qt.Null[int32]) ScanTargetInsert
+func (ScanTargetInsert) TableSampleCol(v qt.Null[int32]) ScanTargetInsert
+func (ScanTargetPatch) Assignments() []qlx.Assignment
+func (ScanTargetsT) All() []qlx.Selectable
+func (ScanTargetsT) As(alias string) ScanTargetsT
+func NewMoodValueInsert(id int32) MoodValueInsert
+func NewScanTargetInsert(id int32) ScanTargetInsert
+type Mood string
+type MoodTypeGold97 string
+type MoodValue struct
+type MoodValueInsert struct
+type MoodValuePatch struct
+type MoodValuesGold97T struct
+type ScanTarget struct
+type ScanTargetInsert struct
+type ScanTargetPatch struct
+type ScanTargetsT struct
+var MoodType
+var MoodTypeGold97Type
+var MoodTypeGold97Values
+var MoodValues
+var MoodValuesGold97
+var MoodValuesGold97MoodValuesPkey
+var ScanTargets
+var ScanTargetsScanTargetsPkey
+var Spec
+
 == empty_enum/def
 field HasNothingRow.E qt.Null[Nothing]
 field HasNothingRow.Ea []Nothing

@@ -78,6 +78,12 @@ CREATE TABLE %[1]s.status_ (id int primary key, s %[1]s.status);
 CREATE TYPE %[1]s."user" AS ENUM ('a');
 CREATE TABLE %[1]s.users (id int primary key, u %[1]s."user", us %[1]s.status[]);`, s)
 		}},
+		oddCase{"enum_label_vs_symbols", func(s string) string { // labels that spell the enum's own symbols
+			return fmt.Sprintf(`CREATE TYPE %[1]s.mood AS ENUM ('type','values','valid','sad');
+CREATE TYPE %[1]s.mood_type AS ENUM ('a');
+CREATE TABLE %[1]s.mood_values (id int primary key, m %[1]s.mood, t %[1]s.mood_type);
+CREATE TABLE %[1]s.scan_targets (id int primary key, scan_targets int, table_sample int);`, s)
+		}},
 		oddCase{"empty_enum", func(s string) string { // an enum with no label is legal in PostgreSQL
 			return fmt.Sprintf(`CREATE TYPE %[1]s.nothing AS ENUM ();
 CREATE TABLE %[1]s.has_nothing (id int primary key, e %[1]s.nothing, ea %[1]s.nothing[]);`, s)
