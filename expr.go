@@ -652,13 +652,36 @@ func (c colOps[T]) ToIf(o qt.Opt[T]) Assignment {
 // insert keep the same columns whatever each row's options hold (the SQL text
 // still differs between a value and DEFAULT, so the shape count is the same as
 // with ToIf). In an UPDATE it would reset the column to its default, which is
-// almost never what an absent field means; use ToIf there (the analyzer
-// reports ToOrDefault in a SET, V027).
-func (c colOps[T]) ToOrDefault(o qt.Opt[T]) Assignment {
+// almost never what an absent field means; use ToIf there. The result is a
+// DefaultingAssignment, which InsertQuery.Row and NotMatchedBuilder.ThenInsert
+// accept and Set, DoUpdate and ThenUpdate do not: that mistake does not compile.
+func (c colOps[T]) ToOrDefault(o qt.Opt[T]) DefaultingAssignment {
 	if !o.Set {
-		return Assignment{c.ref, defaultNode{}, false}
+		return DefaultingAssignment{Assignment{c.ref, defaultNode{}, false}}
 	}
-	return Assignment{c.ref, argNode{o.V}, false}
+	return DefaultingAssignment{Assignment{c.ref, argNode{o.V}, false}}
+}
+
+// DefaultingAssignment is the result of ToOrDefault: an assignment that writes
+// DEFAULT when its option is unset. It can only go where a new row is written
+// (Row, ThenInsert), never in a SET list, where DEFAULT would silently reset
+// the column.
+type DefaultingAssignment struct{ a Assignment }
+
+// RowValue is what a row of values accepts: an Assignment or a
+// DefaultingAssignment.
+type RowValue interface{ rowAssignment() Assignment }
+
+func (a Assignment) rowAssignment() Assignment           { return a }
+func (d DefaultingAssignment) rowAssignment() Assignment { return d.a }
+
+// rowAssignments flattens row values, dropping the ToIf assignments left out.
+func rowAssignments(vs []RowValue) []Assignment {
+	as := make([]Assignment, len(vs))
+	for i, v := range vs {
+		as[i] = v.rowAssignment()
+	}
+	return live(as)
 }
 
 // live drops the assignments that ToIf left out. The slice is returned as it

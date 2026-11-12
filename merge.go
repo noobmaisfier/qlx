@@ -89,9 +89,11 @@ func (q MergeQuery) WhenNotMatched(cond ...Pred) NotMatchedBuilder {
 func (m NotMatchedBuilder) w(action string, sets []Assignment) MergeQuery {
 	return m.q.addWhen(mergeWhen{kind: "NOT MATCHED", cond: m.cond, action: action, sets: live(sets), scopeSrc: true})
 }
-func (m NotMatchedBuilder) ThenInsert(as ...Assignment) MergeQuery { return m.w("insert", as) }
-func (m NotMatchedBuilder) ThenInsertDefaults() MergeQuery         { return m.w("insert-default", nil) }
-func (m NotMatchedBuilder) ThenDoNothing() MergeQuery              { return m.w("nothing", nil) }
+func (m NotMatchedBuilder) ThenInsert(as ...RowValue) MergeQuery {
+	return m.w("insert", rowAssignments(as))
+}
+func (m NotMatchedBuilder) ThenInsertDefaults() MergeQuery { return m.w("insert-default", nil) }
+func (m NotMatchedBuilder) ThenDoNothing() MergeQuery      { return m.w("nothing", nil) }
 
 // BySourceBuilder completes WHEN NOT MATCHED BY SOURCE.
 type BySourceBuilder struct {

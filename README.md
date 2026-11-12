@@ -517,7 +517,7 @@ and `All` is the explicit opt-in for a whole-table write.
 `To(v)` binds a value, `ToX(expr)` assigns an expression, `ToDefault()` writes
 `DEFAULT`, `ToNull()` writes `NULL`, `ToIf(opt)` leaves the assignment out when
 the option is unset, and `ToOrDefault(opt)` writes `DEFAULT` when the option is
-unset (in an `UPDATE`, use `ToIf`: V027):
+unset (it is accepted by `Row` and `ThenInsert` only; in an `UPDATE`, use `ToIf`):
 
 ```go
 q.Update(Users).

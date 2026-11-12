@@ -1123,7 +1123,7 @@ The analyzer is the only static checker: `go install github.com/noobmaisfier/qlx
 | V024 | `Refresh...Concurrently()` with `WithNoData()`; `SetConstraints` without a name |
 | V025 | `SearchOrder()` / `CycleMark()` on a CTE built without `SearchDepthFirst`/`SearchBreadthFirst` / `Cycle` |
 | V026 | conflict column or assignment (`Set`, `Row`, `DoUpdate`) that designates a column of a table other than the one written |
-| V027 | `ToOrDefault` in a `SET` list (`Set`, `DoUpdate`, `ThenUpdate`): an absent field would reset the column to its default, `ToIf` leaves it alone |
+| V027 | retired: `ToOrDefault` in a `SET` list no longer compiles |
 | V028 | row lock (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) on a query with `Distinct`, `GroupBy`, `Having`, an aggregate or a window function: PostgreSQL rejects it |
 | V029 | `Distinct` with an `OrderBy` column that is not selected; `DistinctOn` whose expressions do not start the `OrderBy` |
 | V030 | `ToNull()` on a column whose Go type cannot hold `NULL` (the server answers 23502) |

@@ -54,7 +54,7 @@ go vet -vettool="$(go env GOPATH)/bin/qlxvet" \
 | V024 | `REFRESH ... CONCURRENTLY` with `NO DATA`, or unnamed `SET CONSTRAINTS` |
 | V025 | `SearchOrder`/`CycleMark` without `SEARCH`/`CYCLE` |
 | V026 | a conflict target or assignment naming another table's column |
-| V027 | `ToOrDefault` in a `SET` list, which resets an absent field |
+| V027 | retired: `ToOrDefault` in a `SET` list no longer compiles; the code is not reused |
 | V028 | a row lock with `DISTINCT`, `GROUP BY`, `HAVING`, an aggregate or a window |
 | V029 | `SELECT DISTINCT` ordering, or `DISTINCT ON` not matching the leading `ORDER BY` |
 | V030 | `ToNull()` on a column whose Go type cannot hold `NULL` (the server answers 23502) |

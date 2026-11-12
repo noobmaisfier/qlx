@@ -237,7 +237,7 @@ Three rules, enforced by tests and by the analyzer:
 
 - Do not `ToIf` a column that is NOT NULL without a default (`email` above): it can disappear and the statement fails (`ErrShape`; V008 reports it). Use `To`.
 - Rows of one multi-row `INSERT` must assign the same columns. Rows whose options differ do not render with `ToIf` (V013 reports it); use `ToOrDefault`.
-- `ToOrDefault` in a `SET` list resets an absent field to its default instead of leaving it alone. V027 reports it. In updates, use `ToIf`.
+- `ToOrDefault` in a `SET` list would reset an absent field to its default instead of leaving it alone, so it does not compile there: its result type is accepted by `Row` and `ThenInsert` only. In updates, use `ToIf`.
 
 `ToOrDefault` does not reduce the number of shapes (a value renders `$n`, `DEFAULT` renders the keyword in the same position); it makes multi-row inserts valid.
 
@@ -587,7 +587,7 @@ Cases worth a test per resource: absent / `null` / value for every nullable patc
 | `required` on `qt.Null`, `qt.Opt`, `qt.ID` | always passes | check `.Valid` or `IsSet()` |
 | binding a request into the generated patch or insert | mass assignment of every column | a DTO with an allow-list, converted |
 | `qt.Null` for a column with a `DEFAULT` | an absent key writes NULL over the default | `qt.Opt[T]` with `ToIf` |
-| `ToIf` on a required column, or `ToOrDefault` in a `SET` | the column disappears, or is reset to its default | `To` for required columns, `ToIf` in updates |
+| `ToIf` on a required column | the column disappears | `To` for required columns |
 | `qt.Opt` in a query-string struct | not filled (JSON methods only) | pointers, then `if` or `EqIf` |
 | accepting and ignoring a read-only field | the client believes it worked | leave it out of the DTO, strict decode |
 | `"infinity"` in a timestamp field | strict date parsers in clients fail | do not store infinities, or document them |

@@ -1577,7 +1577,7 @@ L'analyseur est le seul contrôleur statique : `go install github.com/noobmaisfi
 | V024 | `Refresh...Concurrently()` avec `WithNoData()` ; `SetConstraints` sans nom |
 | V025 | `SearchOrder()` / `CycleMark()` sur une CTE construite sans `SearchDepthFirst`/`SearchBreadthFirst` / `Cycle` |
 | V026 | colonne de conflit ou affectation (`Set`, `Row`, `DoUpdate`) qui désigne une colonne d'une autre table que celle écrite |
-| V027 | `ToOrDefault` dans une liste `SET` (`Set`, `DoUpdate`, `ThenUpdate`) : un champ absent remettrait la colonne à son défaut, `ToIf` la laisse intacte |
+| V027 | retiré : `ToOrDefault` dans une liste `SET` ne compile plus |
 | V028 | verrou de lignes (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) sur une requête avec `Distinct`, `GroupBy`, `Having`, un agrégat ou une fonction de fenêtre : PostgreSQL le refuse |
 | V029 | `Distinct` avec un `OrderBy` sur une colonne non sélectionnée ; `DistinctOn` dont les expressions ne commencent pas le `OrderBy` |
 | V030 | `ToNull()` sur une colonne dont le type Go ne peut pas contenir `NULL` (le serveur répond 23502) |

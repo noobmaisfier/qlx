@@ -51,6 +51,9 @@ func TestCompileFailCorpus(t *testing.T) {
 		{"NOT LIKE on a number", `_ = fx.Users.Balance.NotLike("x")`, "NotLike"},
 		{"BETWEEN SYMMETRIC on text", `_ = fx.Users.Email.BetweenSymmetric("a", "b")`, "BetweenSymmetric"},
 		{"COLLATE with a non-string name", `_ = fx.Users.Email.Collate(1)`, "string"},
+		{"control: ToOrDefault in a new row", `_ = q.InsertInto(fx.Users).Row(fx.Users.Email.To("a"), fx.Users.Tier.ToOrDefault(qt.Unset[string]()))`, ""},
+		{"ToOrDefault in an UPDATE SET", `_ = q.Update(fx.Users).Set(fx.Users.Tier.ToOrDefault(qt.Unset[string]()))`, "DefaultingAssignment"},
+		{"ToOrDefault in ON CONFLICT DO UPDATE", `_ = q.InsertInto(fx.Users).Row(fx.Users.Email.To("a")).OnConflict(fx.Users.Email).DoUpdate(fx.Users.Tier.ToOrDefault(qt.Unset[string]()))`, "DefaultingAssignment"},
 		{"function result of the wrong type in a typed slot", `var x q.Expr[string] = q.CountAll(); _ = x`, "cannot use"},
 	}
 	for _, c := range cases {

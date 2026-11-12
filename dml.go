@@ -98,8 +98,8 @@ func (q InsertQuery) outNames() []string { return returningNames(q.returning) }
 func (q InsertQuery) With(ctes ...CTE) InsertQuery { q.ctes = app(q.ctes, ctes...); return q }
 
 // Row adds one row of assignments. Every row must assign the same columns.
-func (q InsertQuery) Row(as ...Assignment) InsertQuery {
-	q.rows = app(q.rows, slices.Clone(live(as))) // a copy: as... may be reused by the caller
+func (q InsertQuery) Row(as ...RowValue) InsertQuery {
+	q.rows = app(q.rows, slices.Clone(rowAssignments(as))) // a copy: as... may be reused by the caller
 	return q
 }
 

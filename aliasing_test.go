@@ -11,7 +11,7 @@ import (
 )
 
 func TestBuildersDoNotAliasCallerSlices(t *testing.T) {
-	as := []q.Assignment{Users.Email.To("a@x"), Users.Balance.To(1)}
+	as := []q.RowValue{Users.Email.To("a@x"), Users.Balance.To(1)}
 	ins := q.InsertInto(Users).Row(as...)
 	as[0] = Users.Email.To("MUTATED")
 	_, args := renderIf(t, ins)

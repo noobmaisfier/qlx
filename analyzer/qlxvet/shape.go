@@ -220,13 +220,10 @@ func (c *checker) shapeChain(call *ast.CallExpr, stack []ast.Node) {
 		c.shapeSelect(root, links, complete, stack)
 	case isFunc(fn, "Update"):
 		c.shapeUpdate(root, links, complete)
-		c.orDefaultInUpdate(links)
 	case isFunc(fn, "InsertInto"):
 		c.shapeInsert(root, links, complete)
-		c.orDefaultInUpdate(links)
 	case isFunc(fn, "Merge"):
 		c.shapeMerge(root, links, complete)
-		c.orDefaultInUpdate(links)
 	case isFunc(fn, "Case"):
 		c.shapeCase(root, links)
 	case isFunc(fn, "NewCTE"):
@@ -517,29 +514,6 @@ func (c *checker) shapeUpdate(root *ast.CallExpr, links []link, complete bool) {
 	}
 	if d := firstDup(keys); d != "" {
 		c.report(root, "V013", "column "+d+" is assigned twice in this UPDATE")
-	}
-}
-
-// V027: ToOrDefault in a SET list (UPDATE, ON CONFLICT DO UPDATE, MERGE
-// WHEN ... THEN UPDATE) resets the column to its default when the option is
-// unset, where an absent field almost always means "leave it alone": ToIf does
-// that. Writing DEFAULT on purpose is ToDefault.
-func (c *checker) orDefaultInUpdate(links []link) {
-	for _, l := range links {
-		switch l.name {
-		case "Set", "DoUpdate", "DoUpdateWhere", "ThenUpdate":
-		default:
-			continue
-		}
-		for _, a := range l.call.Args {
-			ac, ok := ast.Unparen(a).(*ast.CallExpr)
-			if !ok {
-				continue
-			}
-			if sel, ok := ast.Unparen(ac.Fun).(*ast.SelectorExpr); ok && sel.Sel.Name == "ToOrDefault" && c.callee(ac) != nil {
-				c.report(ac, "V027", "ToOrDefault in "+l.name+" resets "+types.ExprString(ast.Unparen(sel.X))+" to its default when the option is unset; use ToIf to leave the column alone (or ToDefault to reset it on purpose)")
-			}
-		}
 	}
 }
 

@@ -28,7 +28,7 @@
 //	V024 REFRESH CONCURRENTLY with NO DATA, SET CONSTRAINTS without a name
 //	V025 SearchOrder/CycleMark on a CTE built without SEARCH/CYCLE
 //	V026 conflict column or assignment naming a column of another table
-//	V027 ToOrDefault in a SET list (an absent field would reset the column)
+//	V027 retired: ToOrDefault in a SET list no longer compiles (the code is not reused)
 //	V028 FOR UPDATE/SHARE together with DISTINCT, GROUP BY, HAVING, aggregates or window functions
 //	V029 SELECT DISTINCT ordered by a column that is not selected; DISTINCT ON not matching ORDER BY
 //	V030 ToNull() on a column whose Go type cannot hold NULL
