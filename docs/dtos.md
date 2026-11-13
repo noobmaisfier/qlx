@@ -233,7 +233,7 @@ With the generated insert type the same code is shorter (`NewUserInsert(r.Email)
 | `ToOrDefault(opt)` | writes the keyword `DEFAULT` | `INSERT`, in particular **multi-row** inserts: every row keeps the same columns |
 | `ToDefault()` | n/a: always writes `DEFAULT` | resetting a column on purpose |
 
-Three rules, enforced by tests and by the analyzer:
+Three rules, enforced by tests, by the compiler and by the analyzer:
 
 - Do not `ToIf` a column that is NOT NULL without a default (`email` above): it can disappear and the statement fails (`ErrShape`; V008 reports it). Use `To`.
 - Rows of one multi-row `INSERT` must assign the same columns. Rows whose options differ do not render with `ToIf` (V013 reports it); use `ToOrDefault`.

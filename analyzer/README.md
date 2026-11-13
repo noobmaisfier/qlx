@@ -3,8 +3,9 @@
 `qlxvet` is the `go/analysis` pass for QLX. It catches SQL mistakes that the Go
 type system cannot see, before the program runs and without a database.
 
-It reports 30 stable codes, V001 to V030. A finding names the rule, the
-statement and the column or clause involved; a valid query stays silent.
+It reports the stable codes V001 to V030; V027 is retired. A finding names
+the rule, the statement and the column or clause involved; a valid query stays
+silent.
 
 ## Install
 
