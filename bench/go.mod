@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/doug-martin/goqu/v9 v9.25.0
 	github.com/go-jet/jet/v2 v2.16.1
-	github.com/noobmaisfier/qlx v0.43.0
+	github.com/noobmaisfier/qlx v1.0.0-rc1
 	github.com/uptrace/bun v1.3.0
 	github.com/uptrace/bun/dialect/pgdialect v1.3.0
 )
