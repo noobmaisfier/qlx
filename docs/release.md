@@ -192,6 +192,17 @@ GOBIN=/tmp/qlxbin GOWORK=off GOPROXY=https://proxy.golang.org \
 
 ---
 
+### 3.4 Release candidates
+
+A candidate uses the same phases with a suffix, for example `v1.0.0-rc1`:
+
+- `scripts/release-modules.sh v1.0.0-rc1` accepts the suffix and sets the same
+  version in `pgxexec` and `otelqlx`.
+- Create the GitHub release with `--prerelease --latest=false`:
+  `gh release create v1.0.0-rc1 --title "v1.0.0-rc1" --notes-file /tmp/release-notes.md --prerelease --latest=false`.
+- `@latest` keeps resolving to the previous final release until the final tag
+  is published, so consumers must request the candidate explicitly.
+
 ## Release checklist
 
 - [ ] `main` is green, working tree clean.
