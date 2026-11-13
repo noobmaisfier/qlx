@@ -38,7 +38,8 @@ request.
 
 You need:
 
-- **Go 1.27** or later (the root module uses generic methods).
+- **Go 1.27.4** or later (the root module uses generic methods; 1.27.4
+  carries the security fixes for `cmd/go` and cgo).
 - **PostgreSQL server binaries** (`initdb`, `postgres`, `pg_ctl`) for the tests
   that talk to a server. Any of 16, 17, 18 or 19 works; CI runs all four.
 - `psql` for the extraction commands.

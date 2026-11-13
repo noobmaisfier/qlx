@@ -25,7 +25,7 @@ qlx gen      # writes the typed package and schema.lock
 qlx check    # CI: fails if generated code or schema.lock is stale
 ```
 
-Requirements: Go 1.27 or later and PostgreSQL 16–19. `qlx gen` needs PostgreSQL
+Requirements: Go 1.27.4 or later and PostgreSQL 16–19. `qlx gen` needs PostgreSQL
 server binaries, or a live database through `database_url`.
 
 Connect once, then use `client` everywhere:

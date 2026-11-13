@@ -1,6 +1,6 @@
 module testdata
 
-go 1.27
+go 1.27.4
 
 require github.com/noobmaisfier/qlx v0.0.0
 

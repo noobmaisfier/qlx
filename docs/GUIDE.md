@@ -24,7 +24,7 @@ Ce guide va de zéro à une application complète (une version anglaise existe :
 16. Dépannage
 17. Aide-mémoire
 
-Prérequis : Go 1.27, pgx v5, PostgreSQL 16 à 19 (cibles par défaut : 18 et 19). Pour `qlx gen` depuis des migrations : les binaires serveur PostgreSQL (il démarre un serveur jetable), ou bien une `database_url`.
+Prérequis : Go 1.27.4, pgx v5, PostgreSQL 16 à 19 (cibles par défaut : 18 et 19). Pour `qlx gen` depuis des migrations : les binaires serveur PostgreSQL (il démarre un serveur jetable), ou bien une `database_url`.
 
 ---
 

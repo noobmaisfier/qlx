@@ -44,7 +44,7 @@ To make this work cleanly without circular dependency workarounds:
 
 - `main` is green on the CI matrix (PostgreSQL 16–19, pgx min and latest).
 - Working tree is clean (`git status` shows nothing unstaged or untracked).
-- Go 1.27 or later and GitHub CLI (`gh`) are installed and authenticated.
+- Go 1.27.4 or later and GitHub CLI (`gh`) are installed and authenticated.
 - One reachable PostgreSQL server per targeted major (16–19) if the catalog ledger needs refreshing.
 
 ---

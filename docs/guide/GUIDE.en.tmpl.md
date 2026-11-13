@@ -24,7 +24,7 @@ This guide goes from zero to a complete application. It does not replace the ref
 16. Troubleshooting
 17. Cheat sheet
 
-Prerequisites: Go 1.27, pgx v5, PostgreSQL 16 to 19 (default targets: 18 and 19). For `qlx gen` from migrations: the PostgreSQL server binaries (it starts a throwaway server), or a `database_url`.
+Prerequisites: Go 1.27.4, pgx v5, PostgreSQL 16 to 19 (default targets: 18 and 19). For `qlx gen` from migrations: the PostgreSQL server binaries (it starts a throwaway server), or a `database_url`.
 
 ---
 
