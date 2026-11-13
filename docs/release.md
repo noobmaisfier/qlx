@@ -84,6 +84,7 @@ scripts/with_pg.sh go test ./...
 Update `README.md` to reference `vX.Y.Z` in:
 - The "Current release:" status callout.
 - The "Modules" table.
+- The "Verification" section ("including the vX.Y.Z release").
 
 Commit the changes:
 
@@ -162,7 +163,7 @@ Write notes summarizing user-facing changes and bug fixes, and list the four pub
 ### 3.2 Watch CI workflows
 
 1. The push to `main` triggers standard CI (`ci.yml`).
-2. Pushing the tags triggers the `modules.yml` workflow, which tests all sub-modules with `GOWORK=off` against the published versions.
+2. Pushing the tags triggers the `modules.yml` workflow, which builds and vets the published sub-modules (`pgxexec`, `otelqlx`, `analyzer`) with `GOWORK=off` against the published versions.
 
 Verify in GitHub Actions that both workflows pass:
 

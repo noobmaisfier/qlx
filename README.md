@@ -979,7 +979,7 @@ your `-targets` is caught by V009 and by the renderer.
 | Executor | integration suite green on all four majors |
 
 GitHub Actions is green on the same PostgreSQL 16–19 matrix, including the
-v0.30.0 release. PostgreSQL 19 is verified on a release candidate; re-pinning on
+v0.43.0 release. PostgreSQL 19 is verified on a release candidate; re-pinning on
 GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 
 ## Documentation
