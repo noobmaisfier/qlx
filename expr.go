@@ -675,11 +675,15 @@ type RowValue interface{ rowAssignment() Assignment }
 func (a Assignment) rowAssignment() Assignment           { return a }
 func (d DefaultingAssignment) rowAssignment() Assignment { return d.a }
 
-// rowAssignments flattens row values, dropping the ToIf assignments left out.
+// rowAssignments flattens row values, dropping the ToIf assignments left out
+// and nil values, which render as an empty row.
 func rowAssignments(vs []RowValue) []Assignment {
-	as := make([]Assignment, len(vs))
-	for i, v := range vs {
-		as[i] = v.rowAssignment()
+	as := make([]Assignment, 0, len(vs))
+	for _, v := range vs {
+		if v == nil {
+			continue
+		}
+		as = append(as, v.rowAssignment())
 	}
 	return live(as)
 }

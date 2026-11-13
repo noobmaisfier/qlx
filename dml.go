@@ -172,12 +172,12 @@ func (c ConflictBuilder) DoNothing() InsertQuery { return c.with(conflictClause{
 
 // DoUpdate renders DO UPDATE SET ...; use Col.Excluded() for the proposed row.
 func (c ConflictBuilder) DoUpdate(sets ...Assignment) InsertQuery {
-	return c.with(conflictClause{action: "update", sets: live(sets)})
+	return c.with(conflictClause{action: "update", sets: slices.Clone(live(sets))})
 }
 
 // DoUpdateWhere is DoUpdate with a WHERE condition.
 func (c ConflictBuilder) DoUpdateWhere(p Pred, sets ...Assignment) InsertQuery {
-	return c.with(conflictClause{action: "update", sets: live(sets), where: p})
+	return c.with(conflictClause{action: "update", sets: slices.Clone(live(sets)), where: p})
 }
 
 // DoSelect renders ON CONFLICT DO SELECT (PostgreSQL 19), which returns the

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -314,6 +315,7 @@ func JSONColQuery(f Field[qt.RawJSON], path JSONPath) JSONColumn {
 
 // JSONColNested is NESTED PATH path COLUMNS (...): rows of a nested array.
 func JSONColNested(path JSONPath, cols ...JSONColumn) JSONColumn {
+	cols = slices.Clone(cols)
 	var names []string
 	for _, c := range cols {
 		names = append(names, c.names...)
@@ -341,7 +343,7 @@ type JSONTableFrom struct {
 //
 // Requires PostgreSQL 17.
 func JSONTable(doc Operand[qt.RawJSON], path JSONPath, alias string, cols ...JSONColumn) JSONTableFrom {
-	return JSONTableFrom{doc: ArgT(doc, PgJSONB).valueNode(), path: path, alias: alias, cols: cols}
+	return JSONTableFrom{doc: ArgT(doc, PgJSONB).valueNode(), path: path, alias: alias, cols: slices.Clone(cols)}
 }
 
 // Passing binds a path variable.

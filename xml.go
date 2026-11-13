@@ -2,6 +2,7 @@ package qlx
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/noobmaisfier/qlx/qt"
 )
@@ -388,7 +389,7 @@ type XMLTableFrom struct {
 
 // XMLTable is XMLTABLE(rowXPath PASSING doc COLUMNS ...) AS alias.
 func XMLTable(rowXPath Operand[string], doc Operand[qt.XML], alias string, cols ...XMLColumn) XMLTableFrom {
-	return XMLTableFrom{row: ArgT(rowXPath, PgText).valueNode(), doc: xmlOperand(doc), cols: cols, alias: alias}
+	return XMLTableFrom{row: ArgT(rowXPath, PgText).valueNode(), doc: xmlOperand(doc), cols: slices.Clone(cols), alias: alias}
 }
 
 // Namespaces adds XMLNAMESPACES(...).
