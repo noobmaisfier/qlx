@@ -2,10 +2,15 @@ name: modules
 # Builds pgxexec, otelqlx, analyzer and qjson/validator the way a user gets them: without go.work,
 # against the published qlx version named in their go.mod. The regular jobs use
 # go.work (the local qlx), so they cannot catch a go.mod that names a version
-# that is missing or too old. Runs when a tag is pushed, and by hand.
+# that is missing or too old. Runs when a sub-module tag is pushed, and by hand.
+#
+# It deliberately does not run on the root `v*` tag: the root must be published
+# before the sub-modules can point at it, so at that commit their go.mod files
+# still name the previous release (and a brand-new sub-module has no qlx
+# require yet). The sub-module tags are the ones that must build standalone.
 on:
   push:
-    tags: ["v*", "pgxexec/v*", "otelqlx/v*", "analyzer/v*", "qjson/validator/v*"]
+    tags: ["pgxexec/v*", "otelqlx/v*", "analyzer/v*", "qjson/validator/v*"]
   workflow_dispatch:
 jobs:
   standalone:

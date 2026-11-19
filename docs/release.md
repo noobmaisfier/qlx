@@ -186,7 +186,7 @@ Write notes summarizing user-facing changes and bug fixes, and list the five pub
 ### 3.2 Watch CI workflows
 
 1. The push to `main` triggers standard CI (`ci.yml`).
-2. Pushing the tags triggers the `modules.yml` workflow, which builds and vets the published sub-modules (`pgxexec`, `otelqlx`, `analyzer`, `qjson/validator`) with `GOWORK=off` against the published versions.
+2. Pushing the four sub-module tags triggers the `modules.yml` workflow, which builds and vets the published sub-modules (`pgxexec`, `otelqlx`, `analyzer`, `qjson/validator`) with `GOWORK=off` against the published versions. The root `vX.Y.Z` tag does not trigger it: at that commit the sub-module `go.mod` files still name the previous release by design, and a brand-new sub-module may not have a `qlx` require yet.
 
 Verify in GitHub Actions that both workflows pass:
 
@@ -244,5 +244,5 @@ A candidate uses the same phases with a suffix, for example `v1.0.0-rc2`:
 - [ ] `bench` pointed at `vX.Y.Z` (internal, not tagged).
 - [ ] Sub-module tags pushed (`pgxexec/vX.Y.Z`, `otelqlx/vX.Y.Z`, `analyzer/vX.Y.Z`, `qjson/validator/vX.Y.Z`).
 - [ ] GitHub release created for `vX.Y.Z`.
-- [ ] CI `modules.yml` green on tag push.
+- [ ] CI `modules.yml` green on the four sub-module tag pushes (the root tag does not trigger it).
 - [ ] Standalone test with `go install` succeeds through the Go proxy.
