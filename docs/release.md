@@ -154,6 +154,21 @@ done
 git push origin pgxexec/vX.Y.Z otelqlx/vX.Y.Z analyzer/vX.Y.Z qjson/validator/vX.Y.Z
 ```
 
+### 2.4 Point `bench` at the release
+
+`bench` is internal and never tagged, but its `go.mod` names a root version and
+its `go.sum` needs the real hash. Once the root tag exists:
+
+```bash
+(cd bench && GOWORK=off go mod edit -require=github.com/noobmaisfier/qlx@vX.Y.Z && GOWORK=off go mod tidy)
+git add bench
+git commit -m "Point bench at qlx vX.Y.Z"
+git push origin main
+```
+
+This is a consistency commit, not part of the published modules; it can land
+before or after the sub-module tags.
+
 ---
 
 ## Phase 3: GitHub Release and verification
@@ -226,6 +241,7 @@ A candidate uses the same phases with a suffix, for example `v1.0.0-rc2`:
 - [ ] Root tag pushed: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 - [ ] `scripts/release-modules.sh vX.Y.Z` executed cleanly (including `qjson/validator` built with `GOWORK=off`).
 - [ ] Sub-module `go.mod` / `go.sum` committed and pushed to `main`.
+- [ ] `bench` pointed at `vX.Y.Z` (internal, not tagged).
 - [ ] Sub-module tags pushed (`pgxexec/vX.Y.Z`, `otelqlx/vX.Y.Z`, `analyzer/vX.Y.Z`, `qjson/validator/vX.Y.Z`).
 - [ ] GitHub release created for `vX.Y.Z`.
 - [ ] CI `modules.yml` green on tag push.
