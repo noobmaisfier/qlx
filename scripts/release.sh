@@ -35,9 +35,9 @@ go run ./cmd/pgcat grammar -y https://raw.githubusercontent.com/postgres/postgre
 
 # The root module has no dependencies and no go.sum: `go mod tidy` there would
 # also read the files behind the sql2go build tag and add pg_query_go.
-# pgxexec, otelqlx and analyzer require a published qlx version, so they are
-# tidied after the root module is tagged, by scripts/release-modules.sh. bench
-# is resolved via go.work and is never published.
+# pgxexec, otelqlx and qjson/validator require a published qlx version, so they
+# are tidied after the root module is tagged, by scripts/release-modules.sh.
+# bench is resolved via go.work and is never published.
 (cd bench && go mod tidy)
 scripts/check_root.sh
 gofmt -l . | grep -v '^$' && { echo "gofmt differences above"; exit 1; } || true

@@ -14,7 +14,7 @@
 #   1. scripts/release.sh, tests, commit, push
 #   2. git tag vX.Y.Z && git push origin vX.Y.Z               (the root module)
 #   3. scripts/release-modules.sh vX.Y.Z                      (this script)
-#   4. commit the three go.mod/go.sum, push, then tag each sub-module with its
+#   4. commit the four go.mod/go.sum files, push, then tag each sub-module with its
 #      path prefix: pgxexec/vX.Y.Z, otelqlx/vX.Y.Z, analyzer/vX.Y.Z, qjson/validator/vX.Y.Z
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -36,8 +36,11 @@ for m in pgxexec otelqlx analyzer qjson/validator; do
     if grep -q '^replace github.com/noobmaisfier/qlx ' go.mod; then
       echo "$m/go.mod still has a replace for qlx: remove it" >&2; exit 1
     fi
-    # analyzer does not import qlx; the require is only for the modules that do.
-    if grep -q 'github.com/noobmaisfier/qlx ' go.mod; then
+    # analyzer does not import qlx. Every other sub-module must name the
+    # release explicitly: qjson/validator is new, so its go.mod may not have a
+    # require yet, and `go mod tidy` alone would pick the latest final release
+    # (which can predate the package it imports).
+    if [ "$m" != analyzer ]; then
       go mod edit -require="github.com/noobmaisfier/qlx@$v"
     fi
     go mod tidy

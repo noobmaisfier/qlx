@@ -13,22 +13,24 @@ must be tagged and pushed before sub-modules can reference it.
 
 ## Architecture of a release
 
-The repository publishes four Go modules under coordinated version tags:
+The repository publishes five Go modules under coordinated version tags:
 
 | Tag format | Module path | Content |
 | --- | --- | --- |
-| `vX.Y.Z` | `github.com/noobmaisfier/qlx` | Root query builder and core packages |
+| `vX.Y.Z` | `github.com/noobmaisfier/qlx` | Root query builder, core packages and `qjson` |
 | `pgxexec/vX.Y.Z` | `github.com/noobmaisfier/qlx/pgxexec` | pgx v5 execution engine |
 | `otelqlx/vX.Y.Z` | `github.com/noobmaisfier/qlx/otelqlx` | OpenTelemetry instrumentation |
 | `analyzer/vX.Y.Z` | `github.com/noobmaisfier/qlx/analyzer` | `qlxvet` static analysis tool |
+| `qjson/validator/vX.Y.Z` | `github.com/noobmaisfier/qlx/qjson/validator` | `go-playground/validator` adapter for DTOs |
 
 `bench` is internal and is never published or tagged.
 
 ### How `go.work` and publishable `go.mod` interact
 
 During day-to-day development, `go.work` at the root lists all modules. This allows
-`pgxexec`, `otelqlx`, `analyzer` and `qjson/validator` to resolve `github.com/noobmaisfier/qlx` locally
+`pgxexec`, `otelqlx` and `qjson/validator` to resolve `github.com/noobmaisfier/qlx` locally
 from your checkout without needing `replace` directives in their `go.mod` files.
+`analyzer` does not import the root module, so it needs no `qlx` require at all.
 
 When users run `go get github.com/noobmaisfier/qlx/pgxexec`, Go does **not** read
 `go.work`. It reads only `pgxexec/go.mod`. Therefore, each sub-module's `go.mod` must
@@ -74,6 +76,7 @@ go test ./...
 (cd pgxexec  && go test ./...)
 (cd otelqlx  && go test ./...)
 (cd analyzer && go test ./...)
+(cd qjson/validator && go vet ./... && go test ./...)
 (cd bench    && go test -run TestBudgets)
 
 scripts/with_pg.sh go test ./...
@@ -120,9 +123,14 @@ scripts/release-modules.sh vX.Y.Z
 This script:
 1. Validates that `vX.Y.Z` exists locally and on `origin`.
 2. Sets `GOWORK=off` and `GOPROXY=direct` (bypassing proxy caching delays).
-3. Updates `pgxexec/go.mod`, `otelqlx/go.mod`, `analyzer/go.mod` and `qjson/validator/go.mod` to require `github.com/noobmaisfier/qlx@vX.Y.Z`.
+3. Updates `pgxexec/go.mod`, `otelqlx/go.mod` and `qjson/validator/go.mod` to require `github.com/noobmaisfier/qlx@vX.Y.Z`; `analyzer/go.mod` is left alone because it does not import the root module.
 4. Runs `go mod tidy` in each sub-module, downloading the newly published `qlx@vX.Y.Z` and recording real hashes in `go.sum`.
 5. Compiles and vets each sub-module standalone (`GOWORK=off`), verifying that what users download builds cleanly.
+
+The explicit `require` matters for `qjson/validator`: its `go.mod` is created
+without a `qlx` requirement, and a bare `go mod tidy` would resolve the latest
+final release, which may predate the `qjson` package it imports. The script pins
+the new tag explicitly.
 
 ### 2.2 Commit sub-module dependency bumps
 
@@ -182,24 +190,30 @@ mkdir -p /tmp/qlx-verify && cd /tmp/qlx-verify && go mod init verify
 GOWORK=off GOPROXY=https://proxy.golang.org \
   go mod download -json github.com/noobmaisfier/qlx@vX.Y.Z
 
-GOWORK=off GOPROXY=https://proxy.golang.org \
-  go mod download -json github.com/noobmaisfier/qlx/pgxexec@vX.Y.Z
+for m in pgxexec otelqlx analyzer qjson/validator; do
+  GOWORK=off GOPROXY=https://proxy.golang.org \
+    go mod download -json "github.com/noobmaisfier/qlx/$m@vX.Y.Z"
+done
 
 # Test binary installation
 GOBIN=/tmp/qlxbin GOWORK=off GOPROXY=https://proxy.golang.org \
   go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@vX.Y.Z
 ```
 
+For a module with no package of its own to download, `go mod download` still
+checks that the tag exists and that the module zip is fetchable; the build/vet
+check in `modules.yml` proves it compiles against the published root.
+
 ---
 
 ### 3.4 Release candidates
 
-A candidate uses the same phases with a suffix, for example `v1.0.0-rc1`:
+A candidate uses the same phases with a suffix, for example `v1.0.0-rc2`:
 
-- `scripts/release-modules.sh v1.0.0-rc1` accepts the suffix and sets the same
-  version in `pgxexec`, `otelqlx`, `analyzer` and `qjson/validator`.
+- `scripts/release-modules.sh v1.0.0-rc2` accepts the suffix and sets the same
+  version in `pgxexec`, `otelqlx` and `qjson/validator`.
 - Create the GitHub release with `--prerelease --latest=false`:
-  `gh release create v1.0.0-rc1 --title "v1.0.0-rc1" --notes-file /tmp/release-notes.md --prerelease --latest=false`.
+  `gh release create v1.0.0-rc2 --title "v1.0.0-rc2" --notes-file /tmp/release-notes.md --prerelease --latest=false`.
 - `@latest` keeps resolving to the previous final release until the final tag
   is published, so consumers must request the candidate explicitly.
 
@@ -210,7 +224,7 @@ A candidate uses the same phases with a suffix, for example `v1.0.0-rc1`:
 - [ ] Full test suite passes across targeted PostgreSQL majors.
 - [ ] `README.md` bumped to `vX.Y.Z` and committed.
 - [ ] Root tag pushed: `git tag vX.Y.Z && git push origin vX.Y.Z`.
-- [ ] `scripts/release-modules.sh vX.Y.Z` executed cleanly.
+- [ ] `scripts/release-modules.sh vX.Y.Z` executed cleanly (including `qjson/validator` built with `GOWORK=off`).
 - [ ] Sub-module `go.mod` / `go.sum` committed and pushed to `main`.
 - [ ] Sub-module tags pushed (`pgxexec/vX.Y.Z`, `otelqlx/vX.Y.Z`, `analyzer/vX.Y.Z`, `qjson/validator/vX.Y.Z`).
 - [ ] GitHub release created for `vX.Y.Z`.
