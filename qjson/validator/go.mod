@@ -2,7 +2,10 @@ module github.com/noobmaisfier/qlx/qjson/validator
 
 go 1.27.4
 
-require github.com/go-playground/validator/v10 v10.30.5
+require (
+	github.com/go-playground/validator/v10 v10.30.5
+	github.com/noobmaisfier/qlx v1.0.0-rc2
+)
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
