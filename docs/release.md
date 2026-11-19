@@ -223,12 +223,12 @@ check in `modules.yml` proves it compiles against the published root.
 
 ### 3.4 Release candidates
 
-A candidate uses the same phases with a suffix, for example `v1.0.0-rc2`:
+A candidate uses the same phases with a suffix, for example `v1.0.0-rc1`:
 
-- `scripts/release-modules.sh v1.0.0-rc2` accepts the suffix and sets the same
+- `scripts/release-modules.sh v1.0.0-rc1` accepts the suffix and sets the same
   version in `pgxexec`, `otelqlx` and `qjson/validator`.
 - Create the GitHub release with `--prerelease --latest=false`:
-  `gh release create v1.0.0-rc2 --title "v1.0.0-rc2" --notes-file /tmp/release-notes.md --prerelease --latest=false`.
+  `gh release create v1.0.0-rc1 --title "v1.0.0-rc1" --notes-file /tmp/release-notes.md --prerelease --latest=false`.
 - `@latest` keeps resolving to the previous final release until the final tag
   is published, so consumers must request the candidate explicitly.
 
