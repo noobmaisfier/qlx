@@ -208,6 +208,8 @@ job_test() {
 					bash -c 'cd otelqlx && go test '"${GO_TEST_FLAGS[*]}"' ./...' || rc=1
 				run_step "$tag" "go test (analyzer)" \
 					bash -c 'cd analyzer && go test '"${GO_TEST_FLAGS[*]}"' ./...' || rc=1
+				run_step "$tag" "go test (qjson/validator)" \
+					bash -c 'cd qjson/validator && go vet ./... && go test '"${GO_TEST_FLAGS[*]}"' ./...' || rc=1
 				out=$(gofmt -l .)
 				if [ -n "$out" ]; then
 					echo "  gofmt: files need formatting:" >&2

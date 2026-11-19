@@ -191,6 +191,8 @@ dec.DisallowUnknownFields()
 if err := dec.Decode(&body); err != nil { /* 400 */ }
 ```
 
+`qjson.DecodeRequest` (section 10) does this and also bounds the body, refuses a second JSON value and checks `Content-Type`; prefer it in handlers.
+
 ---
 
 ## 6. Create requests
@@ -435,6 +437,72 @@ func isConstraint(err error, code string) bool {
 
 A serialization failure or deadlock (`40001`, `40P01`) is retried by `InTx`; if it still reaches the handler it is a 500 or a 503 with a retry hint, never a 409.
 
+### Request errors: `qjson` and `qvalidator`
+
+A body is rejected before any statement is built. `qjson` (part of the root module, standard library only) does the strict decode that handlers keep getting wrong, and `qjson/validator` adapts `go-playground/validator` to the `qt` types. **Tested** (`qjson/qjson_test.go`, `qjson/validator/validator_test.go`):
+
+```go
+v := qvalidator.New()
+
+body, err := qjson.DecodeRequest[PatchUser](r)
+if err != nil {
+	var de *qjson.Error
+	if errors.As(err, &de) {
+		// de.Code: unknown_field, invalid_json, empty_body, too_large,
+		// trailing_data, unsupported_media_type, read_error
+		// de.Field: the JSON key involved, "" for a whole-body failure
+		return c.JSON(http.StatusBadRequest, apiError{http.StatusBadRequest, de.Code, de.Msg})
+	}
+	return err
+}
+
+if err := v.Validate(body); err != nil {
+	var fields qjson.Errors
+	if errors.As(err, &fields) {
+		// fields[i] = {Field: "email", Code: "required", Msg: "is required"}
+		return c.JSON(http.StatusUnprocessableEntity, apiError{http.StatusUnprocessableEntity, "invalid", fields.Error()})
+	}
+	return err
+}
+```
+
+What `DecodeRequest` changes against `json.NewDecoder`:
+
+- unknown keys are refused by default (`AllowUnknownFields` opts out);
+- the body is capped at 1 MiB (`MaxBytes` changes it, `MaxBytes(0)` removes it);
+- exactly one JSON value is accepted, so `{...}{...}` is `trailing_data`;
+- an empty body and a bare `null` are errors, not a zero DTO;
+- `Content-Type` must be `application/json` or `application/*+json` (`AnyContentType` opts out);
+- the underlying error is kept: `errors.Is(err, qt.ErrBadID)` still works.
+
+`qvalidator.New()` registers the JSON tag names and three rules:
+
+| Rule | Passes when | Use it for |
+| --- | --- | --- |
+| `provided` | an `Opt[T]` has `IsSet()` true, a JSON `null` included for `Opt[Null[T]]` | presence only: a patch field the client sent |
+| `notnull` | a `Null[T]` has `IsNull()` false, or a pointer/slice/map is non-nil | a nullable field that must carry a value |
+| `nonzero` | the value's `IsZero()` is false (for a set `Opt`, its `.V`) | a `qt.ID`, a `qt.Date`, a non-zero value |
+
+`New` also unwraps `Opt[T]` before the other rules run: an unset `Opt` is seen
+as a nil value (so `omitempty` skips it) and a set `Opt` becomes its `.V`.
+Content rules therefore work inside an `Opt`, which is the reason
+`provided,email` is enough for a patch field:
+
+```go
+type PatchUser struct {
+    Email qt.Opt[string] `json:"email" validate:"provided,email"`
+    Name  qt.Opt[string] `json:"name"  validate:"omitempty,min=3"`
+}
+```
+
+Without `provided` or `omitempty`, an absent `Opt` fails the first rule, like a
+nil pointer. To get the same behaviour from a validator you built yourself, call
+`qvalidator.RegisterOpts(v, body)` after `Register` and before `Struct`.
+
+Do not use `required` on these types: `go-playground/validator` skips it on non-pointer structs, so a zero value always passes. `Validate` returns `qjson.Errors`, whose `Field` is the `json` name (`nick_name`, not `NickName`), so the response can be sent without a translation table. `SetMessageFunc` replaces the default English messages.
+
+The adapter is its own module (`github.com/noobmaisfier/qlx/qjson/validator`) because it needs a third-party package; the root module stays dependency-free. If you do not use `go-playground/validator`, implement `Validate() error` on the DTO and call `qjson.Validate(body)`.
+
 ---
 
 ## 11. Echo
@@ -478,7 +546,7 @@ Points specific to the framework:
 
 - `Bind` reads JSON with `encoding/json`, so the forms of section 3 apply. It does not reject unknown keys by default (section 5 shows the strict decode).
 - `Bind` also reads path and query parameters into a struct with `param` and `query` tags. Whether a `qt.ID` is filled from a path parameter depends on the Echo version supporting `encoding.TextUnmarshaler`; calling `qt.ParseID` yourself, as above, does not depend on it.
-- **`validate:"required"` tests the struct, not the value.** A `qt.Opt[T]`, `qt.Null[T]` or `qt.ID[S]` is a struct, so `required` is always satisfied by a zero value. For "this field must be provided" write a check on `IsSet()` or `.Valid`.
+- **`validate:"required"` is skipped on non-pointer structs.** `go-playground/validator` ignores `required` on a struct unless `WithRequiredStructEnabled` is set; `qt.Null[T]`, `qt.ID[S]`, `qt.Date` and `qt.Range` are structs, so a zero value passes. Use `provided`, `notnull` or `nonzero` from `qjson/validator`, or check `IsSet()` / `IsNull()` / `IsZero()` yourself. `qt.Opt[T]` is unwrapped by `qvalidator`, so `required` there sees `.V` and fails an unset field, but `provided` states presence more directly.
 - `validator` cannot register one rule for every instantiation of a generic type, but it can call an interface. `Opt[T]` has `IsSet() bool`; one custom rule covers every `Opt`:
 
 ```go
@@ -584,7 +652,7 @@ Cases worth a test per resource: absent / `null` / value for every nullable patc
 | Pitfall | What happens | Fix |
 | --- | --- | --- |
 | `omitempty` on a `qt` struct field | the key is never omitted | `omitzero` |
-| `required` on `qt.Null`, `qt.Opt`, `qt.ID` | always passes | check `.Valid` or `IsSet()` |
+| `required` on `qt.Null`, `qt.ID`, `qt.Date` | skipped (non-pointer struct), so it always passes | `provided` / `notnull` / `nonzero`, or check `IsSet()` / `IsNull()` |
 | binding a request into the generated patch or insert | mass assignment of every column | a DTO with an allow-list, converted |
 | `qt.Null` for a column with a `DEFAULT` | an absent key writes NULL over the default | `qt.Opt[T]` with `ToIf` |
 | `ToIf` on a required column | the column disappears | `To` for required columns |

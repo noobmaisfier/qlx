@@ -26,6 +26,11 @@ func Some[T any](v T) Null[T] { return Null[T]{V: v, Valid: true} }
 // None returns NULL.
 func None[T any]() Null[T] { return Null[T]{} }
 
+// IsNull reports whether the value is SQL NULL. It is the inverse of Valid and
+// lets a validation rule treat Null like Opt's IsSet: a rule can test
+// interface{ IsNull() bool } without knowing T.
+func (n Null[T]) IsNull() bool { return !n.Valid }
+
 // QLXArg lets the renderer bind Null[T] as nil or the plain value, so any
 // driver sees a standard argument.
 func (n Null[T]) QLXArg() any {

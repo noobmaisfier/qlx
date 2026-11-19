@@ -34,6 +34,15 @@ func TestNullScanValueJSON(t *testing.T) {
 	}
 }
 
+func TestNullIsNull(t *testing.T) {
+	if !(qt.Null[int]{}).IsNull() {
+		t.Fatal("the zero Null is NULL")
+	}
+	if (qt.Some(1)).IsNull() {
+		t.Fatal("Some(1) is not NULL")
+	}
+}
+
 func TestIntervalParse(t *testing.T) {
 	cases := map[string]qt.Interval{
 		"1 year 2 mons 3 days 04:05:06.5": {Months: 14, Days: 3, Micros: 4*3600e6 + 5*60e6 + 6_500_000},

@@ -47,3 +47,4 @@ jobs:
       - run: cd pgxexec && go test ./... -count=1
       - run: cd otelqlx && go test ./... -count=1
       - run: cd analyzer && go test ./... -count=1
+      - run: cd qjson/validator && go vet ./... && go test ./... -count=1

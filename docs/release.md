@@ -1,8 +1,8 @@
 # Releasing QLX
 
 This is the maintainer procedure for a versioned release. It is written for the
-repository's multi-module architecture: four publishable modules (`qlx`, `pgxexec`,
-`otelqlx`, `analyzer`), an internal test/benchmark module (`bench`), and a local Go
+repository's multi-module architecture: five publishable modules (`qlx`, `pgxexec`,
+`otelqlx`, `analyzer`, `qjson/validator`), an internal test/benchmark module (`bench`), and a local Go
 workspace (`go.work`).
 
 Read the whole page before starting. The order of steps matters: because sub-modules
@@ -27,7 +27,7 @@ The repository publishes four Go modules under coordinated version tags:
 ### How `go.work` and publishable `go.mod` interact
 
 During day-to-day development, `go.work` at the root lists all modules. This allows
-`pgxexec`, `otelqlx` and `analyzer` to resolve `github.com/noobmaisfier/qlx` locally
+`pgxexec`, `otelqlx`, `analyzer` and `qjson/validator` to resolve `github.com/noobmaisfier/qlx` locally
 from your checkout without needing `replace` directives in their `go.mod` files.
 
 When users run `go get github.com/noobmaisfier/qlx/pgxexec`, Go does **not** read
@@ -120,7 +120,7 @@ scripts/release-modules.sh vX.Y.Z
 This script:
 1. Validates that `vX.Y.Z` exists locally and on `origin`.
 2. Sets `GOWORK=off` and `GOPROXY=direct` (bypassing proxy caching delays).
-3. Updates `pgxexec/go.mod` and `otelqlx/go.mod` to require `github.com/noobmaisfier/qlx@vX.Y.Z`.
+3. Updates `pgxexec/go.mod`, `otelqlx/go.mod`, `analyzer/go.mod` and `qjson/validator/go.mod` to require `github.com/noobmaisfier/qlx@vX.Y.Z`.
 4. Runs `go mod tidy` in each sub-module, downloading the newly published `qlx@vX.Y.Z` and recording real hashes in `go.sum`.
 5. Compiles and vets each sub-module standalone (`GOWORK=off`), verifying that what users download builds cleanly.
 
@@ -129,7 +129,7 @@ This script:
 Commit the updated `go.mod` and `go.sum` files for the sub-modules to `main`:
 
 ```bash
-git add pgxexec otelqlx analyzer
+git add pgxexec otelqlx analyzer qjson/validator
 git commit -m "Bump internal module references to vX.Y.Z"
 git push origin main
 ```
@@ -139,11 +139,11 @@ git push origin main
 Tag each sub-module using its path prefix, and push the tags:
 
 ```bash
-for m in pgxexec otelqlx analyzer; do
+for m in pgxexec otelqlx analyzer qjson/validator; do
   git tag -a "$m/vX.Y.Z" -m "$m vX.Y.Z"
 done
 
-git push origin pgxexec/vX.Y.Z otelqlx/vX.Y.Z analyzer/vX.Y.Z
+git push origin pgxexec/vX.Y.Z otelqlx/vX.Y.Z analyzer/vX.Y.Z qjson/validator/vX.Y.Z
 ```
 
 ---
@@ -158,12 +158,12 @@ Only the root tag gets a GitHub release object:
 gh release create vX.Y.Z --title "vX.Y.Z" --notes-file /tmp/release-notes.md --latest
 ```
 
-Write notes summarizing user-facing changes and bug fixes, and list the four published tags.
+Write notes summarizing user-facing changes and bug fixes, and list the five published tags.
 
 ### 3.2 Watch CI workflows
 
 1. The push to `main` triggers standard CI (`ci.yml`).
-2. Pushing the tags triggers the `modules.yml` workflow, which builds and vets the published sub-modules (`pgxexec`, `otelqlx`, `analyzer`) with `GOWORK=off` against the published versions.
+2. Pushing the tags triggers the `modules.yml` workflow, which builds and vets the published sub-modules (`pgxexec`, `otelqlx`, `analyzer`, `qjson/validator`) with `GOWORK=off` against the published versions.
 
 Verify in GitHub Actions that both workflows pass:
 
@@ -197,7 +197,7 @@ GOBIN=/tmp/qlxbin GOWORK=off GOPROXY=https://proxy.golang.org \
 A candidate uses the same phases with a suffix, for example `v1.0.0-rc1`:
 
 - `scripts/release-modules.sh v1.0.0-rc1` accepts the suffix and sets the same
-  version in `pgxexec` and `otelqlx`.
+  version in `pgxexec`, `otelqlx`, `analyzer` and `qjson/validator`.
 - Create the GitHub release with `--prerelease --latest=false`:
   `gh release create v1.0.0-rc1 --title "v1.0.0-rc1" --notes-file /tmp/release-notes.md --prerelease --latest=false`.
 - `@latest` keeps resolving to the previous final release until the final tag
@@ -212,7 +212,7 @@ A candidate uses the same phases with a suffix, for example `v1.0.0-rc1`:
 - [ ] Root tag pushed: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 - [ ] `scripts/release-modules.sh vX.Y.Z` executed cleanly.
 - [ ] Sub-module `go.mod` / `go.sum` committed and pushed to `main`.
-- [ ] Sub-module tags pushed (`pgxexec/vX.Y.Z`, `otelqlx/vX.Y.Z`, `analyzer/vX.Y.Z`).
+- [ ] Sub-module tags pushed (`pgxexec/vX.Y.Z`, `otelqlx/vX.Y.Z`, `analyzer/vX.Y.Z`, `qjson/validator/vX.Y.Z`).
 - [ ] GitHub release created for `vX.Y.Z`.
 - [ ] CI `modules.yml` green on tag push.
 - [ ] Standalone test with `go install` succeeds through the Go proxy.

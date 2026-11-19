@@ -18,8 +18,8 @@ request.
   quoted by the renderer.
 - **The root module has no dependencies.** Anything that needs a third-party
   package lives in its own module (`pgxexec`, `otelqlx`, `analyzer`,
-  `bench`). `scripts/check_root.sh` fails if the root `go.mod` gains a
-  `require` or a `go.sum` appears.
+  `qjson/validator`, `bench`). `scripts/check_root.sh` fails if the root
+  `go.mod` gains a `require` or a `go.sum` appears.
 - **Builders are immutable; a statement is rendered once.** Every method
   returns a new value. Rendering produces a `Stmt` whose shape is cached; the
   allocation budgets in `budget_test.go` and `bench/` must still hold.
@@ -53,9 +53,9 @@ go test ./...                      # tests that need a server skip themselves
 scripts/with_pg.sh go test ./...   # the same, against a throwaway cluster
 ```
 
-The internal modules (`pgxexec`, `otelqlx`, `analyzer`, `bench`) are separate
-Go modules. A root `go.work` file is committed to link them to the root module
-during local development (see [go.work](#gowork) below).
+The internal modules (`pgxexec`, `otelqlx`, `analyzer`, `qjson/validator`,
+`bench`) are separate Go modules. A root `go.work` file is committed to link
+them to the root module during local development (see [go.work](#gowork) below).
 
 `scripts/with_pg.sh` starts a cluster on a unix socket, loads
 `fixture/schema.sql`, exports the `QLX_PG_*` variables, runs your command and
@@ -83,7 +83,7 @@ own files change on `main`.
 
 | Job | What it does |
 | --- | --- |
-| `test` | the matrix: PostgreSQL 16/17/18/19 (19 via `postgres:19rc1`) × pgx latest/min, `go vet`, the four modules, `gofmt` |
+| `test` | the matrix: PostgreSQL 16/17/18/19 (19 via `postgres:19rc1`) × pgx latest/min, `go vet`, the five modules, `gofmt` |
 | `ledgers` | grammar ledger against PG 18 and master, command ledger, generated code is current |
 | `extensions` | extracts and diffs pgvector, pg_trgm, hstore, ltree, citext, runs their wrappers |
 | `bench` | budgets and benchmarks, written to `bench/bench.txt` (or `~/.cache/qlx-ci/bench.txt` with `ci-local.sh`) |
@@ -115,6 +115,8 @@ no cache between runs.
 | `cmd/pgcat` | the ledger tool (`extract`, `merge`, `versions`, `enrich`, `gen`, `diff`, `grammar`, `docs`, `coverage`) |
 | `internal/` | generator, ledger and pack code |
 | `pgxexec/` | executor on pgx v5 (own module) |
+| `qjson/` | strict request-body decoding and JSON field errors (root module, stdlib only) |
+| `qjson/validator/` | go-playground/validator adapter for `qt` types (own module) |
 | `analyzer/` | `go/analysis` analyzer, codes V001 and up (own module) |
 | `otelqlx/`, `bench/` | OpenTelemetry adapter; benchmarks and budgets (own modules) |
 | `fixture/` | the small hand-written schema package most tests use |
@@ -145,7 +147,7 @@ scripts/with_pg.sh go test ./...        # against a real server
 ### `go.work`
 
 The repository is several Go modules (root, `pgxexec`, `otelqlx`, `analyzer`,
-`bench`). `go.work` at the root ties them together so that, while you work,
+`qjson/validator`, `bench`). `go.work` at the root ties them together so that, while you work,
 `pgxexec` and the others build against the `qlx` in your checkout. It is
 committed on purpose and is only for people working in this repository: a
 user running `go get` never reads it. If a `go.work.sum` appears, commit it too.
@@ -159,7 +161,7 @@ see what a user gets, run a module with the workspace off:
 
 This works only once the `qlx` version named in that `go.mod` is tagged. The
 `modules` workflow does it on every tag, and `scripts/release-modules.sh`
-does it for the three published sub-modules during a release.
+does it for the four published sub-modules during a release.
 
 Changes that can behave differently across majors should be run on more than
 one server (16 and 19 at least). Say in the pull request which majors you ran.
@@ -324,7 +326,7 @@ A suppression is `//qlx:ignore <reason>`; a reason is mandatory (V010) and
 
 ## Releasing
 
-A version reaches four modules at once, and the proxy makes a published version
+A version reaches five modules at once, and the proxy makes a published version
 permanent. Before creating a tag, read [docs/release.md](docs/release.md): it
 covers the `go.sum` step that needs the tag to exist, the order of the pushes,
 and the checks that must pass on the exact tree being tagged. The checks in

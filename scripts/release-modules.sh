@@ -3,7 +3,7 @@
 #
 #   scripts/release-modules.sh v0.1.0
 #
-# pgxexec, otelqlx and analyzer are separate Go modules. In the repository they
+# pgxexec, otelqlx, analyzer and qjson/validator are separate Go modules. In the repository they
 # build against the local qlx through go.work; a user gets no go.work, only the
 # go.mod. This script points each go.mod at the published root tag, tidies it
 # and builds it with GOWORK=off, which is exactly what `go get` will see.
@@ -15,7 +15,7 @@
 #   2. git tag vX.Y.Z && git push origin vX.Y.Z               (the root module)
 #   3. scripts/release-modules.sh vX.Y.Z                      (this script)
 #   4. commit the three go.mod/go.sum, push, then tag each sub-module with its
-#      path prefix: pgxexec/vX.Y.Z, otelqlx/vX.Y.Z, analyzer/vX.Y.Z
+#      path prefix: pgxexec/vX.Y.Z, otelqlx/vX.Y.Z, analyzer/vX.Y.Z, qjson/validator/vX.Y.Z
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -29,7 +29,7 @@ fi
 # The proxy can lag behind a fresh tag; going direct avoids a stale "unknown revision".
 export GOPROXY="${GOPROXY:-direct}" GOWORK=off GOFLAGS=-mod=mod
 
-for m in pgxexec otelqlx analyzer; do
+for m in pgxexec otelqlx analyzer qjson/validator; do
   echo "== $m"
   (
     cd "$m"
@@ -48,8 +48,8 @@ done
 
 echo
 echo "all sub-modules resolve against $v without go.work. Next:"
-echo "  git add pgxexec otelqlx analyzer && git commit -m 'modules: require qlx $v' && git push"
-echo "  for m in pgxexec otelqlx analyzer; do git tag \$m/$v; done"
-echo "  git push origin pgxexec/$v otelqlx/$v analyzer/$v"
+echo "  git add pgxexec otelqlx analyzer qjson/validator && git commit -m 'modules: require qlx $v' && git push"
+echo "  for m in pgxexec otelqlx analyzer qjson/validator; do git tag \$m/$v; done"
+echo "  git push origin pgxexec/$v otelqlx/$v analyzer/$v qjson/validator/$v"
 echo "  then bring the repository back to the development state if you bumped the require"
 echo "  (go.work keeps working: it overrides whatever version the go.mod names)."

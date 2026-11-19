@@ -754,6 +754,8 @@ regression case.
 | --- | --- | --- |
 | `github.com/noobmaisfier/qlx` | core builders, renderer, shape cache, `qt`, generated catalog and extension wrappers; no dependencies | this file |
 | `github.com/noobmaisfier/qlx/pgxexec` | execution on pgx v5: scanning, transactions, batching, tracing, `VerifyRow` | [pgxexec](pgxexec/README.md) |
+| `github.com/noobmaisfier/qlx/qjson` | strict JSON body decoding for HTTP handlers; part of the root module, standard library only | [DTOs](docs/dtos.md) |
+| `github.com/noobmaisfier/qlx/qjson/validator` | `go-playground/validator` adapter: JSON field names, `Opt` unwrapping, `provided`/`notnull`/`nonzero` | [DTOs](docs/dtos.md) |
 | `github.com/noobmaisfier/qlx/analyzer` | `qlxvet`, the `go/analysis` pass and its CLI | [analyzer](analyzer/README.md) |
 | `github.com/noobmaisfier/qlx/otelqlx` | OpenTelemetry spans and metrics | [otelqlx](otelqlx/README.md) |
 | `github.com/noobmaisfier/qlx/bench` | comparisons and allocation budgets | [bench](bench/README.md) |
@@ -761,8 +763,8 @@ regression case.
 The root module has no third-party dependencies. Anything that needs one lives
 in its own module, so your `go.mod` only gains what you import. The published
 modules are tagged separately (`v1.0.0-rc1`, `analyzer/v1.0.0-rc1`,
-`pgxexec/v1.0.0-rc1`, `otelqlx/v1.0.0-rc1`); `bench` is internal and is not
-released.
+`pgxexec/v1.0.0-rc1`, `otelqlx/v1.0.0-rc1`, `qjson/validator/v1.0.0-rc1`);
+`bench` is internal and is not released.
 
 ## Types in custom structs
 
@@ -835,7 +837,7 @@ Every `qt` scalar type is usable as a field when your column has that type; run
 adds no new types: it uses `q.Table`, `q.*Col` on the query side and the types
 above in row structs.
 
-### JSON and validation
+### JSON forms
 
 Every `qt` type has a JSON form, pinned by `qt/json_test.go`:
 
@@ -859,25 +861,157 @@ Every `qt` type has a JSON form, pinned by `qt/json_test.go`:
 | `qt.Char` | a number | convert to `string` at the edge |
 | `[16]byte` (uuid) | an array of 16 numbers | convert to `string` at the edge |
 
-With `go-playground/validator`, `required` does not see inside most `qt` types:
-a zero `Null`, `Opt`, `ID`, `Date`, `Timestamptz` or `Range` passes. Check
-`.Valid` (Null), `IsSet()` (Opt) or `IsZero()` (ID, Date) instead, or register
-one custom rule for every `Opt`:
+### JSON tags
+
+The `json` tag is the public contract of a DTO: `encoding/json` reads it, and
+`qjson`/`qvalidator` use the same name in errors. These are the forms to know:
+
+| Tag | Marshal | Unmarshal | Use it for |
+| --- | --- | --- | --- |
+| `json:"name"` | key `name` | exact key first, then case-insensitively | the normal case |
+| `json:"-"` | field omitted | key ignored, so a body that sends it is an unknown key (`qjson` refuses it) | a read-only field (`id`, `balance`) |
+| `json:"-,"` | key `-` | key `-` | a field whose name really is `-` |
+| `json:"name,omitempty"` | omits empty values | — | `string`, numbers, `false`, nil slice/map/pointer |
+| `json:"name,omitzero"` | omits values where `IsZero()` is true | — | `qt.Opt`, `qt.ID`, `qt.Date`, pointers |
+| `json:"name,string"` | quotes a string/number/bool | reads the quoted form | `int64`, `uint`, `float64`, `bool`; it does not change a `qt` type that already writes a string |
+| `json:",omitempty"` / no tag | Go field name | Go field name, case-insensitively | fields that need no public name |
+| embedded anonymous struct | its fields are flattened | flattened | composition, never a nested object by accident |
+| unexported field | ignored | ignored | internal state |
+
+Details that cause real bugs:
+
+- **`omitempty` never omits a struct.** `qt.Null`, `qt.Opt`, `qt.Date`,
+  `qt.Range` and every other struct field is written even when empty; an unset
+  `qt.Opt` becomes `"opt":null`. Use `omitzero` for those.
+- **`omitzero` uses `IsZero`.** It correctly drops an unset `qt.Opt` and a zero
+  `qt.ID`, but it also drops valid values for `Date` (1970-01-01),
+  `Timestamptz` (the epoch) and `Range` (the unbounded `(,)`). Use a pointer
+  when such a value must be distinguishable from an absent key.
+- **`omitzero` on `qt.Null`** compares the struct with its zero value: a NULL
+  is omitted, but `null` is what most clients expect for a nullable column.
+- **`json:"-"` is not a validation rule.** The field is absent from the
+  contract; with strict decoding, sending its key is a 400 (`unknown_field`),
+  which is usually what an allow-list wants.
+- **An embedded struct without a tag is flattened**; with a tag it becomes a
+  named object. `json:"-"` on the embedded field removes all of it.
+- **Case and duplicates.** Decoding prefers an exact key match, otherwise
+  matches case-insensitively; when two keys map to the same field, the last
+  one wins. `qjson` does not reject duplicate keys.
+- **`null` versus absent.** `qt.Null[T]` cannot tell them apart (both are
+  NULL). `qt.Opt[T]` can, and `qt.Opt[qt.Null[T]]` carries the three states.
+  See [DTOs](docs/dtos.md), section 5.
+
+`json` is not the only tag on a generated or hand-written struct:
+
+| Tag | Read by | Purpose |
+| --- | --- | --- |
+| `db:"col"` | `pgxexec` row mapping | SQL column name; never used by JSON |
+| `qlx:"-"` | `qlx rows` (`ScanTargets`) | leave an exported field out of scanning |
+| `validate:"..."` | `qvalidator` / go-playground | validation rules (next section) |
+| `param` / `query` | Echo and other frameworks | path and query parameters, not the body |
+
+## Validation
+
+Validation happens in layers, and each one catches what the previous cannot:
+
+1. **Decode** (`qjson`): the body is JSON, bounded, one value, no unknown keys,
+   and every `qt` type accepts its documented form.
+2. **Validate** (`qvalidator` or a `Validate() error` method): business rules
+   such as "email required", "age at least 18".
+3. **Statement** (compiler and `qlxvet`): the column exists, is NOT NULL when
+   the field is required, and the SQL type matches.
+
+```go
+v := qvalidator.New()
+
+body, err := qjson.DecodeRequest[CreateUser](r) // strict, bounded, one JSON value
+if err != nil {
+    // 400: *qjson.Error{Code: qjson.CodeUnknownField, Field: "emial", ...}
+}
+if err := v.Validate(body); err != nil {
+    var fields qjson.Errors // []qjson.FieldError{{Field: "email", Code: "required", ...}}
+}
+```
+
+The `validate` tag is a comma-separated list of rules; a rule may take a
+parameter after `=`:
+
+| Tag | Passes when | Notes |
+| --- | --- | --- |
+| `required` | the value is not its zero value | **skipped on most `qt` structs**, see below |
+| `provided` | `qt.Opt[T]` has `IsSet()` true | presence only; a JSON `null` counts for `Opt[Null[T]]` |
+| `notnull` | `qt.Null[T]` is not NULL, or a pointer/slice is non-nil | for `Opt[Null[T]]`, pair it with `provided` |
+| `nonzero` | `IsZero()` is false | `qt.ID`, `qt.Date`; for a set `Opt`, its `.V` |
+| `email`, `url`/`uri`, `uuid`/`uuid4`/`uuid7`, `e164` | the string has that form | |
+| `min=`, `max=`, `len=`, `gte=`, `lte=`, `gt=`, `lt=` | numeric or length bounds | |
+| `oneof=a b c` | the value is one of the listed values | space-separated |
+| `numeric`/`number`, `alphanum`, `boolean` | the text has that form | |
+| `omitempty` | skips the other rules when the value is empty | a rule modifier, not a test |
+| `dive` | validates each element of a slice/map | `dive,keys,...,endkeys` for map keys |
+
+`required` is skipped on non-pointer structs by `go-playground/validator` by
+default, so a zero `Null`, `ID`, `Date`, `Timestamptz` or `Range` passes it; use
+`provided`, `notnull` or `nonzero` for those. `Opt` is different: `qvalidator`
+unwraps it, so `required` sees its `.V` and fails an absent key, but `provided`
+states presence more directly. `LocalTime` is the other exception: it is
+convertible to `time.Time`, so `required` runs on it and catches its zero value.
+
+`qvalidator` unwraps `qt.Opt[T]` before running the other rules: an **unset**
+`Opt` is seen as a nil value, which `omitempty` skips, and a **set** `Opt`
+becomes its `.V`, so the content rules finally see the value. Presence and
+format therefore fit in one tag:
+
+```go
+type PatchUser struct {
+    Email qt.Opt[string] `json:"email" validate:"provided,email"`
+    Name  qt.Opt[string] `json:"name"  validate:"omitempty,min=3"`
+}
+```
+
+`provided,email` rejects a missing key (`provided`) and a malformed address
+(`email`); `omitempty,min=3` accepts a missing key and rejects `"ab"`. Without
+`provided` or `omitempty`, an unset `Opt` fails the first rule, like a nil
+pointer. `notnull` on `qt.Opt[qt.Null[T]]` is only reached once the key is
+present, so `provided,notnull` means "sent, and not `null`".
+
+With `go-playground/validator`, the `github.com/noobmaisfier/qlx/qjson/validator`
+module registers `provided`, `notnull` and `nonzero` and reports each failure
+under the field's `json` name. If you build the validator yourself with
+`qvalidator.Register`, also call `qvalidator.RegisterOpts(v, body)` so the
+content rules see `.V`; `New` already does both:
+
+```go
+v := validator.New()
+qvalidator.Register(v)
+qvalidator.RegisterOpts(v, body) // unwraps every Opt[T] field of body
+v.Struct(body)
+```
+
+`Validate` returns `qjson.Errors`, whose `Field` is the `json` name
+(`nick_name`, not `NickName`), so the response needs no translation table.
+`SetMessageFunc` replaces the default English messages. The adapter is its own
+module because it needs a third-party package; the root module stays
+dependency-free.
+
+If you do not use `qvalidator` at all, register the rule yourself and implement
+`Validate() error` on the DTO:
 
 ```go
 v.RegisterValidation("provided", func(fl validator.FieldLevel) bool {
     s, ok := fl.Field().Interface().(interface{ IsSet() bool })
     return !ok || s.IsSet()
 })
+
+func (c CreateUser) Validate() error { /* ... */ }
 ```
 
-`LocalTime` is the exception: it behaves like a `time.Time`, so `required` does
-catch its zero value.
+Then call `qjson.Validate(body)` (it invokes `Validate` when the DTO has it).
+`qjson.DecodeRequest` (`github.com/noobmaisfier/qlx/qjson`, standard library
+only) refuses unknown keys by default, caps the body at 1 MiB, accepts exactly
+one JSON value, checks `Content-Type` and keeps the underlying error for
+`errors.Is` (for example `qt.ErrBadID`). Validation never replaces the
+compiler: a field can be valid and still target a column that does not exist.
 
-For JSON output, use `omitzero`, not `omitempty`: `omitempty` never omits a
-struct. But `omitzero` uses `IsZero`, so it also drops valid values for `Date`
-(1970-01-01), `Timestamptz` (the epoch) and `Range` (the unbounded `(,)`). Use a
-pointer for those when an absent key must mean "no value".
 
 ## Opaque IDs (opt-in)
 

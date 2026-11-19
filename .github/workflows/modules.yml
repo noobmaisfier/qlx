@@ -1,11 +1,11 @@
 name: modules
-# Builds pgxexec, otelqlx and analyzer the way a user gets them: without go.work,
+# Builds pgxexec, otelqlx, analyzer and qjson/validator the way a user gets them: without go.work,
 # against the published qlx version named in their go.mod. The regular jobs use
 # go.work (the local qlx), so they cannot catch a go.mod that names a version
 # that is missing or too old. Runs when a tag is pushed, and by hand.
 on:
   push:
-    tags: ["v*", "pgxexec/v*", "otelqlx/v*", "analyzer/v*"]
+    tags: ["v*", "pgxexec/v*", "otelqlx/v*", "analyzer/v*", "qjson/validator/v*"]
   workflow_dispatch:
 jobs:
   standalone:
@@ -18,7 +18,7 @@ jobs:
         with: { go-version: "1.27.x" }
       - name: build and vet each module against its published qlx
         run: |
-          for m in pgxexec otelqlx analyzer; do
+          for m in pgxexec otelqlx analyzer qjson/validator; do
             echo "== $m"
             (cd "$m" && go build ./... && go vet ./...)
           done

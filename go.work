@@ -11,4 +11,5 @@ use (
 	./bench
 	./otelqlx
 	./pgxexec
+	./qjson/validator
 )
