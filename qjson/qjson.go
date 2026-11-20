@@ -57,10 +57,10 @@ const DefaultMaxBytes int64 = 1 << 20
 // "" when the failure is not about one field. Err is the underlying error, so
 // errors.Is keeps working (for example with qt.ErrBadID).
 type Error struct {
-	Code  string
-	Field string
-	Msg   string
-	Err   error
+	Code  string `json:"code"`
+	Field string `json:"field,omitempty"`
+	Msg   string `json:"msg,omitempty"`
+	Err   error  `json:"-"`
 }
 
 func (e *Error) Error() string {
@@ -79,9 +79,9 @@ func (e *Error) Unwrap() error { return e.Err }
 
 // FieldError is one field refused by a validation rule, named by its JSON key.
 type FieldError struct {
-	Field string // JSON name, e.g. "email"
-	Code  string // the rule, e.g. "required"
-	Msg   string // human-readable detail
+	Field string `json:"field"`
+	Code  string `json:"code"`
+	Msg   string `json:"msg,omitempty"`
 }
 
 // Errors is a non-empty list of field errors. It is the error returned by the

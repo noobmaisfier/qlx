@@ -1,0 +1,675 @@
+# QLX — Complete Reference & AI Agent Specification
+
+> **QLX** is a type-safe, schema-first PostgreSQL query builder and executor for Go.
+> Native to `pgx/v5`, zero reflection, static analysis linting, and support for PostgreSQL 16 through 19.
+> This file is a complete, 100% self-contained reference. It requires no external documentation.
+
+---
+
+## 1. Core Architecture & Invariants
+
+1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, and patches (e.g. `db.Users`, `db.Orders`).
+2. **Zero String Construction**: SQL queries are NEVER assembled using string concatenation or raw SQL fragments (`Where("id = ?", 1)` does NOT exist). Everything is a typed Go function or method.
+3. **Values vs. Expressions (`X` Suffix Rule)**:
+   - Methods without `X` bind Go parameters (`$1`, `$2`): `.Eq(v)`, `.Ne(v)`, `.Gt(v)`, `.To(v)`.
+   - Methods with `X` accept columns or SQL expressions: `.EqX(col)`, `.NeX(col)`, `.GtX(expr)`, `.ToX(expr)`.
+4. **Compile-Time & Analyzer Safety**:
+   - Columns are strictly typed; an integer column cannot accept a string.
+   - `qlxvet` analyzer catches logical errors at build time: `Update` or `DeleteFrom` without `.Where(...)` or `.All()` fails compilation/linting; setting `ToNull()` on a non-nullable column fails (V030).
+5. **Zero-Reflection Row Scanning**:
+   - Use `//qlx:row` above custom result structs and run `qlx rows ./...`.
+   - Generates a `ScanTargets()` method for positional scanning directly into memory pointers with zero reflection overhead.
+
+---
+
+## 2. CLI Workflow
+
+```bash
+# 1. Initialize project (creates qlx.yaml and migrations/001_init.sql)
+qlx init
+
+# 2. Generate typed Go code and schema.lock from migrations or live database
+qlx gen
+
+# 3. Verify in CI (fails if generated code or schema.lock is out of sync)
+qlx check
+
+# 4. Generate reflection-free ScanTargets for all //qlx:row structs in package
+qlx rows ./...
+```
+
+---
+
+## 3. Package Structure & Imports
+
+```go
+import (
+    q "github.com/noobmaisfier/qlx"                 // Core query builder DSL
+    "github.com/noobmaisfier/qlx/qt"                // Complete value types: Null, Opt, Date, ID, Numeric, etc.
+    "github.com/noobmaisfier/qlx/pgxexec"           // Connection, execution, bulk & transactions
+    "github.com/noobmaisfier/qlx/qjson"             // Strict JSON request decoding for HTTP APIs
+    "github.com/noobmaisfier/qlx/qjson/validator"   // DTO validator adapter for go-playground/validator
+    "github.com/noobmaisfier/qlx/pg"                // PostgreSQL built-in functions
+    "github.com/noobmaisfier/qlx/qext/textsearch"   // High-level Full-Text Search
+    "github.com/noobmaisfier/qlx/qext/pgvector"     // High-level Vector Search (pgvector)
+    "github.com/noobmaisfier/qlx/qext/trgm"         // High-level Trigram Search (pg_trgm)
+
+    "example.com/app/db"                            // Generated package containing table definitions
+)
+```
+
+---
+
+## 4. Connection & Execution API
+
+### 4.1 Connecting
+```go
+client, err := pgxexec.Connect(ctx, os.Getenv("DATABASE_URL"), pgxexec.ConnectOptions{
+    Spec:      &db.Spec, // Target PostgreSQL version and table fingerprints
+    MinServer: 16,       // Minimum supported PostgreSQL version
+})
+if err != nil {
+    log.Fatal(err)
+}
+defer client.Close()
+```
+
+### 4.2 Methods on `*pgxexec.Client`
+* `client.All[R](ctx, stmt)`: Returns `([]R, error)`. Returns empty slice if no rows match.
+* `client.One[R](ctx, stmt)`: Returns `(R, error)`. Returns `pgx.ErrNoRows` if no row matches; returns error if >1 row.
+* `client.Maybe[R](ctx, stmt)`: Returns `(qt.Opt[R], error)`. If no row matches, returns `qt.Opt[R]{Set: false}` and `nil` error!
+* `client.Each[R](ctx, stmt)`: Returns Go 1.23 standard iterator `iter.Seq2[R, error]` for streaming without buffering.
+* `client.Exec(ctx, stmt)`: Executes non-query statements. Returns `(pgconn.CommandTag, error)`.
+* `client.Render(stmt)`: Renders SQL string and args slice without executing.
+* `client.DB()`: Returns underlying `Querier` (wrapped with tracer if configured).
+* `client.Close()`: Closes the connection pool.
+
+### 4.3 Package-Level Execution (Transactions & Queries on `pgx.Tx` / `*pgx.Conn`)
+When inside a transaction callback or working with raw pgx connections:
+* `pgxexec.All[R](ctx, tx, stmt)`
+* `pgxexec.One[R](ctx, tx, stmt)`
+* `pgxexec.Maybe[R](ctx, tx, stmt)`
+* `pgxexec.Each[R](ctx, tx, stmt)`
+* `pgxexec.Exec(ctx, tx, stmt)`
+
+### 4.4 Bulk Operations (`InsertMany` & `InsertManyReturning`)
+Bulk inserts automatically split large datasets across statements to respect PostgreSQL's 65,535-parameter limit. If multiple statements are required, they execute automatically in a single transaction.
+
+```go
+// 1. Bulk insert without RETURNING (returns count of inserted rows)
+rows := []qlx.RowAssigner{
+    Users.Row(Users.Email.To("a@example.com"), Users.Tier.To("pro")),
+    Users.Row(Users.Email.To("b@example.com"), Users.Tier.To("free")),
+}
+count, err := pgxexec.InsertMany(ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).OnConflict(Users.Email).DoNothing(),
+    rows,
+    pgxexec.BulkOptions{MaxParams: 0}) // 0 = default MaxBindParams (65,535)
+
+// 2. Bulk insert with RETURNING (collects returned rows in order)
+ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
+    q.InsertInto(Users).Returning(Users.ID),
+    rows,
+    pgxexec.BulkOptions{})
+```
+
+---
+
+## 5. Complete Types Catalog (`qt` Package)
+
+QLX provides first-class Go representations for every PostgreSQL data type. Never use raw `*string` or `*int` pointers for database nullability.
+
+### 5.1 Nullability & Dynamic Arguments
+- `qt.Null[T]`: Models SQL NULL.
+  - `qt.Some(v)`: Non-NULL value.
+  - `qt.None[T]()`: SQL NULL.
+  - Methods: `.IsNull()`, `.Valid`, `.V`, `.Ptr()`, `qt.FromPtr(p)`.
+- `qt.Opt[T]`: Models dynamic filter / PATCH argument presence or absence.
+  - `qt.Of(v)`: Field provided.
+  - `qt.Unset[T]()`: Field omitted.
+  - Methods: `.Set`, `.V`, `.IsSet()`, `.IsZero()`.
+- `qt.Opt[qt.Null[T]]`: Models HTTP PATCH three-state updates.
+  - `qt.Unset[qt.Null[T]]()`: Omitted in JSON -> Keep database column untouched.
+  - `qt.Of(qt.None[T]())`: JSON is `null` -> Update column to SQL NULL.
+  - `qt.Of(qt.Some(v))`: JSON is `"val"` -> Update column to `"val"`.
+
+### 5.2 Date & Time
+- `qt.Date`: PostgreSQL `date` (days since 2000-01-01). Formats to/from JSON `"YYYY-MM-DD"`.
+  - Constructors: `qt.NewDate(year, month, day)`, `qt.ParseDate("2026-03-30")`.
+- `qt.TimeOfDay`: PostgreSQL `time without time zone` (microsecond resolution since midnight). JSON `"15:04:05.999999"`.
+  - Constructors: `qt.NewTimeOfDay(hour, min, sec, micro)`.
+- `qt.TimeTZ`: PostgreSQL `time with time zone`.
+- `qt.Timestamptz`: PostgreSQL `timestamptz` (stored as microsecond UTC timestamp). Formats to ISO 8601 UTC.
+- `qt.LocalTime`: PostgreSQL `timestamp without time zone` (distinct from `time.Time` to prevent timezone confusion).
+- `qt.Interval`: PostgreSQL `interval` (Months, Days, Microseconds).
+
+### 5.3 Typed Obfuscated Entity IDs (`qt.ID[Space]`)
+Protects internal auto-increment integer IDs from enumeration by formatting them as prefixed, typed, scrambled strings (e.g. `usr_8v92kf9`):
+
+```go
+type UserSpace struct{}
+func (UserSpace) IDSpace() string { return "usr" }
+
+type UserID = qt.ID[UserSpace]
+
+// Usage:
+id := UserID.FromInt64(42)
+encoded := id.String() // "usr_..."
+parsed, err := qt.ParseID[UserSpace](encoded)
+rawInt := parsed.Int64()
+```
+
+### 5.4 Numeric & Decimals
+- `qt.Numeric`: Arbitrary precision decimal for PostgreSQL `NUMERIC` / `DECIMAL`. Avoids float rounding bugs.
+  - `qt.NewNumeric("12345.6789")`
+
+### 5.5 JSON Columns
+- `qt.JSONB[T]`: Strongly typed JSONB column. Automatically marshals/unmarshals `T` on read and write.
+- `qt.RawJSON`: Shortcut for `qt.JSONB[json.RawMessage]`.
+- `qt.JSON[T]`: Alias for `qt.JSONB[T]`.
+
+### 5.6 Ranges & Multiranges (PostgreSQL 14+)
+- `qt.Range[T]`: PostgreSQL range (`int4range`, `numrange`, `tstzrange`, `daterange`).
+  - Accessors: `.Lower()`, `.Upper()`, `.LowerInclusive()`, `.UpperInclusive()`, `.IsEmpty()`.
+- `qt.Multirange[T]`: Slice of `qt.Range[T]`.
+
+### 5.7 Extension & System Types
+- `qt.Vector`: `[]float32` for `pgvector` embeddings.
+- `qt.HalfVector`: FP16 vector (`halfvec`).
+- `qt.SparseVector`: String representation for sparse vectors.
+- `qt.Geometry` & `qt.Geography`: PostGIS spatial types.
+- `qt.LTree`, `qt.LQuery`, `qt.LTxtQuery`: Hierarchical tree labels for `ltree`.
+- `qt.Hstore`: Key-value pairs (`map[string]qt.Null[string]`).
+- `qt.MacAddr` & `qt.MacAddr8`: MAC network hardware addresses.
+- `qt.Char`: PostgreSQL internal 1-byte `"char"` type.
+
+### 5.8 Web-Ready JSON Serialization Contract
+Unlike standard Go database types (`sql.NullString` which serializes to `{"String":"...","Valid":true}`), all `qt` types implement `json.Marshaler` and `json.Unmarshaler` with clean, standardized, web-ready formats. They are safe to embed directly in public HTTP request/response DTOs:
+
+| Type | JSON Output / Input | Benefit / Format |
+|---|---|---|
+| `qt.Null[T]` | `"val"` or `null` | **Zero wrapper**: unwraps directly to primitive value or `null` |
+| `qt.Opt[T]` | `"val"` or omitted | Disappears completely from JSON when unset using `json:",omitzero"` |
+| `qt.Opt[qt.Null[T]]` | `"val"`, `null`, or omitted | Solves HTTP PATCH: absent = keep, `null` = SQL NULL, `"val"` = update |
+| `qt.Date` | `"YYYY-MM-DD"` | Pure ISO date string (`"2026-03-30"`), no artificial midnight timestamps |
+| `qt.TimeOfDay` | `"HH:MM:SS"` | Microsecond resolution time (`"14:30:00.000000"`) |
+| `qt.Timestamptz` | ISO 8601 UTC / `"infinity"` | `"2026-03-30T14:30:00Z"`; safely supports `"infinity"` and `"-infinity"` |
+| `qt.Interval` | ISO 8601 Duration | `"P1Y2M3DT1H"` (standard duration: 1 year, 2 months, 3 days, 1 hour) |
+| `qt.Range[T]` | Explicit JSON object | `{"lower": 1, "upper": 5, "lower_inc": true, "upper_inc": false}` |
+| `qt.Numeric` | Decimal string | `"123.45"` (avoids IEEE 754 float rounding inaccuracies like `19.98999999`) |
+| `qt.ID[Space]` | Scrambled prefixed string | `"usr_8v92kf9"` (DB stores `int64(42)`, public JSON gets opaque typed ID) |
+| `qt.Vector` | Array of numbers | `[0.1, 0.45, 0.89]` (clean array for LLM / vector embeddings) |
+
+---
+
+## 6. Strict JSON Request Decoding & Validation (`qjson`)
+
+QLX provides a dedicated HTTP DTO layer to prevent mass-assignment vulnerabilities, enforce body size limits, and cleanly map validation errors directly to JSON field names.
+
+### 6.1 Strict JSON Decoding (`qjson.Decode`)
+```go
+import "github.com/noobmaisfier/qlx/qjson"
+
+type CreateUserRequest struct {
+    Email    string          `json:"email"`
+    Nickname qt.Null[string] `json:"nickname"`
+    Tier     qt.Opt[string]  `json:"tier,omitzero"`
+}
+
+func HandleCreate(w http.ResponseWriter, r *http.Request) {
+    req, err := qjson.Decode[CreateUserRequest](r)
+// 1. Direct response: qjson.Error serializes cleanly to {"code":"...","field":"...","msg":"..."}
+if err != nil {
+    var jerr *qjson.Error
+    if errors.As(err, &jerr) {
+        // Safe to serialize directly: c.JSON(http.StatusBadRequest, jerr)
+        http.Error(w, fmt.Sprintf("field %s: %s", jerr.Field, jerr.Code), http.StatusBadRequest)
+        return
+    }
+}
+}
+```
+
+### 6.2 DTO Validation (`qjson/validator`)
+Adapts `github.com/go-playground/validator/v10` specifically for QLX types and unwraps `qt.Opt` and `qt.Null`:
+
+```go
+import "github.com/noobmaisfier/qlx/qjson/validator"
+
+type UpdateUserDTO struct {
+    Email    qt.Opt[string]          `json:"email" validate:"provided,email"`
+    BirthDate qt.Date                `json:"birth_date" validate:"nonzero"`
+    Nickname qt.Opt[qt.Null[string]] `json:"nickname" validate:"provided"`
+}
+
+v := qvalidator.New()
+if err := v.Validate(dto); err != nil {
+    var fieldErrors qjson.Errors
+    if errors.As(err, &fieldErrors) {
+        // Safe to serialize directly: c.JSON(http.StatusUnprocessableEntity, fieldErrors)
+        // Produces: [{"field":"email","code":"required","msg":"is required"}, ...]
+        for _, fe := range fieldErrors {
+            fmt.Println(fe.Field, fe.Code)
+        }
+    }
+}
+```
+
+#### Special QLX Validation Rules:
+- `provided`: Checks that an `Opt[T]` was explicitly present in the JSON body (even if set to `null`).
+- `notnull`: Checks that a `Null[T]` is not SQL NULL.
+- `nonzero`: Checks that types like `qt.Date`, `qt.ID`, `qt.Timestamptz`, or `qt.Range` are not their zero-value struct. (Standard `required` evaluates the struct header and falsely passes zero-value structs; always use `nonzero` on them!).
+
+---
+
+## 7. Row Mapping & Scanning Modes
+
+### Mode 1: Positional Scanning (`//qlx:row`) — PREFERRED
+Zero reflection. Fastest execution. Fields match `SELECT` columns in exact order.
+
+```go
+//qlx:row
+type UserSummary struct {
+    ID        int64
+    Email     string
+    OrderNum  int64
+    Nickname  qt.Null[string]
+    Ignored   string `qlx:"-"` // Omitted from SQL scanning
+}
+
+// NOTE: Run `qlx rows ./...` after declaring or modifying this struct.
+
+users, err := client.All[UserSummary](ctx,
+    q.Select(
+        Users.ID,
+        Users.Email,
+        q.Count(Orders.ID).As("order_num"),
+        Users.Nickname,
+    ).
+    From(Users).
+    LeftJoin(Orders).On(Orders.UserID.EqX(Users.ID)).
+    GroupBy(Users.ID))
+```
+
+### Mode 2: By Name (`db:"..."` Tags)
+Used when a custom struct does not have `ScanTargets()`. Uses cached reflection by field offsets.
+
+```go
+type UserRow struct {
+    ID    int64  `db:"id"`
+    Email string `db:"email"`
+}
+// Note: Go field names do NOT automatically convert to snake_case.
+// Always provide explicit db:"column_name" tags.
+```
+
+### Mode 3: Scalar
+When `R` is a single primitive (`int64`, `string`, `bool`, `time.Time`, `qt.Null[T]`), the query must select **exactly one column**.
+
+```go
+count, err := client.One[int64](ctx, q.Select(q.CountAll()).From(Users))
+```
+
+### Mode 4: Tuples
+For quick inline queries returning 2 to 8 columns without declaring a struct:
+
+```go
+pairs, err := client.All[q.Tuple2[int64, string]](ctx,
+    q.Select(Users.ID, Users.Email).From(Users))
+```
+
+---
+
+## 8. Operators & Predicates
+
+### 8.1 Comparisons
+- **Value comparisons** (binds `$n` parameter):
+  `col.Eq(v)`, `col.Ne(v)`, `col.Gt(v)`, `col.Gte(v)`, `col.Lt(v)`, `col.Lte(v)`
+- **Column / Expression comparisons** (identifier to identifier):
+  `col.EqX(other)`, `col.NeX(other)`, `col.GtX(other)`, `col.GteX(other)`, `col.LtX(other)`, `col.LteX(other)`
+- **Null checks**:
+  `col.IsNull()`, `col.IsNotNull()`
+- **Ranges & Sets**:
+  `col.Between(min, max)`, `col.In("a", "b", "c")`, `col.NotIn("a", "b")`
+  `col.Any(slice)`: Renders `col = ANY($1)` using PostgreSQL array parameter.
+- **String pattern matching**:
+  `col.Like("%pattern%")`, `col.ILike("%pattern%")`, `col.Contains("sub")`, `col.ContainsFold("sub")`, `col.HasPrefix("pre")`, `col.HasSuffix("post")`
+
+### 8.2 Boolean Combinations
+```go
+q.And(cond1, cond2, cond3)
+q.Or(cond1, cond2)
+q.Not(cond)
+```
+
+### 8.3 Dynamic Conditional Filters (`...If`)
+When building search forms or REST APIs with optional query parameters, do NOT use `if filter != "" { query = query.Where(...) }`. Use the `...If` operator family with `qt.Opt[T]`. If the option is `qt.Unset[T]()`, the predicate is completely omitted from the SQL:
+
+```go
+tierOpt   := qt.Of("enterprise")
+minBalOpt := qt.Unset[int64]()
+searchOpt := qt.Of("alice")
+
+q.Select(Users.ID).From(Users).Where(
+    Users.Tier.EqIf(tierOpt),                         // Included: tier = $1
+    Users.Balance.BetweenIf(minBalOpt, qt.Unset[int64]()), // Omitted: both bounds unset
+    Users.Email.ContainsFoldIf(searchOpt),            // Included: lower(email) LIKE '%' || lower($2) || '%'
+)
+```
+Available `...If` operators: `EqIf`, `NeIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf`, `InIf`, `IsNullIf`, `ContainsIf`, `ContainsFoldIf`, `HasPrefixIf`, `HasSuffixIf`, `LikeIf`, `ILikeIf`.
+
+---
+
+## 9. Statements & Clauses
+
+### 9.1 SELECT Queries
+```go
+users, err := client.All[UserSummary](ctx,
+    q.Select(
+        Users.ID,
+        Users.Email,
+        q.Count(Orders.ID).As("orders_count"),
+        q.SumBig(Orders.Total).As("revenue"),
+    ).
+    From(Users).
+    LeftJoin(Orders).On(Orders.UserID.EqX(Users.ID)).
+    Where(
+        Users.Tier.In("pro", "enterprise"),
+        Users.DeletedAt.IsNull(),
+    ).
+    GroupBy(Users.ID, Users.Email).
+    Having(q.Count(Orders.ID).Gt(0)).
+    OrderBy(Users.CreatedAt.Desc().NullsLast()).
+    Limit(20).
+    Offset(40))
+```
+
+### 9.2 Joins & Aliasing
+```go
+// Inner, Left, Right, Full Joins
+q.Select(...).From(Users).Join(Orders).On(Orders.UserID.EqX(Users.ID))
+q.Select(...).From(Users).LeftJoin(Orders).On(...)
+
+// Self Join with Table Aliases
+u1, u2 := Users.As("u1"), Users.As("u2")
+q.Select(u1.Email, u2.Email).
+    From(u1).
+    Join(u2).On(u1.ManagerID.EqX(u2.ID))
+
+// Foreign Key Join Helper
+u, o := Users.As("u"), Orders.As("o")
+q.Select(u.Email, o.Total).
+    From(u).
+    Join(o).OnFK(o.FKOrdersUserIDFkey(u))
+```
+
+### 9.3 Aggregates & Window Functions
+```go
+// Aggregates
+q.CountAll()                        // count(*)
+q.Count(col)                        // count(col)
+q.CountDistinct(col)                // count(DISTINCT col)
+q.SumBig(col)                       // sum(col) returning int64
+q.Avg(col), q.Min(col), q.Max(col)
+q.StringAgg(col, ", ").OrderBy(...)
+
+// Filtered Aggregate
+q.CountAll().Filter(Orders.Status.Eq("paid")).As("paid_count")
+
+// Window Specification
+w := q.Window().
+    PartitionBy(Orders.UserID).
+    OrderBy(Orders.CreatedAt.Desc()).
+    Rows(q.UnboundedPreceding, q.CurrentRow)
+
+q.Select(
+    Orders.ID,
+    q.RowNumber().Over(w).As("row_num"),
+    q.Lag(Orders.Total).Over(w).As("prev_total"),
+    q.SumBig(Orders.Total).Over(w).As("running_total"),
+).From(Orders)
+```
+
+### 9.4 Keyset (Cursor) Pagination
+```go
+byDate := q.KeyDesc(Users.CreatedAt)
+byID   := q.KeyAsc(Users.ID)
+
+var after q.Pred
+if lastRow != nil {
+    after = q.After(byDate.After(lastRow.CreatedAt), byID.After(lastRow.ID))
+}
+
+users, err := client.All[UserSummary](ctx,
+    q.Select(Users.ID, Users.Email, Users.CreatedAt).
+    From(Users).
+    Where(after). // Becomes (created_at, id) < ($1, $2)
+    OrderBy(q.KeyOrder(byDate, byID)...).
+    Limit(20))
+```
+
+### 9.5 Safe URL Sort Parser
+```go
+var userSorts = q.NewSorts(map[string]q.Orderable{
+    "email":   Users.Email,
+    "created": Users.CreatedAt,
+}).Default(Users.CreatedAt.Desc()).Tiebreak(Users.ID.Asc())
+
+order, err := userSorts.Parse(r.URL.Query().Get("sort")) // e.g. "-created,email"
+if err != nil { /* 400 Bad Request */ }
+
+q.Select(Users.ID).From(Users).OrderBy(order...)
+```
+
+### 9.6 Common Table Expressions (WITH)
+```go
+counts := q.NewCTE("counts",
+    q.Select(Orders.UserID.As("user_id"), q.Count(Orders.ID).As("n")).
+        From(Orders).
+        GroupBy(Orders.UserID))
+
+userIDField := q.NewField[int64]("user_id")
+nCountField := q.NewField[int64]("n")
+
+users, err := client.All[UserSummary](ctx,
+    q.Select(Users.Email, q.RefNum(counts, nCountField).As("order_count")).
+        With(counts).
+        From(Users).
+        Join(counts).On(q.RefNum(counts, userIDField).EqX(Users.ID)).
+        Where(q.RefNum(counts, nCountField).Gt(5)))
+```
+
+### 9.7 Subqueries
+```go
+// EXISTS
+q.Select(Users.Email).From(Users).Where(
+    q.Exists(q.Select(Orders.ID).From(Orders).Where(
+        Orders.UserID.EqX(Users.ID),
+        Orders.Total.Gt(100),
+    )),
+)
+```
+
+---
+
+## 10. Mutations (INSERT, UPDATE, DELETE, MERGE)
+
+### 10.1 INSERT & Upsert
+```go
+// Single row insert with RETURNING
+newID, err := client.One[int64](ctx,
+    q.InsertInto(Users).
+        Row(
+            Users.Email.To("bob@example.com"),
+            Users.Tier.To("pro"),
+            Users.Balance.To(50),
+            Users.Nickname.ToNull(),
+        ).
+        Returning(Users.ID))
+
+// Upsert (ON CONFLICT DO UPDATE)
+_, err = client.Exec(ctx,
+    q.InsertInto(Users).
+        Row(Users.Email.To("bob@example.com"), Users.Balance.To(50)).
+        OnConflict(Users.Email).
+        DoUpdate(Users.Balance.ToX(Users.Balance.Add(50))).
+        Returning(Users.ID))
+```
+
+### 10.2 UPDATE
+> **IMPORTANT**: `q.Update(Table)` requires `.Where(...)` or explicit `.All()`. Omitting both fails static analysis (V002).
+
+```go
+// Standard Update
+_, err := client.Exec(ctx,
+    q.Update(Users).
+        Set(
+            Users.Balance.ToX(Users.Balance.Sub(10)),
+            Users.Tier.To("enterprise"),
+            Users.Nickname.ToNull(),
+        ).
+        Where(Users.ID.Eq(7)).
+        Returning(Users.Balance))
+
+// Partial Update via Generated Patch Struct
+patch := db.UserPatch{
+    Tier:    qt.Of("pro"),
+    Balance: qt.Of(int64(250)),
+}
+_, err = client.Exec(ctx,
+    q.Update(Users).
+        SetPatch(patch).
+        Where(Users.ID.Eq(7)))
+```
+
+### 10.3 DELETE
+> **IMPORTANT**: `q.DeleteFrom(Table)` requires `.Where(...)` or explicit `.All()`.
+
+```go
+// Filtered Delete
+_, err := client.Exec(ctx,
+    q.DeleteFrom(Orders).
+        Where(Orders.Status.Eq("cancelled")).
+        Returning(Orders.ID))
+
+// Full Table Delete (Explicitly opt-in)
+_, err = client.Exec(ctx, q.DeleteFrom(AuditLogs).All())
+```
+
+### 10.4 MERGE (PostgreSQL 15+)
+```go
+_, err := client.Exec(ctx,
+    q.MergeInto(Users).
+        Using(NewUsers).On(Users.ID.EqX(NewUsers.ID)).
+        WhenMatched().DoUpdate(Users.Email.ToX(NewUsers.Email)).
+        WhenNotMatched().DoInsert(
+            Users.ID.ToX(NewUsers.ID),
+            Users.Email.ToX(NewUsers.Email),
+        ))
+```
+
+---
+
+## 11. Extensions (`qext/*`)
+
+### 11.1 Full-Text Search (`qext/textsearch`)
+```go
+import "github.com/noobmaisfier/qlx/qext/textsearch"
+
+doc := textsearch.Document("english",
+    textsearch.Weighted(textsearch.A, Articles.Title),
+    textsearch.Weighted(textsearch.B, Articles.Body))
+query := textsearch.Web("english", q.Val(userSearchTerm))
+
+articles, err := client.All[ArticleSummary](ctx,
+    q.Select(
+        Articles.ID,
+        Articles.Title,
+        textsearch.Rank(doc, query).As("rank"),
+        textsearch.Headline("english", Articles.Body, query, textsearch.Highlight{
+            StartSel: "<mark>",
+            StopSel:  "</mark>",
+            MaxWords: 25,
+        }).As("snippet"),
+    ).
+    From(Articles).
+    Where(textsearch.SearchIf(doc, "english", optUserSearchTerm)).
+    OrderBy(textsearch.Rank(doc, query).Desc()).
+    Limit(10))
+```
+
+### 11.2 Vector Similarity Search (`qext/pgvector`)
+```go
+import "github.com/noobmaisfier/qlx/qext/pgvector"
+
+targetVector := qt.Vector{0.02, 0.45, 0.81, /* ... 1536 floats */}
+
+matches, err := client.All[ItemMatch](ctx,
+    q.Select(
+        Items.ID,
+        Items.Title,
+        pgvector.Cosine(Items.Embedding, targetVector).As("cosine_dist"),
+    ).
+    From(Items).
+    OrderBy(pgvector.Cosine(Items.Embedding, targetVector).Asc()).
+    Limit(10))
+```
+
+### 11.3 Trigram Similarity (`qext/trgm`)
+```go
+import "github.com/noobmaisfier/qlx/qext/trgm"
+
+users, err := client.All[UserSummary](ctx,
+    q.Select(Users.ID, Users.Name).
+    From(Users).
+    Where(trgm.Similar(Users.Name, "Jonathan")))
+```
+
+---
+
+## 12. Transactions & Retries
+
+```go
+err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{
+    IsoLevel: pgx.ReadCommitted,
+}, pgxexec.Retry{
+    Attempts: 3, // Automatically retries deadlocks and serialization failures (40001, 40P01)
+}, func(ctx context.Context, tx pgx.Tx) error {
+    _, err := pgxexec.Exec(ctx, tx,
+        q.Update(Accounts).
+            Set(Accounts.Balance.ToX(Accounts.Balance.Sub(100))).
+            Where(Accounts.ID.Eq(fromID)))
+    if err != nil {
+        return err // Rolls back
+    }
+    return nil // Commits
+})
+```
+
+---
+
+## 13. Strict Rules & Anti-Hallucination Checklist
+
+When generating Go code with QLX, you **MUST** follow these rules:
+
+1. **NEVER use string SQL fragments**:
+   - ❌ `Where("status = ?", "active")`
+   - ✅ `Where(Orders.Status.Eq("active"))`
+2. **NEVER use `.Eq` to compare two columns**:
+   - ❌ `Orders.UserID.Eq(Users.ID)`
+   - ✅ `Orders.UserID.EqX(Users.ID)`
+3. **NEVER use `.To` to assign an expression in UPDATE/INSERT**:
+   - ❌ `Users.Balance.To(Users.Balance.Add(10))`
+   - ✅ `Users.Balance.ToX(Users.Balance.Add(10))`
+4. **NEVER use Go pointers (`*string`, `*int64`) for database nullability**:
+   - ❌ `type Row struct { Nickname *string }`
+   - ✅ `type Row struct { Nickname qt.Null[string] }`
+5. **NEVER perform an `Update` or `DeleteFrom` without `.Where` or `.All`**:
+   - ❌ `q.DeleteFrom(Orders)`
+   - ✅ `q.DeleteFrom(Orders).Where(Orders.ID.Eq(1))`
+   - ✅ `q.DeleteFrom(Orders).All()`
+6. **ALWAYS alias computed columns to match struct field names**:
+   - ❌ `q.Select(q.CountAll()).From(...)` scanned into struct with `Count int64`
+   - ✅ `q.Select(q.CountAll().As("count")).From(...)`
+7. **ALWAYS remember to place `//qlx:row` above custom result structs and instruct running `qlx rows ./...`**.
+8. **ALWAYS use `nonzero` instead of `required` for `qt.Date`, `qt.ID`, `qt.Timestamptz`, `qt.Range` in DTO validation**.

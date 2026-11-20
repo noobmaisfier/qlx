@@ -1,6 +1,7 @@
 package qjson_test
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"reflect"
@@ -223,5 +224,35 @@ func TestValidate(t *testing.T) {
 	}
 	if err := qjson.Validate(42); err != nil {
 		t.Fatalf("a value without Validate must pass: %v", err)
+	}
+}
+
+func TestErrorJSONMarshal(t *testing.T) {
+	err := &qjson.Error{
+		Code:  qjson.CodeUnknownField,
+		Field: "nickname",
+		Msg:   "unknown field",
+		Err:   errors.New("internal detail"),
+	}
+	b, merr := json.Marshal(err)
+	if merr != nil {
+		t.Fatalf("json.Marshal(Error): %v", merr)
+	}
+	want := `{"code":"unknown_field","field":"nickname","msg":"unknown field"}`
+	if string(b) != want {
+		t.Errorf("got %s, want %s", string(b), want)
+	}
+
+	fields := qjson.Errors{
+		{Field: "email", Code: "required", Msg: "is required"},
+		{Field: "age", Code: "min"},
+	}
+	fb, merr := json.Marshal(fields)
+	if merr != nil {
+		t.Fatalf("json.Marshal(Errors): %v", merr)
+	}
+	fwant := `[{"field":"email","code":"required","msg":"is required"},{"field":"age","code":"min"}]`
+	if string(fb) != fwant {
+		t.Errorf("got %s, want %s", string(fb), fwant)
 	}
 }
