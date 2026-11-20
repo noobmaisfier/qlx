@@ -88,4 +88,12 @@ func TestTimeTZ(t *testing.T) {
 	if _, err := ParseTimeTZ("12:00:00"); err == nil {
 		t.Fatal("offset required")
 	}
+	for _, in := range []string{
+		"12:00:00+2147483648",
+		"12:00:00+596523:59:59",
+	} {
+		if _, err := ParseTimeTZ(in); err == nil {
+			t.Errorf("%q: overflowing offset accepted", in)
+		}
+	}
 }
