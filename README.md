@@ -9,7 +9,7 @@ columns cannot receive a plain value, and a required `INSERT` column cannot be
 forgotten. The analyzer catches the SQL mistakes the Go compiler cannot, and a
 real `PREPARE` checks the rest in tests.
 
-> **Status: release candidate.** Current release: `v1.0.0-rc3`. The core,
+> **Status: release candidate.** Current release: `v1.0.0-rc4`. The core,
 > generator, executor and analyzer are verified on PostgreSQL 16, 17, 18 and
 > 19. See [Verification](#verification) for what has been run.
 
@@ -762,8 +762,8 @@ regression case.
 
 The root module has no third-party dependencies. Anything that needs one lives
 in its own module, so your `go.mod` only gains what you import. The published
-modules are tagged separately (`v1.0.0-rc3`, `analyzer/v1.0.0-rc3`,
-`pgxexec/v1.0.0-rc3`, `otelqlx/v1.0.0-rc3`, `qjson/validator/v1.0.0-rc3`);
+modules are tagged separately (`v1.0.0-rc4`, `analyzer/v1.0.0-rc4`,
+`pgxexec/v1.0.0-rc4`, `otelqlx/v1.0.0-rc4`, `qjson/validator/v1.0.0-rc4`);
 `bench` is internal and is not released.
 
 ## Types in custom structs
@@ -882,7 +882,9 @@ Details that cause real bugs:
 
 - **`omitempty` never omits a struct.** `qt.Null`, `qt.Opt`, `qt.Date`,
   `qt.Range` and every other struct field is written even when empty; an unset
-  `qt.Opt` becomes `"opt":null`. Use `omitzero` for those.
+  `qt.Opt` becomes `"opt":null`. Use `omitzero` for those. An unset
+  `qt.Opt[qt.Null[T]]` without it is an error (`qt.ErrUnsetOptNull`), because
+  `null` would read back as an explicit NULL.
 - **`omitzero` uses `IsZero`.** It correctly drops an unset `qt.Opt` and a zero
   `qt.ID`, but it also drops valid values for `Date` (1970-01-01),
   `Timestamptz` (the epoch) and `Range` (the unbounded `(,)`). Use a pointer
@@ -914,8 +916,9 @@ Details that cause real bugs:
 
 Validation happens in layers, and each one catches what the previous cannot:
 
-1. **Decode** (`qjson`): the body is JSON, bounded, one value, no unknown keys,
-   and every `qt` type accepts its documented form.
+1. **Decode** (`qjson`): the body is JSON, bounded, one value, no unknown keys
+   (at any depth, including inside `qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`
+   and `qt.Multirange`), and every `qt` type accepts its documented form.
 2. **Validate** (`qvalidator` or a `Validate() error` method): business rules
    such as "email required", "age at least 18".
 3. **Statement** (compiler and `qlxvet`): the column exists, is NOT NULL when
@@ -1021,7 +1024,9 @@ func (c CreateUser) Validate() error { /* ... */ }
 
 Then call `qjson.Validate(body)` (it invokes `Validate` when the DTO has it).
 `qjson.DecodeRequest` (`github.com/noobmaisfier/qlx/qjson`, standard library
-only) refuses unknown keys by default, caps the body at 1 MiB, accepts exactly
+only) refuses unknown keys by default, at the top level and inside the `qt`
+wrappers (`qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`, `qt.Multirange`), caps
+the body at 1 MiB, accepts exactly
 one JSON value, checks `Content-Type` and keeps the underlying error for
 `errors.Is` (for example `qt.ErrBadID`). Validation never replaces the
 compiler: a field can be valid and still target a column that does not exist.
@@ -1128,7 +1133,7 @@ your `-targets` is caught by V009 and by the renderer.
 | Executor | integration suite green on all four majors |
 
 GitHub Actions is green on the same PostgreSQL 16–19 matrix, including the
-v1.0.0-rc3 release candidate. PostgreSQL 19 is verified on a release candidate;
+v1.0.0-rc4 release candidate. PostgreSQL 19 is verified on a release candidate;
 re-pinning on GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 
 ## Documentation

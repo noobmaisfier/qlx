@@ -3,7 +3,9 @@ package qt
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -20,9 +22,21 @@ func (o Opt[T]) IsSet() bool { return o.Set }
 // `omitzero`, so an unset field leaves no key behind.
 func (o Opt[T]) IsZero() bool { return !o.Set }
 
-// MarshalJSON writes null for an unset option and the value otherwise.
+// ErrUnsetOptNull is returned when an unset Opt[Null[T]] is marshaled. Its JSON
+// form would be null, which reads back as an explicit NULL, so a patch that
+// meant "leave it alone" would become "set it to NULL". Tag the field
+// `json:"name,omitzero"`: the key is then left out.
+var ErrUnsetOptNull = errors.New("qt: unset Opt[Null[T]] marshaled without omitzero: add ,omitzero to its json tag")
+
+// MarshalJSON writes null for an unset option and the value otherwise. An
+// unset Opt[Null[T]] is an error (ErrUnsetOptNull): null would be read back as
+// a set NULL.
 func (o Opt[T]) MarshalJSON() ([]byte, error) {
 	if !o.Set {
+		var v T
+		if _, ok := any(&v).(interface{ holdsNull() }); ok {
+			return nil, ErrUnsetOptNull
+		}
 		return []byte("null"), nil
 	}
 	return json.Marshal(o.V)
@@ -183,3 +197,26 @@ func (m *Multirange[T]) UnmarshalJSON(b []byte) error {
 func isJSONNull(b []byte) bool {
 	return bytes.Equal(bytes.TrimSpace(b), []byte("null"))
 }
+
+// JSONInner, JSONKeys: shape hints for qjson's strict decoder. encoding/json
+// calls UnmarshalJSON with a fresh decoder, so DisallowUnknownFields does not
+// reach the value inside a wrapper; qjson reads these hints to check the
+// nested keys itself. They are duck-typed, so qt does not import qjson.
+
+// JSONInner is the type of the JSON value an Opt holds.
+func (Opt[T]) JSONInner() reflect.Type { return reflect.TypeFor[T]() }
+
+// JSONInner is the type of the JSON value a Null holds.
+func (Null[T]) JSONInner() reflect.Type { return reflect.TypeFor[T]() }
+
+// JSONInner is the type of the JSON document a JSONB holds.
+func (JSONB[T]) JSONInner() reflect.Type { return reflect.TypeFor[T]() }
+
+// JSONKeys lists the keys of the object form of a Range.
+func (Range[T]) JSONKeys() []string {
+	return []string{"lower", "upper", "lower_inc", "upper_inc", "empty"}
+}
+
+// JSONInner is the type of the JSON value a Multirange holds: an array of
+// ranges.
+func (Multirange[T]) JSONInner() reflect.Type { return reflect.TypeFor[[]Range[T]]() }

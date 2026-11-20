@@ -159,7 +159,7 @@ st := q.Update(Users).Set(p.Assignments()...).Where(Users.ID.Eq(id))
 | `{"email":"x@y.z","nickname":"ada"}` | `SET "email" = $1, "nickname" = $2 ...` | `[x@y.z, ada, id]` |
 | `{}` | not rendered: every `ToIf` is left out, so the `UPDATE` has no `SET` and fails with `ErrShape` | |
 
-`omitzero` (Go 1.24 and later) with the `IsZero` method of `Opt` drops unset fields when you write the DTO back out. `omitempty` does not work on a struct: it would never omit.
+`omitzero` (Go 1.24 and later) with the `IsZero` method of `Opt` drops unset fields when you write the DTO back out. `omitempty` does not work on a struct: it would never omit. A field of type `qt.Opt[qt.Null[T]]` without `omitzero` does not marshal an unset option as `null` (that would read back as a set NULL): `json.Marshal` returns `qt.ErrUnsetOptNull`, and `errors.Is` sees it through the wrapper `encoding/json` adds.
 
 Decide what an empty body means for your API. Usually 400 (nothing to do) or 204. The render error for the empty `UPDATE` is not a user-facing message: check the body first (for example a `Changed()` method on the DTO that tests `Set` on each field).
 
@@ -468,7 +468,9 @@ if err := v.Validate(body); err != nil {
 
 What `DecodeRequest` changes against `json.NewDecoder`:
 
-- unknown keys are refused by default (`AllowUnknownFields` opts out);
+- unknown keys are refused by default (`AllowUnknownFields` opts out), including
+  inside `qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range` and `qt.Multirange`, whose
+  own `UnmarshalJSON` would otherwise use a decoder without that check;
 - the body is capped at 1 MiB (`MaxBytes` changes it, `MaxBytes(0)` removes it);
 - exactly one JSON value is accepted, so `{...}{...}` is `trailing_data`;
 - an empty body and a bare `null` are errors, not a zero DTO;
@@ -661,8 +663,8 @@ Cases worth a test per resource: absent / `null` / value for every nullable patc
 | --- | --- | --- |
 | `omitempty` on a `qt` struct field | the key is never omitted | `omitzero` |
 | `required` on `qt.ID`, `qt.Date`, `qt.Range` | skipped (non-pointer struct), so it always passes | `nonzero` (the only rule that reads the struct), or check `IsZero()` |
-| strict decode inside `qt.JSONB[T]`, `qt.Opt[struct]`, `qt.Range` | unknown keys in the nested value are accepted: their `UnmarshalJSON` uses its own decoder | decode into a plain nested struct, then wrap it |
-| `qt.Opt[qt.Null[T]]` without `omitzero` | unset marshals `null`; read back, it is a set NULL | `omitzero` on every `Opt`, and test the round trip |
+| unknown keys inside `qt.JSONB[T]`, `qt.Opt[struct]`, `qt.Null[struct]`, `qt.Range`, `qt.Multirange` | `qjson` checks them too (error field `settings.theme_typo`); a type with its own `UnmarshalJSON` that is not a `qt` wrapper is not looked into | give a custom type `JSONInner() reflect.Type`, or accept it as opaque |
+| `qt.Opt[qt.Null[T]]` without `omitzero` | marshaling an unset one returns `qt.ErrUnsetOptNull` (null would read back as a set NULL) | `json:"name,omitzero"` |
 | binding a request into the generated patch or insert | mass assignment of every column | a DTO with an allow-list, converted |
 | `qt.Null` for a column with a `DEFAULT` | an absent key writes NULL over the default | `qt.Opt[T]` with `ToIf` |
 | `ToIf` on a required column | the column disappears | `To` for required columns |

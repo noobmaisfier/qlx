@@ -234,6 +234,11 @@ func DecodeInto(dst any, r io.Reader, opts ...Option) error {
 	if err := dec.Decode(&extra); err != io.EOF {
 		return &Error{Code: CodeTrailingData, Msg: "the body must contain exactly one JSON value"}
 	}
+	if cfg.strict {
+		// DisallowUnknownFields stops at a type with its own UnmarshalJSON
+		// (qt.JSONB, qt.Opt, qt.Range): check the keys inside them too.
+		return checkNested(data, dst)
+	}
 	return nil
 }
 

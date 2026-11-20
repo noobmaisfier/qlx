@@ -2,6 +2,7 @@ package qt_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/netip"
 	"testing"
 	"time"
@@ -183,5 +184,59 @@ func TestJSONOpt(t *testing.T) {
 	}
 	if got := mustJSON(t, qt.Unset[int]()); got != `null` {
 		t.Errorf("unset without omitzero: %s", got)
+	}
+}
+
+func TestOptNullUnsetWithoutOmitzeroIsAnError(t *testing.T) {
+	type bad struct {
+		Nick qt.Opt[qt.Null[string]] `json:"nick"`
+	}
+	if _, err := json.Marshal(bad{}); !errors.Is(err, qt.ErrUnsetOptNull) {
+		t.Fatalf("want ErrUnsetOptNull, got %v", err)
+	}
+	type ok struct {
+		Nick qt.Opt[qt.Null[string]] `json:"nick,omitzero"`
+	}
+	if b, err := json.Marshal(ok{}); err != nil || string(b) != `{}` {
+		t.Errorf("omitzero must leave the key out: %s %v", b, err)
+	}
+	// An explicit NULL still round-trips, and a plain Opt keeps writing null.
+	if b, err := json.Marshal(ok{Nick: qt.Opt[qt.Null[string]]{Set: true}}); err != nil || string(b) != `{"nick":null}` {
+		t.Errorf("set NULL: %s %v", b, err)
+	}
+	type plain struct {
+		S qt.Opt[string] `json:"s"`
+	}
+	if b, err := json.Marshal(plain{}); err != nil || string(b) != `{"s":null}` {
+		t.Errorf("plain Opt: %s %v", b, err)
+	}
+}
+
+// JSONKeys is the hint qjson uses to refuse unknown keys inside a range; it
+// must list exactly the keys MarshalJSON can emit.
+func TestRangeJSONKeysMatchTheMarshaledForm(t *testing.T) {
+	one, five := 1, 5
+	r := qt.Range[int]{Lower: &one, Upper: &five, LowerInc: true}
+	forms := []qt.Range[int]{r, {Empty: true}}
+	for _, f := range forms {
+		b, err := json.Marshal(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var m map[string]json.RawMessage
+		if err := json.Unmarshal(b, &m); err != nil {
+			t.Fatal(err)
+		}
+		for k := range m {
+			known := false
+			for _, hint := range f.JSONKeys() {
+				if hint == k {
+					known = true
+				}
+			}
+			if !known {
+				t.Errorf("Range marshals %q, which JSONKeys does not list", k)
+			}
+		}
 	}
 }
