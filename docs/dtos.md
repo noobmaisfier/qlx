@@ -479,12 +479,18 @@ What `DecodeRequest` changes against `json.NewDecoder`:
 
 | Rule | Passes when | Use it for |
 | --- | --- | --- |
-| `provided` | an `Opt[T]` has `IsSet()` true, a JSON `null` included for `Opt[Null[T]]` | presence only: a patch field the client sent |
+| `provided` | an `Opt[T]` has `IsSet()` true (a JSON `null` included for `Opt[Null[T]]`), or the unwrapped value is non-nil | presence only: a patch field the client sent |
 | `notnull` | a `Null[T]` has `IsNull()` false, or a pointer/slice/map is non-nil | a nullable field that must carry a value |
-| `nonzero` | the value's `IsZero()` is false (for a set `Opt`, its `.V`) | a `qt.ID`, a `qt.Date`, a non-zero value |
+| `nonzero` | the value's `IsZero()` is false (for a set `Opt` or `Null`, its `.V`) | a `qt.ID`, a `qt.Date`, a non-zero value |
 
-`New` also unwraps `Opt[T]` before the other rules run: an unset `Opt` is seen
-as a nil value (so `omitempty` skips it) and a set `Opt` becomes its `.V`.
+Only `Opt` carries a presence bit. On a plain `Null[T]`, `provided` cannot tell
+an absent key from an explicit `null`, so it means "not NULL", exactly like
+`notnull`. On a pointer/slice/map it means non-nil. Use `Opt[Null[T]]` when the
+two cases must stay distinct.
+
+`New` also unwraps `Opt[T]` and `Null[T]` before the other rules run: an unset
+`Opt` or a NULL is seen as a nil value (so `omitempty` skips it) and a set `Opt`
+or a non-NULL `Null` becomes its `.V`. `Opt[Null[T]]` is unwrapped twice.
 Content rules therefore work inside an `Opt`, which is the reason
 `provided,email` is enough for a patch field:
 
@@ -496,10 +502,12 @@ type PatchUser struct {
 ```
 
 Without `provided` or `omitempty`, an absent `Opt` fails the first rule, like a
-nil pointer. To get the same behaviour from a validator you built yourself, call
+nil pointer. The same goes for a NULL `qt.Null`. For `Opt[Null[T]]` use
+`provided,omitempty,max=5`: present, and judged only when not `null`. A tag that
+does not fit its field is returned as an error by `Validate`, not a panic. To get the same behaviour from a validator you built yourself, call
 `qvalidator.RegisterOpts(v, body)` after `Register` and before `Struct`.
 
-Do not use `required` on these types: `go-playground/validator` skips it on non-pointer structs, so a zero value always passes. `Validate` returns `qjson.Errors`, whose `Field` is the `json` name (`nick_name`, not `NickName`), so the response can be sent without a translation table. `SetMessageFunc` replaces the default English messages.
+Do not use `required` on `qt.ID`, `qt.Date`, `qt.Timestamptz` or `qt.Range`: `go-playground/validator` skips it on non-pointer structs, so a zero value always passes; use `nonzero`, which unwraps and reads the value. On `qt.Null` and `qt.Opt` `required` is safe, because they are unwrapped (`required` then means "not NULL and not zero"). `Validate` returns `qjson.Errors`, whose `Field` is the `json` name (`nick_name`, not `NickName`), so the response can be sent without a translation table. `SetMessageFunc` replaces the default English messages.
 
 The adapter is its own module (`github.com/noobmaisfier/qlx/qjson/validator`) because it needs a third-party package; the root module stays dependency-free. If you do not use `go-playground/validator`, implement `Validate() error` on the DTO and call `qjson.Validate(body)`.
 
@@ -652,7 +660,9 @@ Cases worth a test per resource: absent / `null` / value for every nullable patc
 | Pitfall | What happens | Fix |
 | --- | --- | --- |
 | `omitempty` on a `qt` struct field | the key is never omitted | `omitzero` |
-| `required` on `qt.Null`, `qt.ID`, `qt.Date` | skipped (non-pointer struct), so it always passes | `provided` / `notnull` / `nonzero`, or check `IsSet()` / `IsNull()` |
+| `required` on `qt.ID`, `qt.Date`, `qt.Range` | skipped (non-pointer struct), so it always passes | `nonzero` (the only rule that reads the struct), or check `IsZero()` |
+| strict decode inside `qt.JSONB[T]`, `qt.Opt[struct]`, `qt.Range` | unknown keys in the nested value are accepted: their `UnmarshalJSON` uses its own decoder | decode into a plain nested struct, then wrap it |
+| `qt.Opt[qt.Null[T]]` without `omitzero` | unset marshals `null`; read back, it is a set NULL | `omitzero` on every `Opt`, and test the round trip |
 | binding a request into the generated patch or insert | mass assignment of every column | a DTO with an allow-list, converted |
 | `qt.Null` for a column with a `DEFAULT` | an absent key writes NULL over the default | `qt.Opt[T]` with `ToIf` |
 | `ToIf` on a required column | the column disappears | `To` for required columns |

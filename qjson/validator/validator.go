@@ -18,18 +18,23 @@
 //	notnull   the field is a Null[T] that is not NULL, or a non-nil pointer/slice/map
 //	nonzero   the field is not its zero value (qt.ID, qt.Date, Opt[T], ...)
 //
-// Use them instead of `required`: required tests the struct, not its content, so
-// a zero qt.Null, qt.Opt or qt.ID always passes it.
+// Use them instead of `required` for qt.ID, qt.Date, qt.Timestamptz and qt.Range:
+// required tests a struct, not its content, so their zero value always passes it.
+// On an Opt or a Null, required works once they are unwrapped (see below).
 //
-// An Opt[T] is unwrapped before the other rules run: an unset Opt becomes null,
-// so omitempty skips it, and a set Opt becomes its .V, so content rules finally
-// apply to the value. `validate:"provided,email"` therefore checks both that the
-// key was present and that the value is an email. Without provided or omitempty,
-// an unset Opt fails the first rule, like a nil pointer.
+// An Opt[T] or a Null[T] is unwrapped before the other rules run: an unset Opt
+// and a NULL become nil, so omitempty skips them, and a value becomes its .V,
+// so content rules (email, min, max, ...) apply to the value instead of to the
+// wrapper struct, where go-playground/validator panics or judges the wrong
+// thing. `validate:"provided,email"` therefore checks both that the key was
+// present and that the value is an email. Without provided or omitempty, an
+// unset Opt or a NULL fails the first rule, like a nil pointer; for `required`
+// that means "not NULL and not the zero value".
 package qvalidator
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -57,7 +62,8 @@ type Validator struct {
 
 // New returns a Validator with the JSON tag names and the QLX rules registered.
 // The first time a DTO type is validated, New also teaches the validator how to
-// unwrap every Opt[T] it contains; no per-instantiation registration is needed.
+// unwrap every Opt[T] and Null[T] it contains; no per-instantiation
+// registration is needed.
 func New() *Validator {
 	v := validator.New()
 	if err := Register(v); err != nil {
@@ -74,8 +80,8 @@ func New() *Validator {
 
 // Register adds the JSON tag name function and the QLX rules to an existing
 // validator. Calling it twice replaces the same rules; the only error is a nil
-// validator. Register does not unwrap Opt[T]; follow it with RegisterOpts, or
-// use New, which does both.
+// validator. Register does not unwrap Opt[T] or Null[T]; follow it with
+// RegisterOpts, or use New, which does both.
 func Register(v *validator.Validate) error {
 	if v == nil {
 		return errors.New("qvalidator: nil validator")
@@ -87,7 +93,9 @@ func Register(v *validator.Validate) error {
 		TagNonzero:  nonzero,
 	}
 	for name, fn := range rules {
-		if err := v.RegisterValidation(name, fn); err != nil {
+		// callEvenIfNull: an unset Opt and a NULL reach the rules as nil, and
+		// these rules are the ones that must judge them.
+		if err := v.RegisterValidation(name, fn, true); err != nil {
 			return err
 		}
 	}
@@ -98,7 +106,7 @@ func Register(v *validator.Validate) error {
 // field, named by its JSON key) or nil.
 //
 // Validate is safe for concurrent use. The first call for a DTO type registers
-// the unwrappers its Opt fields need, then the type is marked prepared.
+// the unwrappers its Opt and Null fields need, then the type is marked prepared.
 func (v *Validator) Validate(s any) error {
 	if v == nil || v.v == nil {
 		return errors.New("qvalidator: nil Validator")
@@ -143,23 +151,32 @@ func (v *Validator) Validate(s any) error {
 // structErr runs the validator once the DTO type is prepared. The read lock
 // keeps concurrent first-time registrations from writing the validator's
 // custom type map while Struct reads it.
-func (v *Validator) structErr(s any) error {
+func (v *Validator) structErr(s any) (err error) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
+	// go-playground/validator panics when a rule meets a type it cannot judge
+	// ("Bad field type"), for example max on a nil pointer left by a NULL. That
+	// is a wrong tag, not a bad request: report it as an error that names the
+	// type, never as a panic in the handler.
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("qvalidator: a validate tag does not fit its field in %T: %v", s, r)
+		}
+	}()
 	return v.v.Struct(s)
 }
 
 // RegisterOpts teaches a validator built outside New how to unwrap every
-// Opt[T] instantiation reachable from sample's type. It is idempotent; call it
-// once per DTO shape before v.Struct when you use Register on your own
-// validator. New does this automatically, so it is only needed with Raw or a
-// hand-built validator.
+// Opt[T] and Null[T] instantiation reachable from sample's type. It is
+// idempotent; call it once per DTO shape before v.Struct when you use Register
+// on your own validator. New does this automatically, so it is only needed with
+// Raw or a hand-built validator.
 func RegisterOpts(v *validator.Validate, sample any) error {
 	if v == nil {
 		return errors.New("qvalidator: nil validator")
 	}
-	for _, t := range optTypes(reflect.TypeOf(sample)) {
-		v.RegisterCustomTypeFunc(unwrapOpt, reflect.Zero(t).Interface())
+	for _, t := range wrapperTypes(reflect.TypeOf(sample)) {
+		v.RegisterCustomTypeFunc(unwrap, reflect.Zero(t).Interface())
 	}
 	return nil
 }
@@ -226,11 +243,11 @@ func DefaultMessage(fe validator.FieldError) string {
 // registerOptsLocked registers the unwrappers for t. The caller holds mu for
 // writing.
 func (v *Validator) registerOptsLocked(t reflect.Type) {
-	for _, ot := range optTypes(t) {
+	for _, ot := range wrapperTypes(t) {
 		if v.registered[ot] {
 			continue
 		}
-		v.v.RegisterCustomTypeFunc(unwrapOpt, reflect.Zero(ot).Interface())
+		v.v.RegisterCustomTypeFunc(unwrap, reflect.Zero(ot).Interface())
 		v.registered[ot] = true
 	}
 }
@@ -253,9 +270,25 @@ func isOptType(t reflect.Type) bool {
 	return ok && sf.Type.Kind() == reflect.Bool
 }
 
-// optTypes returns every Opt instantiation reachable from t, without walking
-// the same type twice.
-func optTypes(t reflect.Type) []reflect.Type {
+var isNullRule = reflect.TypeOf((*interface{ IsNull() bool })(nil)).Elem()
+
+// isNullType reports whether t is a Null[T]: a struct with an exported V, a
+// bool Valid and the IsNull method.
+func isNullType(t reflect.Type) bool {
+	if t == nil || t.Kind() != reflect.Struct || !t.Implements(isNullRule) {
+		return false
+	}
+	vf, ok := t.FieldByName("V")
+	if !ok || !vf.IsExported() {
+		return false
+	}
+	vd, ok := t.FieldByName("Valid")
+	return ok && vd.Type.Kind() == reflect.Bool
+}
+
+// wrapperTypes returns every Opt and Null instantiation reachable from t,
+// without walking the same type twice.
+func wrapperTypes(t reflect.Type) []reflect.Type {
 	var out []reflect.Type
 	var walk func(reflect.Type)
 	seen := make(map[reflect.Type]bool)
@@ -271,7 +304,7 @@ func optTypes(t reflect.Type) []reflect.Type {
 			walk(t.Key())
 			walk(t.Elem())
 		case reflect.Struct:
-			if isOptType(t) {
+			if isOptType(t) || isNullType(t) {
 				out = append(out, t)
 			}
 			for i := 0; i < t.NumField(); i++ {
@@ -286,10 +319,17 @@ func optTypes(t reflect.Type) []reflect.Type {
 	return out
 }
 
-// unwrapOpt is the CustomTypeFunc validator calls for an Opt[T]. An unset Opt
-// becomes nil (so omitempty skips it and any other rule fails); a set Opt
-// becomes its .V, so email, min and friends run on the value the client sent.
-func unwrapOpt(field reflect.Value) any {
+// unwrap is the CustomTypeFunc validator calls for an Opt[T] or a Null[T]. An
+// unset Opt and a NULL become a nil *T (so omitempty skips them and any other
+// rule fails, as it does on a nil pointer); a set Opt or a non-NULL Null becomes
+// its .V, so email, min, max and friends run on the value. An Opt[Null[T]] is
+// unwrapped twice: validator applies the custom type function again to the
+// result.
+//
+// The nil is a typed pointer, not an untyped nil, on purpose: validator reports
+// an untyped nil with the first rule of the field without ever calling it, so
+// provided, notnull and nonzero could not judge an explicit null.
+func unwrap(field reflect.Value) any {
 	for field.Kind() == reflect.Ptr || field.Kind() == reflect.Interface {
 		if field.IsNil() {
 			return nil
@@ -299,12 +339,20 @@ func unwrapOpt(field reflect.Value) any {
 	if field.Kind() != reflect.Struct || !field.CanInterface() {
 		return nil
 	}
-	s, ok := field.Interface().(interface{ IsSet() bool })
-	if !ok || !s.IsSet() {
-		return nil
-	}
 	vf := field.FieldByName("V")
 	if !vf.IsValid() || !vf.CanInterface() {
+		return nil
+	}
+	switch s := field.Interface().(type) {
+	case interface{ IsSet() bool }:
+		if !s.IsSet() {
+			return reflect.Zero(reflect.PointerTo(vf.Type())).Interface()
+		}
+	case interface{ IsNull() bool }:
+		if s.IsNull() {
+			return reflect.Zero(reflect.PointerTo(vf.Type())).Interface()
+		}
+	default:
 		return nil
 	}
 	return vf.Interface()
@@ -317,6 +365,20 @@ func provided(fl validator.FieldLevel) bool {
 		if s, ok := f.Interface().(interface{ IsSet() bool }); ok {
 			return s.IsSet()
 		}
+	}
+	// Not an Opt: the field is provided when there is a value to look at.
+	return hasValue(fl.Field())
+}
+
+// hasValue reports whether v is something to validate: not an invalid (nil)
+// value, and not a nil pointer, interface, map or slice.
+func hasValue(v reflect.Value) bool {
+	if !v.IsValid() {
+		return false
+	}
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Map, reflect.Slice, reflect.Func, reflect.Chan:
+		return !v.IsNil()
 	}
 	return true
 }
@@ -346,22 +408,15 @@ func structField(fl validator.FieldLevel) (reflect.Value, bool) {
 	return f, true
 }
 
-func notnull(fl validator.FieldLevel) bool {
-	f := fl.Field()
-	switch f.Kind() {
-	case reflect.Ptr, reflect.Interface, reflect.Map, reflect.Slice, reflect.Func, reflect.Chan:
-		return !f.IsNil()
-	}
-	if f.CanInterface() {
-		if s, ok := f.Interface().(interface{ IsNull() bool }); ok {
-			return !s.IsNull()
-		}
-	}
-	return true
-}
+// notnull sees an unwrapped value: a NULL, an unset Opt and a nil pointer all
+// reach it as nil, and any other value as the value itself.
+func notnull(fl validator.FieldLevel) bool { return hasValue(fl.Field()) }
 
 func nonzero(fl validator.FieldLevel) bool {
 	f := fl.Field()
+	if !hasValue(f) {
+		return false
+	}
 	if !f.CanInterface() {
 		return true
 	}

@@ -9,7 +9,7 @@ columns cannot receive a plain value, and a required `INSERT` column cannot be
 forgotten. The analyzer catches the SQL mistakes the Go compiler cannot, and a
 real `PREPARE` checks the rest in tests.
 
-> **Status: release candidate.** Current release: `v1.0.0-rc2`. The core,
+> **Status: release candidate.** Current release: `v1.0.0-rc3`. The core,
 > generator, executor and analyzer are verified on PostgreSQL 16, 17, 18 and
 > 19. See [Verification](#verification) for what has been run.
 
@@ -762,8 +762,8 @@ regression case.
 
 The root module has no third-party dependencies. Anything that needs one lives
 in its own module, so your `go.mod` only gains what you import. The published
-modules are tagged separately (`v1.0.0-rc2`, `analyzer/v1.0.0-rc2`,
-`pgxexec/v1.0.0-rc2`, `otelqlx/v1.0.0-rc2`, `qjson/validator/v1.0.0-rc2`);
+modules are tagged separately (`v1.0.0-rc3`, `analyzer/v1.0.0-rc3`,
+`pgxexec/v1.0.0-rc3`, `otelqlx/v1.0.0-rc3`, `qjson/validator/v1.0.0-rc3`);
 `bench` is internal and is not released.
 
 ## Types in custom structs
@@ -939,9 +939,9 @@ parameter after `=`:
 | Tag | Passes when | Notes |
 | --- | --- | --- |
 | `required` | the value is not its zero value | **skipped on most `qt` structs**, see below |
-| `provided` | `qt.Opt[T]` has `IsSet()` true | presence only; a JSON `null` counts for `Opt[Null[T]]` |
+| `provided` | `qt.Opt[T]` has `IsSet()` true, or the unwrapped value is non-nil | presence only; a JSON `null` counts for `Opt[Null[T]]` |
 | `notnull` | `qt.Null[T]` is not NULL, or a pointer/slice is non-nil | for `Opt[Null[T]]`, pair it with `provided` |
-| `nonzero` | `IsZero()` is false | `qt.ID`, `qt.Date`; for a set `Opt`, its `.V` |
+| `nonzero` | `IsZero()` is false | `qt.ID`, `qt.Date`, `qt.Range`; for a set `Opt` or `Null`, its `.V` |
 | `email`, `url`/`uri`, `uuid`/`uuid4`/`uuid7`, `e164` | the string has that form | |
 | `min=`, `max=`, `len=`, `gte=`, `lte=`, `gt=`, `lt=` | numeric or length bounds | |
 | `oneof=a b c` | the value is one of the listed values | space-separated |
@@ -949,17 +949,26 @@ parameter after `=`:
 | `omitempty` | skips the other rules when the value is empty | a rule modifier, not a test |
 | `dive` | validates each element of a slice/map | `dive,keys,...,endkeys` for map keys |
 
-`required` is skipped on non-pointer structs by `go-playground/validator` by
-default, so a zero `Null`, `ID`, `Date`, `Timestamptz` or `Range` passes it; use
-`provided`, `notnull` or `nonzero` for those. `Opt` is different: `qvalidator`
-unwraps it, so `required` sees its `.V` and fails an absent key, but `provided`
-states presence more directly. `LocalTime` is the other exception: it is
-convertible to `time.Time`, so `required` runs on it and catches its zero value.
+Only `Opt` carries a presence bit. On a plain `qt.Null` field, `provided` no
+longer means "the key was sent" (the type cannot tell an absent key from an
+explicit `null`): it means "not NULL", like `notnull`. On a pointer, slice or
+map it means non-nil. Use `Opt[Null[T]]` when the two cases must stay distinct.
 
-`qvalidator` unwraps `qt.Opt[T]` before running the other rules: an **unset**
-`Opt` is seen as a nil value, which `omitempty` skips, and a **set** `Opt`
-becomes its `.V`, so the content rules finally see the value. Presence and
-format therefore fit in one tag:
+`required` is skipped on non-pointer structs by `go-playground/validator` by
+default, so a zero `ID`, `Date`, `Timestamptz` or `Range` passes it; use
+`nonzero` for those, the only one of the three that inspects the struct's
+contents (`provided` and `notnull` have no presence bit to read and always
+pass). `Opt` and `Null` are different: `qvalidator` unwraps them, so `required`
+sees the `.V` and fails an absent key or a NULL, and also fails a non-NULL zero
+value. `provided` and `notnull` state the intent more directly. `LocalTime` is
+the other exception: it is convertible to `time.Time`, so `required` runs on it
+and catches its zero value.
+
+`qvalidator` unwraps `qt.Opt[T]` and `qt.Null[T]` before running the other
+rules: an **unset** `Opt` or a **NULL** is seen as a nil value, which
+`omitempty` skips, and a **set** `Opt` or a **non-NULL** `Null` becomes its
+`.V`, so the content rules finally see the value. Presence and format therefore
+fit in one tag:
 
 ```go
 type PatchUser struct {
@@ -969,10 +978,15 @@ type PatchUser struct {
 ```
 
 `provided,email` rejects a missing key (`provided`) and a malformed address
-(`email`); `omitempty,min=3` accepts a missing key and rejects `"ab"`. Without
-`provided` or `omitempty`, an unset `Opt` fails the first rule, like a nil
-pointer. `notnull` on `qt.Opt[qt.Null[T]]` is only reached once the key is
-present, so `provided,notnull` means "sent, and not `null`".
+(`email`); `omitempty,min=3` accepts a missing key and rejects `"ab"`. The same
+holds for `qt.Null[T]`: its content rules judge the value, and a NULL is seen as
+a nil value (skipped by `omitempty`). On an `Opt[Null[T]]`, write
+`provided,omitempty,max=5`: the key must be present, and the content rules run
+only when it is not `null`. A tag that cannot fit its field (a content rule that
+runs on a NULL without `omitempty`) is returned by `Struct` as an error, never a
+panic. Without `provided` or `omitempty`, an unset `Opt` fails the first rule,
+like a nil pointer. `notnull` on `qt.Opt[qt.Null[T]]` is only reached once the
+key is present, so `provided,notnull` means "sent, and not `null`".
 
 With `go-playground/validator`, the `github.com/noobmaisfier/qlx/qjson/validator`
 module registers `provided`, `notnull` and `nonzero` and reports each failure
@@ -1114,7 +1128,7 @@ your `-targets` is caught by V009 and by the renderer.
 | Executor | integration suite green on all four majors |
 
 GitHub Actions is green on the same PostgreSQL 16–19 matrix, including the
-v1.0.0-rc2 release candidate. PostgreSQL 19 is verified on a release candidate;
+v1.0.0-rc3 release candidate. PostgreSQL 19 is verified on a release candidate;
 re-pinning on GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 
 ## Documentation

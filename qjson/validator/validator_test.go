@@ -281,3 +281,140 @@ func TestValidateIsSafeForConcurrentUse(t *testing.T) {
 		t.Fatalf("got %d passes and %d failures, want 8 and 8", passed, failed)
 	}
 }
+
+// go-playground/validator cannot apply content rules to a struct. Null[T] is
+// unwrapped like Opt[T], so max, email and the others judge the value. Before
+// that, max on a Null holding a value panicked and email rejected every address.
+func TestNullContentRulesJudgeTheValue(t *testing.T) {
+	type body struct {
+		Nick qt.Null[string] `json:"nick" validate:"omitempty,max=5"`
+		Mail qt.Null[string] `json:"mail" validate:"omitempty,email"`
+		Age  qt.Null[int64]  `json:"age" validate:"omitempty,gte=18"`
+	}
+	v := qvalidator.New()
+	ok := body{Nick: qt.Some("ada"), Mail: qt.Some("ada@example.com"), Age: qt.Some(int64(30))}
+	if err := v.Validate(ok); err != nil {
+		t.Fatalf("values that satisfy the rules must pass: %v", err)
+	}
+	if err := v.Validate(body{}); err != nil {
+		t.Fatalf("NULL with omitempty must pass: %v", err)
+	}
+	bad := body{Nick: qt.Some("toolongvalue"), Mail: qt.Some("nope"), Age: qt.Some(int64(5))}
+	var fields qjson.Errors
+	if err := v.Validate(bad); !errors.As(err, &fields) || len(fields) != 3 {
+		t.Fatalf("want three field errors, got %v", err)
+	}
+	for i, want := range []string{"nick", "mail", "age"} {
+		if fields[i].Field != want {
+			t.Errorf("error %d is about %q, want %q", i, fields[i].Field, want)
+		}
+	}
+}
+
+// Without omitempty a NULL fails the first rule, like a nil pointer; required
+// on a Null therefore means "not NULL and not the zero value".
+func TestNullWithoutOmitemptyFailsTheFirstRule(t *testing.T) {
+	type body struct {
+		Nick qt.Null[string] `json:"nick" validate:"required"`
+	}
+	v := qvalidator.New()
+	if err := v.Validate(body{}); err == nil {
+		t.Fatal("a NULL must fail required")
+	}
+	if err := v.Validate(body{Nick: qt.Some("ada")}); err != nil {
+		t.Fatalf("a value must pass required: %v", err)
+	}
+}
+
+func TestOptOfNullContentRules(t *testing.T) {
+	type body struct {
+		Nick qt.Opt[qt.Null[string]] `json:"nick" validate:"provided,omitempty,max=5"`
+	}
+	v := qvalidator.New()
+	cases := []struct {
+		name string
+		in   qt.Opt[qt.Null[string]]
+		ok   bool
+	}{
+		{"absent", qt.Opt[qt.Null[string]]{}, false},
+		{"explicit null", qt.Of(qt.None[string]()), true},
+		{"short value", qt.Of(qt.Some("ada")), true},
+		{"long value", qt.Of(qt.Some("toolongvalue")), false},
+	}
+	for _, c := range cases {
+		if err := v.Validate(body{Nick: c.in}); (err == nil) != c.ok {
+			t.Errorf("%s: err = %v, want ok=%v", c.name, err, c.ok)
+		}
+	}
+}
+
+// A rule that cannot judge the value left by an explicit null (max after
+// provided, with no omitempty between them) is a wrong tag. It is reported as
+// an error naming the type, not as a panic in the handler.
+func TestWrongTagIsAnErrorNotAPanic(t *testing.T) {
+	type body struct {
+		Nick qt.Opt[qt.Null[string]] `json:"nick" validate:"provided,max=5"`
+	}
+	v := qvalidator.New()
+	err := v.Validate(body{Nick: qt.Of(qt.None[string]())})
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	var fields qjson.Errors
+	if errors.As(err, &fields) {
+		t.Fatalf("a wrong tag is not a field error: %v", err)
+	}
+}
+
+func TestNotnullOnNullInsideSlices(t *testing.T) {
+	type body struct {
+		Items []qt.Null[string] `json:"items" validate:"dive,notnull,max=3"`
+	}
+	v := qvalidator.New()
+	var fields qjson.Errors
+	err := v.Validate(body{Items: []qt.Null[string]{qt.Some("a"), {}, qt.Some("toolong")}})
+	if !errors.As(err, &fields) || len(fields) != 2 {
+		t.Fatalf("want two errors (items[1] NULL, items[2] long), got %v", err)
+	}
+}
+
+// provided falls back to the unwrapped value when the field is not an Opt: a
+// plain Null carries no presence bit, so NULL is not provided, and neither is a
+// nil pointer/slice/map. An Opt[Null] still counts an explicit null as present.
+func TestProvidedRequiresAValue(t *testing.T) {
+	type body struct {
+		N qt.Null[string]         `json:"n" validate:"provided"`
+		S []string                `json:"s" validate:"provided"`
+		M map[string]string       `json:"m" validate:"provided"`
+		O qt.Opt[qt.Null[string]] `json:"o" validate:"provided"`
+	}
+	v := qvalidator.New()
+	var fields qjson.Errors
+	if err := v.Validate(body{}); !errors.As(err, &fields) || len(fields) != 4 {
+		t.Fatalf("want four field errors, got %v", err)
+	}
+	ok := body{
+		N: qt.Some("ada"),
+		S: []string{},
+		M: map[string]string{},
+		O: qt.Of(qt.None[string]()),
+	}
+	if err := v.Validate(ok); err != nil {
+		t.Fatalf("present values must pass: %v", err)
+	}
+}
+
+// nonzero on a Null judges the unwrapped value, not the wrapper struct: a
+// non-NULL empty string is still zero.
+func TestNonzeroOnNullChecksTheValue(t *testing.T) {
+	type body struct {
+		N qt.Null[string] `json:"n" validate:"nonzero"`
+	}
+	v := qvalidator.New()
+	if err := v.Validate(body{N: qt.Some("")}); err == nil {
+		t.Fatal("a non-NULL zero value must fail nonzero")
+	}
+	if err := v.Validate(body{N: qt.Some("ada")}); err != nil {
+		t.Fatalf("a non-zero value must pass: %v", err)
+	}
+}
