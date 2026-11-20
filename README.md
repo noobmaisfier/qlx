@@ -854,7 +854,7 @@ Every `qt` type has a JSON form, pinned by `qt/json_test.go`:
 | `qt.Interval` | an ISO 8601 duration (`"P1Y2M3DT1H"`) | also reads PostgreSQL's form |
 | `qt.Range[T]` | `{"lower":...,"upper":...,"lower_inc":...,"upper_inc":...}`, `{"empty":true}`, `null` | an inclusive bound without a bound is rejected |
 | `qt.Multirange[T]` | an array of ranges, `[]`, `null` | `[]` is empty, `null` is SQL NULL |
-| `qt.JSONB[T]` | the document itself | |
+| `qt.JSONB[T]` | the document itself | strict decoding checks the keys of `T`; use `qt.JSONB[map[string]any]` or `any` for a free-form document |
 | `qt.Vector`, `qt.HalfVector` | an array of numbers | |
 | `qt.Hstore` | an object; its values may be `null` | |
 | text-form types (`qt.LTree`, `qt.Geometry`, ...) | a string | decide that the text is your public contract |
@@ -883,8 +883,9 @@ Details that cause real bugs:
 - **`omitempty` never omits a struct.** `qt.Null`, `qt.Opt`, `qt.Date`,
   `qt.Range` and every other struct field is written even when empty; an unset
   `qt.Opt` becomes `"opt":null`. Use `omitzero` for those. An unset
-  `qt.Opt[qt.Null[T]]` without it is an error (`qt.ErrUnsetOptNull`), because
-  `null` would read back as an explicit NULL.
+  `qt.Opt[qt.Null[T]]` without it is an error (`qt.ErrUnsetOptNull`, which
+  `errors.Is` sees through `encoding/json`'s wrapper), because `null` would
+  read back as an explicit NULL.
 - **`omitzero` uses `IsZero`.** It correctly drops an unset `qt.Opt` and a zero
   `qt.ID`, but it also drops valid values for `Date` (1970-01-01),
   `Timestamptz` (the epoch) and `Range` (the unbounded `(,)`). Use a pointer
@@ -918,7 +919,9 @@ Validation happens in layers, and each one catches what the previous cannot:
 
 1. **Decode** (`qjson`): the body is JSON, bounded, one value, no unknown keys
    (at any depth, including inside `qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`
-   and `qt.Multirange`), and every `qt` type accepts its documented form.
+   and `qt.Multirange`; `AllowUnknownFields` opts out, and a type outside `qt`
+   with its own `UnmarshalJSON` stays opaque), and every `qt` type accepts its
+   documented form.
 2. **Validate** (`qvalidator` or a `Validate() error` method): business rules
    such as "email required", "age at least 18".
 3. **Statement** (compiler and `qlxvet`): the column exists, is NOT NULL when
@@ -1025,8 +1028,10 @@ func (c CreateUser) Validate() error { /* ... */ }
 Then call `qjson.Validate(body)` (it invokes `Validate` when the DTO has it).
 `qjson.DecodeRequest` (`github.com/noobmaisfier/qlx/qjson`, standard library
 only) refuses unknown keys by default, at the top level and inside the `qt`
-wrappers (`qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`, `qt.Multirange`), caps
-the body at 1 MiB, accepts exactly
+wrappers (`qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`, `qt.Multirange`);
+`AllowUnknownFields` opts out, including for the nested check, and a type
+outside `qt` with its own `UnmarshalJSON` is left opaque. It caps the body at
+1 MiB, accepts exactly
 one JSON value, checks `Content-Type` and keeps the underlying error for
 `errors.Is` (for example `qt.ErrBadID`). Validation never replaces the
 compiler: a field can be valid and still target a column that does not exist.
