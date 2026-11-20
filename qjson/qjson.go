@@ -316,9 +316,7 @@ func errorField(data []byte, dst any) string {
 		if err != nil {
 			return ""
 		}
-		one := make([]byte, 0, len(name)+len(raw)+3)
-		one = append(one, '{')
-		one = append(one, name...)
+		one := append([]byte{'{'}, name...)
 		one = append(one, ':')
 		one = append(one, raw...)
 		one = append(one, '}')
