@@ -208,6 +208,18 @@ Unlike standard Go database types (`sql.NullString` which serializes to `{"Strin
 | `qt.ID[Space]` | Scrambled prefixed string | `"usr_8v92kf9"` (DB stores `int64(42)`, public JSON gets opaque typed ID) |
 | `qt.Vector` | Array of numbers | `[0.1, 0.45, 0.89]` (clean array for LLM / vector embeddings) |
 
+### 5.9 PostgreSQL ENUMs
+PostgreSQL `CREATE TYPE ... AS ENUM ('free', 'pro', 'enterprise')` types are generated into `db/enums.go`:
+- **Strongly Typed Go Type**: `type UserTier string`
+- **Typed Constants**: `const (UserTierFree UserTier = "free", UserTierPro UserTier = "pro", ...)`
+- **Ordered Labels Slice**: `var UserTierValues = []UserTier{UserTierFree, UserTierPro, ...}` preserving PostgreSQL `enumsortorder`.
+- **Validation**: `func (v UserTier) Valid() bool` reports whether a string matches any valid enum label.
+- **SQL Cast Symbol**: `var UserTierType = qlx.NewPgType[UserTier]("public", "user_tier")` for SQL casts.
+- **Usage in Queries**:
+  - Direct type checking: `Where(Users.Tier.Eq(db.UserTierPro))` (rejects wrong types at compile time).
+  - If column is nullable: typed as `qt.Null[db.UserTier]` (`qt.Some(db.UserTierPro)` or `qt.None[db.UserTier]()`).
+  - Native JSON and `pgx` compatibility (serializes directly as `"pro"`).
+
 ---
 
 ## 6. Strict JSON Request Decoding & Validation (`qjson`)

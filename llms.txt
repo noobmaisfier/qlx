@@ -4,7 +4,7 @@
 
 ## Self-Contained AI Specification
 
-- [Full Autonomous AI Context](llms-full.txt): Complete, 100% self-contained reference and grammar rules for AI coding agents. Contains all types, query patterns, mutation rules, extension helpers, and anti-hallucination checklists without referencing any external files.
+- [Full Autonomous AI Context](llms-full.txt): Complete, 100% self-contained reference and grammar rules for AI coding agents. Contains all types (`qt`, PostgreSQL ENUMs, JSON contracts), query patterns, mutation rules, extension helpers, and anti-hallucination checklists without referencing any external files.
 
 ## Human Documentation
 

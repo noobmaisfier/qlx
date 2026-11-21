@@ -54,6 +54,22 @@ Never use Go pointers (`*string`) to model SQL NULL or dynamic parameters:
 | `qt.Vector` | `pgvector` embedding (`[]float32`) | Numbers array: `[0.1, 0.45, 0.89]` |
 | `qt.JSONB[T]` | Strong-typed JSONB column | Marshals/unmarshals `T` directly |
 | `qt.Range[T]` | Range types (`int4range`, `daterange`, `tstzrange`) | Object: `{"lower":1,"upper":5,"lower_inc":true,"upper_inc":false}` |
+| `db.EnumName` | PostgreSQL ENUM (`CREATE TYPE ... AS ENUM`) | String: `"pro"` (typed constants `db.UserTierPro`, validates with `.Valid()`) |
+
+### PostgreSQL ENUMs
+Columns referencing a PostgreSQL ENUM generate custom types in `db/enums.go`:
+```go
+// Generated:
+// type UserTier string
+// const ( UserTierFree UserTier = "free", UserTierPro UserTier = "pro" )
+// var UserTierValues = []UserTier{...}
+// func (v UserTier) Valid() bool
+
+// Usage in queries:
+Where(Users.Tier.Eq(db.UserTierPro))
+// If nullable:
+Users.Tier.Set(qt.Some(db.UserTierPro))
+```
 
 ### DTO Decoding & Validation (`qjson`)
 ```go
@@ -77,7 +93,7 @@ err := v.Validate(req)
 ```go
 // 1. One scalar value
 count, err := client.One[int64](ctx,
-    q.Select(q.CountAll()).From(Users).Where(Users.Tier.Eq("pro")))
+    q.Select(q.CountAll()).From(Users).Where(Users.Tier.Eq(db.UserTierPro)))
 
 // 2. Positional scanning with //qlx:row (Zero reflection)
 //qlx:row
@@ -96,7 +112,7 @@ users, err := client.All[UserSummary](ctx,
     ).
     From(Users).
     LeftJoin(Orders).On(Orders.UserID.EqX(Users.ID)).
-    Where(Users.Tier.Eq("pro")).
+    Where(Users.Tier.Eq(db.UserTierPro)).
     GroupBy(Users.ID, Users.Email).
     OrderBy(Users.CreatedAt.Desc()).
     Limit(20).Offset(40))
