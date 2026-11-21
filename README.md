@@ -854,6 +854,10 @@ Every `qt` scalar type is usable as a field when your column has that type; run
 adds no new types: it uses `q.Table`, `q.*Col` on the query side and the types
 above in row structs.
 
+The wrapper types `qt.Null`, `qt.Opt`, `qt.JSONB`, `qt.Range`, and `qt.Multirange`
+implement `fmt.Stringer`: `%v`, `%+v` and `fmt.Println` print their display value
+(`"hi"`, `NULL`, `unset`, `{"a":1}`, `[1,5)`), while `%#v` retains the Go struct representation.
+
 ### JSON forms
 
 Every `qt` type has a JSON form, pinned by `qt/json_test.go`:

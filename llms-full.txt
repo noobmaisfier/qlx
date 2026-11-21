@@ -131,11 +131,11 @@ QLX provides first-class Go representations for every PostgreSQL data type. Neve
 - `qt.Null[T]`: Models SQL NULL.
   - `qt.Some(v)`: Non-NULL value.
   - `qt.None[T]()`: SQL NULL.
-  - Methods: `.IsNull()`, `.Valid`, `.V`, `.Ptr()`, `qt.FromPtr(p)`.
+  - Methods: `.IsNull()`, `.Valid`, `.V`, `.Ptr()`, `qt.FromPtr(p)`, `.String()` (implements `fmt.Stringer`: `%v` prints `"NULL"` or formatted value; `%#v` shows struct fields).
 - `qt.Opt[T]`: Models dynamic filter / PATCH argument presence or absence.
   - `qt.Of(v)`: Field provided.
   - `qt.Unset[T]()`: Field omitted.
-  - Methods: `.Set`, `.V`, `.IsSet()`, `.IsZero()`.
+  - Methods: `.Set`, `.V`, `.IsSet()`, `.IsZero()`, `.String()` (implements `fmt.Stringer`: `%v` prints `"unset"` or formatted value).
 - `qt.Opt[qt.Null[T]]`: Models HTTP PATCH three-state updates.
   - `qt.Unset[qt.Null[T]]()`: Omitted in JSON -> Keep database column untouched.
   - `qt.Of(qt.None[T]())`: JSON is `null` -> Update column to SQL NULL.
@@ -172,14 +172,15 @@ rawInt := parsed.Int64()
   - `qt.NewNumeric("12345.6789")`
 
 ### 5.5 JSON Columns
-- `qt.JSONB[T]`: Strongly typed JSONB column. Automatically marshals/unmarshals `T` on read and write.
+- `qt.JSONB[T]`: Strongly typed JSONB column. Automatically marshals/unmarshals `T` on read and write. Implements `fmt.Stringer` (`.String()` returns compact JSON representation).
 - `qt.RawJSON`: Shortcut for `qt.JSONB[json.RawMessage]`.
 - `qt.JSON[T]`: Alias for `qt.JSONB[T]`.
 
 ### 5.6 Ranges & Multiranges (PostgreSQL 14+)
 - `qt.Range[T]`: PostgreSQL range (`int4range`, `numrange`, `tstzrange`, `daterange`).
   - Accessors: `.Lower()`, `.Upper()`, `.LowerInclusive()`, `.UpperInclusive()`, `.IsEmpty()`.
-- `qt.Multirange[T]`: Slice of `qt.Range[T]`.
+  - Implements `fmt.Stringer` (`.String()` returns e.g. `[1,5)` or `empty`).
+- `qt.Multirange[T]`: Slice of `qt.Range[T]`. Implements `fmt.Stringer` (`.String()` returns e.g. `{[1,3),empty}`).
 
 ### 5.7 Extension & System Types
 - `qt.Vector`: `[]float32` for `pgvector` embeddings.
@@ -227,6 +228,8 @@ PostgreSQL `CREATE TYPE ... AS ENUM ('free', 'pro', 'enterprise')` types are gen
 QLX provides a dedicated HTTP DTO layer to prevent mass-assignment vulnerabilities, enforce body size limits, and cleanly map validation errors directly to JSON field names.
 
 ### 6.1 Strict JSON Decoding (`qjson.Decode`)
+Refuses unknown fields by default at the root level and inside nested wrapper types (`qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`, `qt.Multirange`). Nested type inspection uses duck typing (`JSONInner() reflect.Type` and `JSONKeys() []string`), so custom wrappers can participate without importing `qjson`.
+
 ```go
 import "github.com/noobmaisfier/qlx/qjson"
 
