@@ -465,6 +465,7 @@ func TestVerifyRow(t *testing.T) {
 	bad("tuple type", pgxexec.VerifyRow[q.Tuple2[int64, bool]](ctx, c, two), "cannot be scanned")
 	bad("scalar width", pgxexec.VerifyRow[int64](ctx, c, two), "exactly one column")
 	bad("missing field", pgxexec.VerifyRow[verifyByName](ctx, c, nick), "no field for column")
+	ok("view into plain types", pgxexec.VerifyRow[string](ctx, c, q.Stmt{SQL: "SELECT tier::text FROM member_tiers"}))
 }
 
 // The fingerprint must not depend on the search_path of the connection that

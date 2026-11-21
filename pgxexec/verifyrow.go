@@ -157,7 +157,10 @@ func checkNullability(ctx context.Context, db Describer, sd *pgconn.StatementDes
 	}
 	// The numbers are server-reported unsigned integers, inlined so the check
 	// also works on a connection in simple protocol, which has no oid arrays.
-	rows, err := qr.Query(ctx, "SELECT attrelid::int8, attnum::int4, attnotnull, attrelid::regclass::text FROM pg_attribute WHERE attnum > 0 AND NOT attisdropped AND attrelid IN ("+strings.Join(oids, ",")+")", pgx.QueryExecModeSimpleProtocol)
+	// Only plain tables and partitioned tables (relkind 'r' and 'p') carry
+	// attnotnull constraints in pg_attribute; views and materialized views
+	// always report attnotnull=false on PostgreSQL, so they are not checked here.
+	rows, err := qr.Query(ctx, "SELECT a.attrelid::int8, a.attnum::int4, a.attnotnull, a.attrelid::regclass::text FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid WHERE a.attnum > 0 AND NOT a.attisdropped AND c.relkind IN ('r', 'p') AND a.attrelid IN ("+strings.Join(oids, ",")+")", pgx.QueryExecModeSimpleProtocol)
 	if err != nil {
 		return nil // no catalog access: the check is best effort
 	}
