@@ -8,7 +8,7 @@
 
 ## 1. Core Architecture & Invariants
 
-1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, and patches (e.g. `db.Users`, `db.Orders`). Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`). Simple views (or views with `INSTEAD OF` triggers) that PostgreSQL reports as updatable (`pg_relation_is_updatable`) also gain typed `Insert` and `Patch` builders for writable columns (`pg_column_is_updatable`).
+1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, patches, and scalar functions/procedures (e.g. `db.Users`, `db.Orders`, `db.ComputeDiscount`). Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`). Simple views (or views with `INSTEAD OF` triggers) that PostgreSQL reports as updatable (`pg_relation_is_updatable`) also gain typed `Insert` and `Patch` builders for writable columns (`pg_column_is_updatable`).
 2. **Zero String Construction**: SQL queries are NEVER assembled using string concatenation or raw SQL fragments (`Where("id = ?", 1)` does NOT exist). Everything is a typed Go function or method.
 3. **Values vs. Expressions (`X` Suffix Rule)**:
    - Methods without `X` bind Go parameters (`$1`, `$2`): `.Eq(v)`, `.Ne(v)`, `.Gt(v)`, `.To(v)`.
@@ -508,6 +508,23 @@ q.Select(Users.Email).From(Users).Where(
         Orders.Total.Gt(100),
     )),
 )
+```
+
+### 9.8 Functions & Procedures (Built-in and User-Defined)
+- **Built-in Catalog Functions**: Available via `import "github.com/noobmaisfier/qlx/pg"` (flat facade: `pg.Lower`, `pg.Abs`, `pg.Now`, etc.) or domain-specific packages `pgcat/text`, `pgcat/num`, `pgcat/datetime`, `pgcat/jsonb`, etc.
+- **User-Defined Functions (`qlx gen`)**:
+  - **Plain scalar functions** with `IN` parameters are automatically generated as typed Go wrappers returning `qlx.Expr[T]`.
+  - **Strictness**: If the function is not `STRICT`, the return type is automatically wrapped in `qt.Null[T]`.
+  - **Procedures** (`CREATE PROCEDURE`): Generated as functions returning `qlx.Command` for execution with `qlx.Call(...)`.
+  - **Skipped by generator**: Set-returning functions (`RETURNS SETOF`/`TABLE`), `VARIADIC` parameters, default arguments (`DEFAULT`), and `OUT`/`INOUT` parameters are skipped during code generation.
+- **Generic / Manual Function Call**: Any custom function can always be invoked explicitly using `qlx.FuncCall[RetType](schema, name, args...)`.
+
+```go
+// Calling generated user function:
+q.Select(db.ComputeDiscount(Products.Price, q.Val(qt.NewNumeric("0.10")))).From(Products)
+
+// Manual invocation escape hatch:
+customExpr := qlx.FuncCall[string]("app", "format_label", qlx.Arg(Users.ID), qlx.Arg(q.Val("VIP")))
 ```
 
 ---
