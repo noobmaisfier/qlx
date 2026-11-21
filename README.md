@@ -9,7 +9,7 @@ columns cannot receive a plain value, and a required `INSERT` column cannot be
 forgotten. The analyzer catches the SQL mistakes the Go compiler cannot, and a
 real `PREPARE` checks the rest in tests.
 
-> **Status: release candidate.** Current release: `v1.0.0-rc4`. The core,
+> **Status: release candidate.** Current release: `v1.0.0-rc5`. The core,
 > generator, executor and analyzer are verified on PostgreSQL 16, 17, 18 and
 > 19. See [Verification](#verification) for what has been run.
 
@@ -779,8 +779,8 @@ regression case.
 
 The root module has no third-party dependencies. Anything that needs one lives
 in its own module, so your `go.mod` only gains what you import. The published
-modules are tagged separately (`v1.0.0-rc4`, `analyzer/v1.0.0-rc4`,
-`pgxexec/v1.0.0-rc4`, `otelqlx/v1.0.0-rc4`, `qjson/validator/v1.0.0-rc4`);
+modules are tagged separately (`v1.0.0-rc5`, `analyzer/v1.0.0-rc5`,
+`pgxexec/v1.0.0-rc5`, `otelqlx/v1.0.0-rc5`, `qjson/validator/v1.0.0-rc5`);
 `bench` is internal and is not released.
 
 ## Types in custom structs
@@ -1155,7 +1155,7 @@ your `-targets` is caught by V009 and by the renderer.
 | Executor | integration suite green on all four majors |
 
 GitHub Actions is green on the same PostgreSQL 16–19 matrix, including the
-v1.0.0-rc4 release candidate. PostgreSQL 19 is verified on a release candidate;
+v1.0.0-rc5 release candidate. PostgreSQL 19 is verified on a release candidate;
 re-pinning on GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 
 ## Documentation
