@@ -23,6 +23,7 @@ targets: [18, 19]      # PostgreSQL majors the code must run on
 # ids: int             # "string" types integer primary and foreign keys as qt.ID (opaque strings in JSON; call qt.SetIDKey)
 # json_types:          # document type of json/jsonb columns (default json.RawMessage)
 #   users.settings: example.com/app/model.Settings
+# not_null: [my_view.id]   # a view column the generator cannot prove NOT NULL (it proves the simple cases itself)
 # overrides:           # Go type of a PostgreSQL type
 #   numeric:
 #     type: github.com/shopspring/decimal.Decimal

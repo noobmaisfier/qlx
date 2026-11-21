@@ -8,7 +8,7 @@
 
 ## 1. Core Architecture & Invariants
 
-1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, and patches (e.g. `db.Users`, `db.Orders`).
+1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, and patches (e.g. `db.Users`, `db.Orders`). Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`).
 2. **Zero String Construction**: SQL queries are NEVER assembled using string concatenation or raw SQL fragments (`Where("id = ?", 1)` does NOT exist). Everything is a typed Go function or method.
 3. **Values vs. Expressions (`X` Suffix Rule)**:
    - Methods without `X` bind Go parameters (`$1`, `$2`): `.Eq(v)`, `.Ne(v)`, `.Gt(v)`, `.To(v)`.

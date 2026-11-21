@@ -60,6 +60,15 @@ type Config struct {
 	Targets []int `json:"targets,omitempty"`
 	// Extensions names the extension packs to generate typed support for.
 	Extensions []string `json:"extensions,omitempty"`
+	// NotNull lists view and materialized-view columns that never hold NULL:
+	// "view.column" or "schema.view.column". PostgreSQL does not record
+	// nullability for a view; the catalog loader proves the simple cases from
+	// the view's stored query (see catalog.applyViewNullability), and a column
+	// it cannot prove is qt.Null[T]. A listed column is typed like a NOT NULL
+	// table column; the claim is the caller's, and a NULL in it fails the scan
+	// with an error instead of being read silently. An entry that names no view
+	// column, or a column of a table, is an error.
+	NotNull []string `json:"not_null,omitempty"`
 	// Nullable is the Go representation of nullable columns: "null" (the
 	// default, qt.Null[T]). Pointer mode is not offered: a *T cannot tell
 	// "NULL" from "not loaded", which is what Null[T] exists to prevent.
@@ -141,6 +150,9 @@ func (f *file) render(cfg Config, s *catalog.Schema) ([]byte, error) {
 func Generate(s *catalog.Schema, cfg Config) (*Result, error) {
 	if cfg.Package == "" {
 		return nil, fmt.Errorf("config: package is required")
+	}
+	if err := checkNotNull(s, cfg.NotNull); err != nil {
+		return nil, err
 	}
 	res := &Result{Files: map[string][]byte{}}
 	m := newMapper(s, cfg, func(w string) { res.Warnings = append(res.Warnings, w) })

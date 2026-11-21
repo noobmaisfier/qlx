@@ -54,6 +54,7 @@ type mapper struct {
 	idInfos   map[string]*idInfo
 	uuidBytes bool                  // UUID mode "bytes": [16]byte instead of the standard library type
 	packTypes map[string]packs.Type // extension types of the enabled packs, by typname
+	notNull   map[string]bool       // "schema.view.column" of view columns declared never NULL
 }
 
 // newPackTypes collects the types of the named packs.

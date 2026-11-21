@@ -5202,8 +5202,8 @@ field InhBRowPatch.A qt.Opt[qt.Null[int32]]
 field InhBRowPatch.B qt.Opt[qt.Null[int32]]
 field InhBT.A qlx.NumCol[qt.Null[int32]]
 field InhBT.B qlx.NumCol[qt.Null[int32]]
-field MvRow.A qt.Null[int32]
-field MvT.A qlx.NumCol[qt.Null[int32]]
+field MvRow.A int32
+field MvT.A qlx.NumCol[int32]
 field NopkRow.A qt.Null[int32]
 field NopkRow.B qt.Null[string]
 field NopkRowPatch.A qt.Opt[qt.Null[int32]]
@@ -5249,10 +5249,10 @@ field UqRowPatch.A qt.Opt[qt.Null[int32]]
 field UqRowPatch.B qt.Opt[qt.Null[int32]]
 field UqT.A qlx.NumCol[qt.Null[int32]]
 field UqT.B qlx.NumCol[qt.Null[int32]]
-field VRow.A qt.Null[int32]
-field VRow.B qt.Null[string]
-field VT.A qlx.NumCol[qt.Null[int32]]
-field VT.B qlx.TextCol[qt.Null[string]]
+field VRow.A int32
+field VRow.B string
+field VT.A qlx.NumCol[int32]
+field VT.B qlx.TextCol[string]
 func (*CpkRow) ScanTargets() []any
 func (*InhARow) ScanTargets() []any
 func (*InhBRow) ScanTargets() []any
@@ -5423,8 +5423,8 @@ field InhBRowPatch.A qt.Opt[qt.Null[int32]]
 field InhBRowPatch.B qt.Opt[qt.Null[int32]]
 field InhBT.A qlx.NumCol[qt.Null[int32]]
 field InhBT.B qlx.NumCol[qt.Null[int32]]
-field MvRow.A qt.Null[int32]
-field MvT.A qlx.NumCol[qt.Null[int32]]
+field MvRow.A int32
+field MvT.A qlx.NumCol[int32]
 field NopkRow.A qt.Null[int32]
 field NopkRow.B qt.Null[string]
 field NopkRowPatch.A qt.Opt[qt.Null[int32]]
@@ -5470,10 +5470,10 @@ field UqRowPatch.A qt.Opt[qt.Null[int32]]
 field UqRowPatch.B qt.Opt[qt.Null[int32]]
 field UqT.A qlx.NumCol[qt.Null[int32]]
 field UqT.B qlx.NumCol[qt.Null[int32]]
-field VRow.A qt.Null[int32]
-field VRow.B qt.Null[string]
-field VT.A qlx.NumCol[qt.Null[int32]]
-field VT.B qlx.TextCol[qt.Null[string]]
+field VRow.A int32
+field VRow.B string
+field VT.A qlx.NumCol[int32]
+field VT.B qlx.TextCol[string]
 func (*CpkRow) ScanTargets() []any
 func (*InhARow) ScanTargets() []any
 func (*InhBRow) ScanTargets() []any

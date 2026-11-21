@@ -7,7 +7,7 @@ This document is the authoritative reference for AI coding assistants (Claude Co
 ## 1. Core Mental Model & Invariants
 
 1. **Schema-First & Typed Tables**:
-   Tables and columns are generated Go values (`db.Users`, `db.Orders`). Each column is typed and only exposes methods valid for its PostgreSQL data type.
+   Tables and columns are generated Go values (`db.Users`, `db.Orders`). Each column is typed and only exposes methods valid for its PostgreSQL data type. Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`).
 2. **Zero Raw SQL Strings**:
    There is **NO** `Where("age > ?", 18)` or string concatenation. Every expression, operator, and predicate is a Go function/method.
 3. **Values vs Expressions (`X` suffix)**:

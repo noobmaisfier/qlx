@@ -239,6 +239,7 @@ func Load(c pgtool.Conn, schemas []string) (*Schema, error) {
 		t := &s.Tables[i]
 		t.Fingerprint = fps[t.Schema+"."+t.Name]
 	}
+	applyViewNullability(c, &s)
 	s.Normalize()
 	return &s, nil
 }

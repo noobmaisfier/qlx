@@ -113,6 +113,7 @@ overrides:                  # type PostgreSQL -> type Go
     family: num
 json_types:                 # colonne json/jsonb -> votre struct
   users.settings: example.com/app/model.Settings
+not_null: [rich_accounts.id]   # colonne de vue que le générateur ne sait pas prouver NOT NULL (voir §10.4)
 extensions: [pg_trgm, hstore, ltree, citext]   # paquets d'extension typés
 ```
 
@@ -1249,6 +1250,7 @@ Les constructeurs SQL/JSON ont leurs builders : `q.JSONObject`, `q.JSONArray`, `
 - Tableau : `Col[[]string]` ; `ANY($1)` pour tester l'appartenance (`col.Any(slice)`) ; opérateurs dans `pgcat/array`.
 - Plages : `qt.Range[T]` (`Lower`, `Upper` en pointeurs, `LowerInc`, `UpperInc`, `Empty`) ; opérateurs et bornes dans `pgcat/ranges`. Un `qt.Range` nul porte `Null: true`.
 - Enum : un type Go par enum avec ses constantes, comparable et typé (`Members.Tier.Eq(TierPro)`).
+- Vues et vues matérialisées : une relation lue comme une table, sans builder d'insertion ni de patch. PostgreSQL n'enregistre pas la nullabilité d'une vue (toute colonne de vue est marquée nullable), donc `qlx gen` lit la requête stockée de la vue et ne type une colonne en simple type, au lieu de `qt.Null[T]`, que si la requête le prouve : une colonne de table `NOT NULL` qui n'est pas du côté nullable d'une jointure externe, une colonne d'une autre vue prouvée, une constante, `COALESCE` avec un argument prouvé, `count(*)`, ou un cast vers un domaine `NOT NULL` (`balance::balance_nn` : PostgreSQL lève lui-même une erreur sur NULL, donc cette garantie est appliquée). Tout le reste (expressions, `CASE`, fonctions, `UNION`, `max`...) reste `qt.Null[T]`. Pour une colonne que le générateur ne sait pas prouver, castez-la vers un domaine `NOT NULL` dans la vue, ou listez-la dans `not_null: [rich_accounts.id, app.rich_accounts.email]` (`vue.colonne` ou `schema.vue.colonne`) : celle-ci est votre affirmation, et un NULL dedans fait échouer le scan au lieu d'être lu en silence. Une entrée qui ne correspond à aucune colonne de vue, ou à une colonne de table, est une erreur de génération. Rafraîchir une vue matérialisée : `q.RefreshMaterializedView`.
 
 ### 10.5 `numeric`
 

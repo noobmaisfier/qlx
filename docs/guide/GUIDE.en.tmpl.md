@@ -113,6 +113,7 @@ overrides:                  # PostgreSQL type -> Go type
     family: num
 json_types:                 # json/jsonb column -> your struct
   users.settings: example.com/app/model.Settings
+not_null: [rich_accounts.id]   # view column the generator cannot prove NOT NULL (see §10.4)
 extensions: [pg_trgm, hstore, ltree, citext]   # typed extension packages
 ```
 
@@ -830,6 +831,7 @@ The SQL/JSON constructors have their builders: `q.JSONObject`, `q.JSONArray`, `q
 - Array: `Col[[]string]`; `ANY($1)` to test membership (`col.Any(slice)`); operators in `pgcat/array`.
 - Ranges: `qt.Range[T]` (`Lower`, `Upper` as pointers, `LowerInc`, `UpperInc`, `Empty`); operators and bounds in `pgcat/ranges`. A null `qt.Range` carries `Null: true`.
 - Enum: one Go type per enum with its constants, comparable and typed (`Members.Tier.Eq(TierPro)`).
+- Views and materialized views: a relation you read like a table, with no insert or patch builder. PostgreSQL does not record nullability for a view (every view column is flagged nullable), so `qlx gen` reads the view's stored query and types a column plain, not `qt.Null[T]`, only when the query proves it: a NOT NULL table column that is not on the nullable side of an outer join, a column of another proven view, a constant, `COALESCE` with a proven argument, `count(*)`, or a cast to a `NOT NULL` domain (`balance::balance_nn`: PostgreSQL itself raises an error on NULL, so this one is enforced). Everything else (expressions, `CASE`, functions, `UNION`, `max`...) stays `qt.Null[T]`. For a column the generator cannot prove, cast it to a `NOT NULL` domain in the view, or list it in `not_null: [rich_accounts.id, app.rich_accounts.email]` (`view.column` or `schema.view.column`): that one is your claim, and a NULL in it fails the scan instead of being read silently. An entry that matches no view column, or a table column, is a generation error. Refresh a materialized view with `q.RefreshMaterializedView`.
 
 ### 10.5 `numeric`
 

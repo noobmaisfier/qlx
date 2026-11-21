@@ -56,7 +56,7 @@ func newTableGen(m *mapper, nm *namer, t catalog.Table, multiSchema bool, jsonTy
 		if info := m.idFor(nm, t, c.Name, 0); info != nil {
 			cg.typ = idGoType(info, m.intName(c.TypeOID))
 		}
-		cg.nullable = !c.NotNull
+		cg.nullable = !c.NotNull && !m.notNull[t.Schema+"."+t.Name+"."+c.Name]
 		if cg.typ.fam == famJSON {
 			for _, k := range []string{t.Schema + "." + t.Name + "." + c.Name, t.Name + "." + c.Name} {
 				if ty, ok := jsonTypes[k]; ok {

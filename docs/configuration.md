@@ -54,6 +54,7 @@ another one. All three formats have the same keys.
 | `extensions` | list of strings | none | Extension packs to generate typed support for. See [§1.4](#14-extension-packs). |
 | `overrides` | mapping | none | Go type for a PostgreSQL type. See [§1.3](#13-overrides-and-json-columns). |
 | `json_types` | mapping | none | Go document type of a `json`/`jsonb` column. See [§1.3](#13-overrides-and-json-columns). |
+| `not_null` | list of strings | none | A view or materialized-view column the generator cannot prove NOT NULL and you claim never holds NULL, as `view.column` or `schema.view.column`. See [§1.3](#13-overrides-and-json-columns). |
 | `uuid` | `std` \| `bytes` | `std` | `std` is the standard library's `uuid.UUID` (Go 1.27); `bytes` is `[16]byte`, for code that must still build on an older toolchain. |
 | `date` | `qt` \| `stdlib` | `qt` | `qt` is `qt.Date`, a calendar date with no time zone; `stdlib` is `time.Time` at midnight UTC. |
 | `timestamptz` | `qt` \| `stdlib` | `qt` | `qt` is `qt.Timestamptz`, which can hold `infinity` and `-infinity`. `stdlib` is `time.Time`, which cannot hold `infinity` (reading such a row fails). |
@@ -107,6 +108,41 @@ json_types:
 
 The column becomes `qt.JSONB[Settings]` and reads and writes that type
 directly. Columns not listed stay `qt.JSONB[json.RawMessage]`.
+
+Views and materialized views. PostgreSQL does not record nullability for a
+view: every view column is flagged nullable. `qlx gen` therefore reads the
+view's stored query and types a column plain (not `qt.Null[T]`) only when the
+query proves it:
+
+- a `NOT NULL` table column that is not on the nullable side of an outer join
+  (`LEFT JOIN` makes the right side nullable, `RIGHT JOIN` the left, `FULL`
+  both);
+- a column of another view or materialized view that is itself proven;
+- a constant, `COALESCE` with a proven argument, `count(*)` and `count(x)`;
+- a cast to a `NOT NULL` domain (`balance::balance_nn`). PostgreSQL raises an
+  error when the value is NULL, so this guarantee is enforced by the server.
+
+Everything else (arithmetic, functions, `CASE`, `max`, `UNION`, sub-selects,
+grouping sets) stays `qt.Null[T]`. When the stored query holds anything the
+generator does not understand, the whole view stays nullable: a newer
+PostgreSQL can cost precision, never a wrong `NOT NULL`. A change in a base
+table's `NOT NULL` shows up in the lock like any schema change.
+
+For a column the generator cannot prove, either cast it to a `NOT NULL`
+domain in the view, or list it in `not_null`, as `view.column` or
+`schema.view.column`:
+
+```yaml
+not_null:
+  - rich_accounts.id
+  - app.rich_accounts.email
+```
+
+A `not_null` entry is your claim, not a proof: a NULL in one of those columns
+makes the scan fail with an error, never a silent zero value. An entry that
+names no view column, or a column of a table (whose nullability the schema
+already gives), is a generation error, so a typo or a renamed column cannot go
+unnoticed.
 
 ### 1.4 Extension packs
 

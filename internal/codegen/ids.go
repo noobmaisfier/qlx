@@ -1,6 +1,8 @@
 package codegen
 
 import (
+	"fmt"
+
 	"github.com/noobmaisfier/qlx/internal/catalog"
 )
 
@@ -20,7 +22,58 @@ func newMapper(s *catalog.Schema, cfg Config, warn func(string)) *mapper {
 	for _, e := range cfg.Exclude {
 		m.exclude[e] = true
 	}
+	m.notNull = viewNotNull(s, cfg.NotNull)
 	return m
+}
+
+// viewNotNull resolves the not_null entries to "schema.view.column" keys of
+// the view and materialized-view columns they name. Entries that match
+// nothing are left out here; checkNotNull reports them.
+func viewNotNull(s *catalog.Schema, entries []string) map[string]bool {
+	want := map[string]bool{}
+	for _, e := range entries {
+		want[e] = true
+	}
+	out := map[string]bool{}
+	for _, t := range s.Tables {
+		if t.Kind != "v" && t.Kind != "m" {
+			continue
+		}
+		for _, c := range t.Columns {
+			if want[t.Schema+"."+t.Name+"."+c.Name] || want[t.Name+"."+c.Name] {
+				out[t.Schema+"."+t.Name+"."+c.Name] = true
+			}
+		}
+	}
+	return out
+}
+
+// checkNotNull refuses a not_null entry that does not name a view column, so a
+// typo or a renamed column cannot leave a column nullable without notice.
+func checkNotNull(s *catalog.Schema, entries []string) error {
+	for _, e := range entries {
+		var viewCol, tableCol bool
+		for _, t := range s.Tables {
+			for _, c := range t.Columns {
+				if e != t.Schema+"."+t.Name+"."+c.Name && e != t.Name+"."+c.Name {
+					continue
+				}
+				if t.Kind == "v" || t.Kind == "m" {
+					viewCol = true
+				} else {
+					tableCol = true
+				}
+			}
+		}
+		switch {
+		case viewCol:
+		case tableCol:
+			return fmt.Errorf("config: not_null %q names a table column: its nullability comes from the schema (NOT NULL); not_null is for views and materialized views", e)
+		default:
+			return fmt.Errorf("config: not_null %q names no view or materialized-view column (use view.column or schema.view.column)", e)
+		}
+	}
+	return nil
 }
 
 func (m *mapper) table(schema, name string) (catalog.Table, bool) {
