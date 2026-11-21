@@ -83,6 +83,8 @@ type SubscriptionResp struct {
 
 ---
 
+Printing: `Null`, `Opt`, `JSONB`, `Range` and `Multirange` have a `String` method for logs and error messages, so `%v` prints `hi`, `NULL`, `unset`, `{"a":1}`, `[1,5)` or `{[1,3),empty}` and not the struct. It is display only (a range bound is not quoted as PostgreSQL would quote it); `%#v` still shows the fields.
+
 ## 4. Ids
 
 With `ids: string` in `qlx.yaml`, every integer primary key and every foreign key to one is a `qt.ID[S]`: an integer in the database and an opaque 11-character string everywhere else, JSON and URLs included. That is made for DTOs:

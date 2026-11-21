@@ -15,6 +15,7 @@ Changes since v1.0.0-rc4.
 - **`qt.ParseTimeTZ` rejects offsets beyond ±15:59:59** (hour ≤ 15, minutes and seconds ≤ 59) instead of overflowing.
 - **Interval fields out of range are rejected** instead of being truncated.
 - **Strict JSON decoding now looks inside `qt.JSONB[T]`, `qt.Opt[struct]`, `qt.Null[struct]`, `qt.Range` and `qt.Multirange`.** Unknown keys there are errors (`settings.theme_typo`). Use `qt.JSONB[map[string]any]` or `any` for a free-form document.
+- **`qt` wrapper types (`Null`, `Opt`, `JSONB`, `Range`, `Multirange`) implement `fmt.Stringer`.** `%v`, `%+v` and `fmt.Println` print the value (`"hi"`, `"NULL"`, `"unset"`, `{"a":1}`, `[1,5)`), not the struct representation. Use `%#v` to view struct fields. Code expecting struct formats in `%v` output changes.
 
 ### Added
 
