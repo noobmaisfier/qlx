@@ -543,8 +543,8 @@ columns that are not a `qt.Null` (arrays, `bytea`, ranges). Go cannot reserve a
 method for some column types, so it compiles on a `NOT NULL` column too: the
 server answers 23502, and the analyzer reports it first (V030).
 
-A generated patch is the same idea, collected in one struct. Only the fields
-you set are written:
+A generated patch is the same idea, collected in one struct (generated for
+tables and updatable views). Only the fields you set are written:
 
 ```go
 patch := db.UserPatch{
@@ -727,8 +727,8 @@ silently.
 The analyzer reports V001–V031, with V027 retired: a column outside `FROM`,
 `UPDATE` without `WHERE`, a bare column next to `GroupBy`, an aggregate in
 `WHERE`, a feature
-newer than your targets, `ToNull()` on a `NOT NULL` column. For mapping, V018
-compares `R` with the selected
+newer than your targets, `ToNull()` on a `NOT NULL` column, `qt.Opt[qt.Null[T]]`
+without `omitzero`. For mapping, V018 compares `R` with the selected
 columns: count, order, field or alias names, Go types, `qt.Null` where the
 column can be NULL, and the optional side of an outer join. That is what turns a
 wrong struct, a missing alias or a swapped field into a `go vet` finding before
@@ -757,7 +757,7 @@ Statements become OpenTelemetry spans and a duration histogram, labelled by the
 | Tier | Catches |
 | --- | --- |
 | **Go compiler** | wrong operand types, nullability, `LIKE` on a number, `SUM` over text, an aggregate in `WHERE`, an insert missing a required column |
-| **Analyzer** (`go vet`, gopls) | a column outside `FROM`, `UPDATE` without `WHERE`, a row type that does not match the selected columns, a PostgreSQL feature newer than your targets, `ToNull()` on a `NOT NULL` column (V001–V030, with V027 retired) |
+| **Analyzer** (`go vet`, gopls) | a column outside `FROM`, `UPDATE` without `WHERE`, a row type that does not match the selected columns, a PostgreSQL feature newer than your targets, `ToNull()` on a `NOT NULL` column, `qt.Opt[qt.Null[T]]` without `omitzero` (V001–V031, with V027 retired) |
 | **Render time** | scope, grouping, shape and version rules on statements built dynamically (`ErrScope`, `ErrShape`, `ErrUnsupportedByServer`) |
 | **The server** | what only PostgreSQL knows: `PREPARE` in tests (`qlx prepare`), `VerifyRow`, `VerifySchema` |
 
@@ -902,7 +902,7 @@ Details that cause real bugs:
   `qt.Opt` becomes `"opt":null`. Use `omitzero` for those. An unset
   `qt.Opt[qt.Null[T]]` without it is an error (`qt.ErrUnsetOptNull`, which
   `errors.Is` sees through `encoding/json`'s wrapper), because `null` would
-  read back as an explicit NULL.
+  read back as an explicit NULL; the analyzer reports missing tags before runtime (V031).
 - **`omitzero` uses `IsZero`.** It correctly drops an unset `qt.Opt` and a zero
   `qt.ID`, but it also drops valid values for `Date` (1970-01-01),
   `Timestamptz` (the epoch) and `Range` (the unbounded `(,)`). Use a pointer
