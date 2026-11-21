@@ -84,7 +84,7 @@ func newTableGen(m *mapper, nm *namer, t catalog.Table, multiSchema bool, jsonTy
 		}
 		g.usedFld[f] = true
 		cg.field = f
-		cg.settable = c.Generated == "" && !t.ReadOnly() && c.Identity != "a"
+		cg.settable = c.Generated == "" && !t.ReadOnly() && c.Identity != "a" && (t.Kind != "v" || c.Updatable)
 		cg.required = cg.settable && c.NotNull && !c.HasDefault && c.Identity == ""
 		g.cols = append(g.cols, cg)
 	}
@@ -236,11 +236,12 @@ func (g *tableGen) emit(f *file) {
 
 	g.emitForeignKeys(f)
 
-	if t.ReadOnly() {
-		return
+	if t.CanInsert() {
+		g.emitInsert(f)
 	}
-	g.emitInsert(f)
-	g.emitPatch(f)
+	if t.CanUpdate() {
+		g.emitPatch(f)
+	}
 }
 
 func (g *tableGen) emitInsert(f *file) {

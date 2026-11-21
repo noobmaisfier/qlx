@@ -33,12 +33,15 @@ import (
 
 const viewNullSQL = `
 SELECT json_build_object(
- 'views', COALESCE((SELECT json_agg(json_build_object('oid', c.oid::int, 'schema', n.nspname, 'name', c.relname, 'tree', r.ev_action::text))
+ 'views', COALESCE((SELECT json_agg(json_build_object('oid', c.oid::int, 'schema', n.nspname, 'name', c.relname, 'tree', r.ev_action::text,
+      'updatable', CASE WHEN c.relkind = 'v' THEN pg_relation_is_updatable(c.oid, true) ELSE 0 END,
+      'writable', CASE WHEN c.relkind = 'v' THEN (SELECT COALESCE(json_agg(a.attnum), '[]'::json) FROM pg_attribute a
+                    WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped AND pg_column_is_updatable(c.oid, a.attnum, true)) ELSE '[]'::json END))
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     JOIN pg_rewrite r ON r.ev_class = c.oid AND r.rulename = '_RETURN'
     WHERE c.relkind IN ('v', 'm') AND n.nspname NOT IN ('pg_catalog', 'information_schema') AND n.nspname NOT LIKE 'pg\_toast%'), '[]'::json),
- 'attrs', COALESCE((SELECT json_agg(json_build_array(a.attrelid::int, a.attnum))
+ 'attrs', COALESCE((SELECT json_agg(json_build_array(a.attrelid::int, a.attnum, a.atthasdef, a.attidentity::text, a.attgenerated::text))
     FROM pg_attribute a
     JOIN pg_class c ON c.oid = a.attrelid
     JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -54,12 +57,51 @@ type viewDef struct {
 	Schema string `json:"schema"`
 	Name   string `json:"name"`
 	Tree   string `json:"tree"`
+	// Updatable is pg_relation_is_updatable(view, true): 4 UPDATE, 8 INSERT,
+	// 16 DELETE, counting INSTEAD OF triggers; Writable lists the attnums for
+	// which pg_column_is_updatable(view, attnum, true) holds.
+	Updatable int   `json:"updatable"`
+	Writable  []int `json:"writable"`
+}
+
+// attrFact is a NOT NULL column of a table: its relation oid and attnum, and
+// what an INSERT through a view needs to know about it.
+type attrFact struct {
+	Rel      int64
+	Num      int
+	HasDef   bool
+	Identity string
+	Gen      string
+}
+
+func (a *attrFact) UnmarshalJSON(b []byte) error {
+	var v []any
+	if err := json.Unmarshal(b, &v); err != nil || len(v) != 5 {
+		return errors.New("catalog: bad attribute fact")
+	}
+	rel, ok1 := v[0].(float64)
+	num, ok2 := v[1].(float64)
+	def, ok3 := v[2].(bool)
+	ident, ok4 := v[3].(string)
+	gen, ok5 := v[4].(string)
+	if !ok1 || !ok2 || !ok3 || !ok4 || !ok5 {
+		return errors.New("catalog: bad attribute fact")
+	}
+	*a = attrFact{int64(rel), int(num), def, ident, gen}
+	return nil
 }
 
 type viewFacts struct {
 	Views   []viewDef  `json:"views"`
-	Attrs   [][2]int64 `json:"attrs"`
+	Attrs   []attrFact `json:"attrs"`
 	Domains []uint32   `json:"domains"`
+}
+
+// viewCol is a view column the stored query proves NOT NULL: its name, and,
+// when it is a plain reference to a column of a table, that column.
+type viewCol struct {
+	Name string
+	Src  [2]int64 // relation oid and attnum of the base column; zero when not a plain reference
 }
 
 // applyViewNullability marks the columns of s's views that the server's query
@@ -84,20 +126,45 @@ func applyViewNullability(c pgtool.Conn, s *Schema) {
 		return
 	}
 	proven := inferViewNotNull(f)
-	byName := map[string]uint32{}
+	byName := map[string]viewDef{}
 	for _, v := range f.Views {
-		byName[v.Schema+"."+v.Name] = v.OID
+		byName[v.Schema+"."+v.Name] = v
+	}
+	base := map[[2]int64]attrFact{}
+	for _, a := range f.Attrs {
+		base[[2]int64{a.Rel, int64(a.Num)}] = a
 	}
 	for i := range s.Tables {
 		t := &s.Tables[i]
 		if t.Kind != "v" && t.Kind != "m" {
 			continue
 		}
-		cols := proven[byName[t.Schema+"."+t.Name]]
+		v := byName[t.Schema+"."+t.Name]
+		cols := proven[v.OID]
+		writable := map[int]bool{}
+		for _, n := range v.Writable {
+			writable[n] = true
+		}
+		t.Updatable = v.Updatable
 		for j := range t.Columns {
 			col := &t.Columns[j]
-			if name, ok := cols[col.Num]; ok && name == col.Name {
-				col.NotNull = true
+			col.Updatable = writable[col.Num]
+			vc, ok := cols[col.Num]
+			if !ok || vc.Name != col.Name {
+				continue
+			}
+			col.NotNull = true
+			// An INSERT through a simple view takes the view's own default, else
+			// the base column's: copy what the base says, so a required column
+			// is not asked for when the table fills it.
+			if b, ok := base[vc.Src]; ok {
+				col.HasDefault = col.HasDefault || b.HasDef
+				if col.Identity == "" {
+					col.Identity = b.Identity
+				}
+				if col.Generated == "" {
+					col.Generated = b.Gen
+				}
 			}
 		}
 	}
@@ -105,24 +172,24 @@ func applyViewNullability(c pgtool.Conn, s *Schema) {
 
 // inferViewNotNull returns, per view oid, the columns (attnum -> name) its
 // stored query proves NOT NULL.
-func inferViewNotNull(f viewFacts) map[uint32]map[int]string {
+func inferViewNotNull(f viewFacts) map[uint32]map[int]viewCol {
 	in := &inferer{
 		views:   map[uint32]viewDef{},
 		attrs:   map[[2]int64]bool{},
 		domains: map[uint32]bool{},
-		memo:    map[uint32]map[int]string{},
+		memo:    map[uint32]map[int]viewCol{},
 		busy:    map[uint32]bool{},
 	}
 	for _, v := range f.Views {
 		in.views[v.OID] = v
 	}
 	for _, a := range f.Attrs {
-		in.attrs[a] = true
+		in.attrs[[2]int64{a.Rel, int64(a.Num)}] = true
 	}
 	for _, d := range f.Domains {
 		in.domains[d] = true
 	}
-	out := map[uint32]map[int]string{}
+	out := map[uint32]map[int]viewCol{}
 	for _, v := range f.Views {
 		if cols := in.analyze(v.OID); len(cols) > 0 {
 			out[v.OID] = cols
@@ -135,11 +202,11 @@ type inferer struct {
 	views   map[uint32]viewDef
 	attrs   map[[2]int64]bool
 	domains map[uint32]bool
-	memo    map[uint32]map[int]string
+	memo    map[uint32]map[int]viewCol
 	busy    map[uint32]bool
 }
 
-func (in *inferer) analyze(oid uint32) map[int]string {
+func (in *inferer) analyze(oid uint32) map[int]viewCol {
 	if m, ok := in.memo[oid]; ok {
 		return m
 	}
@@ -157,7 +224,7 @@ func (in *inferer) analyze(oid uint32) map[int]string {
 	return cols
 }
 
-func (in *inferer) analyzeTree(tree string) map[int]string {
+func (in *inferer) analyzeTree(tree string) map[int]viewCol {
 	root, err := parseNodeTree(tree)
 	if err != nil {
 		return nil
@@ -174,7 +241,7 @@ func (in *inferer) analyzeTree(tree string) map[int]string {
 		return nil
 	}
 	rtable, _ := q.f["rtable"].([]any)
-	out := map[int]string{}
+	out := map[int]viewCol{}
 	targets, _ := q.f["targetList"].([]any)
 	for _, te := range targets {
 		t, ok := te.(*treeNode)
@@ -185,8 +252,8 @@ func (in *inferer) analyzeTree(tree string) map[int]string {
 		if err != nil {
 			return nil
 		}
-		if in.nonNull(t.f["expr"], rtable, 0) {
-			out[resno] = atom(t.f["resname"])
+		if ok, src := in.nonNull(t.f["expr"], rtable, 0); ok {
+			out[resno] = viewCol{Name: atom(t.f["resname"]), Src: src}
 		}
 	}
 	return out
@@ -195,38 +262,41 @@ func (in *inferer) analyzeTree(tree string) map[int]string {
 // Counting aggregates never return NULL: count(*) and count("any").
 var countOIDs = map[string]bool{"2803": true, "2147": true}
 
-func (in *inferer) nonNull(e any, rtable []any, depth int) bool {
+// nonNull reports whether the expression is proven never NULL and, when it is
+// a plain reference to a column of a table, which column.
+func (in *inferer) nonNull(e any, rtable []any, depth int) (bool, [2]int64) {
 	n, ok := e.(*treeNode)
 	if !ok || depth > 32 {
-		return false
+		return false, [2]int64{}
 	}
 	switch n.name {
 	case "VAR":
 		return in.nonNullVar(n, rtable, true, depth)
 	case "CONST":
-		return atom(n.f["constisnull"]) == "false"
+		return atom(n.f["constisnull"]) == "false", [2]int64{}
 	case "COALESCEEXPR":
 		args, _ := n.f["args"].([]any)
 		for _, a := range args {
-			if in.nonNull(a, rtable, depth+1) {
-				return true
+			if ok, _ := in.nonNull(a, rtable, depth+1); ok {
+				return true, [2]int64{}
 			}
 		}
-		return false
+		return false, [2]int64{}
 	case "COERCETODOMAIN":
 		// A cast to a NOT NULL domain makes PostgreSQL raise an error on NULL.
 		if id, err := strconv.ParseUint(atom(n.f["resulttype"]), 10, 32); err == nil && in.domains[uint32(id)] {
-			return true
+			return true, [2]int64{}
 		}
-		return in.nonNull(n.f["arg"], rtable, depth+1)
+		ok, _ := in.nonNull(n.f["arg"], rtable, depth+1)
+		return ok, [2]int64{}
 	case "RELABELTYPE":
 		return in.nonNull(n.f["arg"], rtable, depth+1)
 	case "AGGREF":
-		return countOIDs[atom(n.f["aggfnoid"])]
+		return countOIDs[atom(n.f["aggfnoid"])], [2]int64{}
 	case "WINDOWFUNC":
-		return countOIDs[atom(n.f["winfnoid"])]
+		return countOIDs[atom(n.f["winfnoid"])], [2]int64{}
 	}
-	return false
+	return false, [2]int64{}
 }
 
 // emptyNullingRels reports whether a Var is not nulled by an outer join:
@@ -236,48 +306,53 @@ func emptyNullingRels(v any) bool {
 	return ok && len(l) == 1 && l[0] == "b"
 }
 
-func (in *inferer) nonNullVar(v *treeNode, rtable []any, top bool, depth int) bool {
+func (in *inferer) nonNullVar(v *treeNode, rtable []any, top bool, depth int) (bool, [2]int64) {
+	no := [2]int64{}
 	if depth > 32 || atom(v.f["varlevelsup"]) != "0" || !emptyNullingRels(v.f["varnullingrels"]) {
-		return false
+		return false, no
 	}
 	varno, err1 := strconv.Atoi(atom(v.f["varno"]))
 	attno, err2 := strconv.Atoi(atom(v.f["varattno"]))
 	if err1 != nil || err2 != nil || varno < 1 || varno > len(rtable) || attno < 1 {
-		return false
+		return false, no
 	}
 	rte, ok := rtable[varno-1].(*treeNode)
 	if !ok || rte.name != "RANGETBLENTRY" {
-		return false
+		return false, no
 	}
 	switch atom(rte.f["rtekind"]) {
 	case "0": // a relation: table, view, materialized view, foreign table
 		id, err := strconv.ParseUint(atom(rte.f["relid"]), 10, 32)
 		if err != nil {
-			return false
+			return false, no
 		}
-		if in.attrs[[2]int64{int64(id), int64(attno)}] {
-			return true
+		key := [2]int64{int64(id), int64(attno)}
+		if in.attrs[key] {
+			return true, key
 		}
 		if _, isView := in.views[uint32(id)]; isView {
-			_, proven := in.analyze(uint32(id))[attno]
-			return proven
+			vc, proven := in.analyze(uint32(id))[attno]
+			return proven, vc.Src
 		}
-		return false
+		return false, no
 	case "2": // a join: its output column is an alias for a Var of a base relation
 		aliases, _ := rte.f["joinaliasvars"].([]any)
 		if attno > len(aliases) {
-			return false
+			return false, no
 		}
 		inner, ok := aliases[attno-1].(*treeNode)
-		return ok && inner.name == "VAR" && in.nonNullVar(inner, rtable, false, depth+1)
+		if !ok || inner.name != "VAR" {
+			return false, no
+		}
+		return in.nonNullVar(inner, rtable, false, depth+1)
 	case "9": // RTE_GROUP (PostgreSQL 17+): a grouped column points into groupexprs
 		exprs, _ := rte.f["groupexprs"].([]any)
 		if attno < 1 || attno > len(exprs) {
-			return false
+			return false, no
 		}
 		return in.nonNull(exprs[attno-1], rtable, depth+1)
 	}
-	return false
+	return false, no
 }
 
 // ---- parser for PostgreSQL's nodeToString text -----------------------------

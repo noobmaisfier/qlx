@@ -22,17 +22,18 @@ func TestInferFromAPostgres16Tree(t *testing.T) {
 	const accounts, items, notNullDomain = 294913, 303106, 303105
 	facts := viewFacts{
 		Views:   []viewDef{{OID: 1, Schema: "vw", Name: "j", Tree: tree}},
-		Attrs:   [][2]int64{{accounts, 1}, {accounts, 2}, {accounts, 3}, {items, 1}, {items, 3}},
+		Attrs:   nn(accounts, 1, 2, 3), // plus items below
 		Domains: []uint32{notNullDomain},
 	}
+	facts.Attrs = append(facts.Attrs, nn(items, 1, 3)...)
 	got := inferViewNotNull(facts)[1]
 	want := map[int]string{1: "id", 2: "email", 5: "one", 6: "q0", 7: "c", 8: "bnn"}
 	if len(got) != len(want) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
 	for k, v := range want {
-		if got[k] != v {
-			t.Errorf("column %d: got %q, want %q (all: %v)", k, got[k], v, got)
+		if got[k].Name != v {
+			t.Errorf("column %d: got %q, want %q (all: %v)", k, got[k].Name, v, got)
 		}
 	}
 	// qty (3) and item_id (4) come from the nullable side of the LEFT JOIN.
@@ -46,7 +47,7 @@ func TestInferFromAPostgres16Tree(t *testing.T) {
 	// Without the domain, and with accounts.balance not NOT NULL, the cast proves
 	// nothing.
 	facts.Domains = nil
-	facts.Attrs = [][2]int64{{accounts, 1}}
+	facts.Attrs = nn(accounts, 1)
 	got = inferViewNotNull(facts)[1]
 	if _, ok := got[8]; ok {
 		t.Errorf("bnn must not be proven without the domain or a NOT NULL balance: %v", got)
@@ -77,9 +78,9 @@ func TestInferVarsAreNotTrustedWhenAnythingIsOff(t *testing.T) {
 			":targetList ({TARGETENTRY :expr {VAR :varno 1 :varattno 1 " + varFields + "} :resno 1 :resname x :resjunk false})})"
 	}
 	facts := func(tree string) viewFacts {
-		return viewFacts{Views: []viewDef{{OID: 1, Tree: tree}}, Attrs: [][2]int64{{10, 1}}}
+		return viewFacts{Views: []viewDef{{OID: 1, Tree: tree}}, Attrs: nn(10, 1)}
 	}
-	if got := inferViewNotNull(facts(q(":varnullingrels (b) :varlevelsup 0")))[1]; got[1] != "x" {
+	if got := inferViewNotNull(facts(q(":varnullingrels (b) :varlevelsup 0")))[1]; got[1].Name != "x" {
 		t.Fatalf("the baseline must be proven: %v", got)
 	}
 	for name, fields := range map[string]string{
@@ -102,4 +103,13 @@ func TestParserHandlesEscapesAndDatums(t *testing.T) {
 	if atom(n.f["resname"]) != "my col" || atom(n.f["constvalue"]) != "4" || n.f["x"] != nil || len(n.f["l"].([]any)) != 3 {
 		t.Errorf("parsed wrongly: %+v", n.f)
 	}
+}
+
+// nn lists NOT NULL columns of one relation, without defaults.
+func nn(rel int64, nums ...int) []attrFact {
+	var out []attrFact
+	for _, n := range nums {
+		out = append(out, attrFact{Rel: rel, Num: n})
+	}
+	return out
 }

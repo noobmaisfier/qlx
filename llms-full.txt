@@ -8,14 +8,14 @@
 
 ## 1. Core Architecture & Invariants
 
-1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, and patches (e.g. `db.Users`, `db.Orders`). Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`).
+1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, and patches (e.g. `db.Users`, `db.Orders`). Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`). Simple views (or views with `INSTEAD OF` triggers) that PostgreSQL reports as updatable (`pg_relation_is_updatable`) also gain typed `Insert` and `Patch` builders for writable columns (`pg_column_is_updatable`).
 2. **Zero String Construction**: SQL queries are NEVER assembled using string concatenation or raw SQL fragments (`Where("id = ?", 1)` does NOT exist). Everything is a typed Go function or method.
 3. **Values vs. Expressions (`X` Suffix Rule)**:
    - Methods without `X` bind Go parameters (`$1`, `$2`): `.Eq(v)`, `.Ne(v)`, `.Gt(v)`, `.To(v)`.
    - Methods with `X` accept columns or SQL expressions: `.EqX(col)`, `.NeX(col)`, `.GtX(expr)`, `.ToX(expr)`.
 4. **Compile-Time & Analyzer Safety**:
    - Columns are strictly typed; an integer column cannot accept a string.
-   - `qlxvet` analyzer catches logical errors at build time: `Update` or `DeleteFrom` without `.Where(...)` or `.All()` fails compilation/linting; setting `ToNull()` on a non-nullable column fails (V030).
+   - `qlxvet` analyzer catches logical errors at build time: `Update` or `DeleteFrom` without `.Where(...)` or `.All()` fails compilation/linting; setting `ToNull()` on a non-nullable column fails (V030); struct fields of type `qt.Opt[qt.Null[T]]` without `omitzero` in their `json` tag fail (V031: prevents unset fields from marshaling as explicit `null`).
 5. **Zero-Reflection Row Scanning**:
    - Use `//qlx:row` above custom result structs and run `qlx rows ./...`.
    - Generates a `ScanTargets()` method for positional scanning directly into memory pointers with zero reflection overhead.
@@ -198,7 +198,7 @@ Unlike standard Go database types (`sql.NullString` which serializes to `{"Strin
 |---|---|---|
 | `qt.Null[T]` | `"val"` or `null` | **Zero wrapper**: unwraps directly to primitive value or `null` |
 | `qt.Opt[T]` | `"val"` or omitted | Disappears completely from JSON when unset using `json:",omitzero"` |
-| `qt.Opt[qt.Null[T]]` | `"val"`, `null`, or omitted | Solves HTTP PATCH: absent = keep, `null` = SQL NULL, `"val"` = update |
+| `qt.Opt[qt.Null[T]]` | `"val"`, `null`, or omitted | Solves HTTP PATCH: absent = keep, `null` = SQL NULL, `"val"` = update. Must tag with `json:",omitzero"` (enforced by `qlxvet` V031, otherwise `qt.ErrUnsetOptNull`) |
 | `qt.Date` | `"YYYY-MM-DD"` | Pure ISO date string (`"2026-03-30"`), no artificial midnight timestamps |
 | `qt.TimeOfDay` | `"HH:MM:SS"` | Microsecond resolution time (`"14:30:00.000000"`) |
 | `qt.Timestamptz` | ISO 8601 UTC / `"infinity"` | `"2026-03-30T14:30:00Z"`; safely supports `"infinity"` and `"-infinity"` |

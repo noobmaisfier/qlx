@@ -21,6 +21,9 @@ type Column struct {
 	HasDefault bool   `json:"has_default"`
 	Identity   string `json:"identity"`  // "", "a" (ALWAYS), "d" (BY DEFAULT)
 	Generated  string `json:"generated"` // "", "s" (stored), "v" (virtual, PostgreSQL 18)
+	// Updatable is set on view columns only: pg_column_is_updatable(view, column,
+	// true), so an INSERT or UPDATE through the view may assign it.
+	Updatable bool `json:"updatable,omitempty"`
 }
 
 // Constraint is a primary key, unique, foreign key or exclusion constraint.
@@ -42,10 +45,33 @@ type Table struct {
 	PrimaryKey  []string     `json:"primary_key"`
 	Constraints []Constraint `json:"constraints"`
 	Fingerprint string       `json:"fingerprint"`
+	// Updatable is set on views only: pg_relation_is_updatable(view, true), the
+	// events an automatically updatable view (or one with INSTEAD OF triggers)
+	// accepts: 4 UPDATE, 8 INSERT, 16 DELETE. A materialized view never is.
+	Updatable int `json:"updatable,omitempty"`
 }
 
-// ReadOnly reports whether the relation cannot be written to.
-func (t Table) ReadOnly() bool { return t.Kind == "v" || t.Kind == "m" }
+// CanInsert reports whether rows can be inserted into the relation: a table, or
+// a view that accepts INSERT.
+func (t Table) CanInsert() bool {
+	if t.Kind == "v" {
+		return t.Updatable&8 != 0
+	}
+	return t.Kind != "m"
+}
+
+// CanUpdate reports whether rows can be updated: a table, or a view that
+// accepts UPDATE.
+func (t Table) CanUpdate() bool {
+	if t.Kind == "v" {
+		return t.Updatable&4 != 0
+	}
+	return t.Kind != "m"
+}
+
+// ReadOnly reports whether the relation can be neither inserted into nor
+// updated: a materialized view, or a view that is not updatable.
+func (t Table) ReadOnly() bool { return !t.CanInsert() && !t.CanUpdate() }
 
 // Type is a pg_type row reachable from the included tables and functions.
 type Type struct {

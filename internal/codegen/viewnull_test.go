@@ -97,3 +97,62 @@ func TestNotNullRefusesWhatItCannotApply(t *testing.T) {
 		}
 	}
 }
+
+// A view gets an Insert and a Patch type only for the events it accepts, and a
+// Patch field only for a column it lets you write.
+func TestUpdatableViewsGetWriteTypes(t *testing.T) {
+	s := viewSchema()
+	for i := range s.Tables {
+		switch s.Tables[i].Name {
+		case "rich": // simple view: INSERT, UPDATE, DELETE
+			s.Tables[i].Updatable = 28
+			s.Tables[i].Columns[0].Updatable = true
+			s.Tables[i].Columns[1].Updatable = true
+			s.Tables[i].Columns[1].NotNull = true // email: required for an insert
+			s.Tables[i].Columns[2].Updatable = false
+		case "mrich":
+			s.Tables[i].Updatable = 0
+		}
+	}
+	s.Tables = append(s.Tables,
+		catalog.Table{Schema: "app", Name: "ins_only", Kind: "v", Updatable: 8, Columns: []catalog.Column{
+			{Num: 1, Name: "email", TypeOID: 25, NotNull: true, Updatable: true}}},
+		catalog.Table{Schema: "app", Name: "upd_only", Kind: "v", Updatable: 4, Columns: []catalog.Column{
+			{Num: 1, Name: "email", TypeOID: 25, Updatable: true}}},
+		catalog.Table{Schema: "app", Name: "deleted_only", Kind: "v", Updatable: 16, Columns: []catalog.Column{
+			{Num: 1, Name: "email", TypeOID: 25}}})
+	r, err := codegen.Generate(s, codegen.Config{Package: "db", Schemas: []string{"app"}, Out: "db"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := map[string]string{}
+	for n, b := range r.Files {
+		f[n] = strings.Join(strings.Fields(string(b)), " ")
+	}
+	has := func(file, sub string) bool { return strings.Contains(f[file], sub) }
+
+	if !has("rich.go", "type RichRowInsert struct") || !has("rich.go", "type RichRowPatch struct") {
+		t.Errorf("a simple view gets Insert and Patch:\n%s", f["rich.go"])
+	}
+	if !has("rich.go", "func NewRichRowInsert(email string)") {
+		t.Errorf("email is required for an insert:\n%s", f["rich.go"])
+	}
+	if has("rich.go", "Note qt.Opt") {
+		t.Error("note is not a writable column of the view: no Patch field")
+	}
+	if !has("rich.go", "Email qt.Opt[string]") {
+		t.Error("email is writable: it is a Patch field")
+	}
+	if has("mrich.go", "Insert struct") || has("mrich.go", "Patch struct") {
+		t.Error("a materialized view stays read-only")
+	}
+	if !has("ins_only.go", "Insert struct") || has("ins_only.go", "Patch struct") {
+		t.Error("an insert-only view gets an Insert type and no Patch")
+	}
+	if has("upd_only.go", "Insert struct") || !has("upd_only.go", "Patch struct") {
+		t.Error("an update-only view gets a Patch type and no Insert")
+	}
+	if has("deleted_only.go", "Insert struct") || has("deleted_only.go", "Patch struct") {
+		t.Error("a view that only accepts DELETE has no write types")
+	}
+}

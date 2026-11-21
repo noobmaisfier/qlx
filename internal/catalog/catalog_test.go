@@ -143,3 +143,95 @@ CREATE MATERIALIZED VIEW vn.mat AS SELECT id, email, note FROM vn.accounts;
 		}
 	}
 }
+
+// pg_relation_is_updatable and pg_column_is_updatable say which views accept
+// INSERT / UPDATE and which of their columns; defaults and identity come from
+// the base column when the view is a plain reference to it.
+func TestUpdatableViewsFromTheServer(t *testing.T) {
+	srv := server(t)
+	sql := `
+CREATE SCHEMA uv;
+CREATE TABLE uv.accounts (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email text NOT NULL,
+  balance bigint NOT NULL DEFAULT 0,
+  slug text NOT NULL,
+  note text);
+CREATE TABLE uv.items (id bigint PRIMARY KEY, account_id bigint REFERENCES uv.accounts(id), qty int NOT NULL);
+CREATE VIEW uv.simple AS SELECT id, email, balance, slug, note FROM uv.accounts;
+CREATE VIEW uv.calc AS SELECT id, email, balance + 1 AS plus FROM uv.accounts;
+CREATE VIEW uv.joined AS SELECT a.id, i.qty FROM uv.accounts a JOIN uv.items i ON i.account_id = a.id;
+CREATE VIEW uv.distinct_v AS SELECT DISTINCT email FROM uv.accounts;
+CREATE VIEW uv.trig AS SELECT a.id, i.qty FROM uv.accounts a JOIN uv.items i ON i.account_id = a.id;
+CREATE FUNCTION uv.noop() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$;
+CREATE TRIGGER t_ins INSTEAD OF INSERT ON uv.trig FOR EACH ROW EXECUTE FUNCTION uv.noop();
+CREATE VIEW uv.dflt AS SELECT id, email FROM uv.accounts;
+ALTER VIEW uv.dflt ALTER COLUMN email SET DEFAULT 'x@example.com';
+CREATE MATERIALIZED VIEW uv.mat AS SELECT id, email FROM uv.accounts;
+`
+	f := t.TempDir() + "/uv.sql"
+	if err := os.WriteFile(f, []byte(sql), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.Conn().ExecFile(f); err != nil {
+		t.Fatal(err)
+	}
+	s, err := catalog.Load(srv.Conn(), []string{"uv"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tab := map[string]catalog.Table{}
+	for _, tb := range s.Tables {
+		tab[tb.Name] = tb
+	}
+	col := func(view, name string) catalog.Column {
+		for _, c := range tab[view].Columns {
+			if c.Name == name {
+				return c
+			}
+		}
+		t.Fatalf("no column %s.%s", view, name)
+		return catalog.Column{}
+	}
+
+	for view, want := range map[string]int{"simple": 28, "calc": 28, "joined": 0, "distinct_v": 0, "trig": 8, "dflt": 28, "mat": 0} {
+		if got := tab[view].Updatable; got != want {
+			t.Errorf("%s: Updatable = %d, want %d", view, got, want)
+		}
+	}
+	if !tab["simple"].CanInsert() || !tab["simple"].CanUpdate() || tab["simple"].ReadOnly() {
+		t.Error("a simple view accepts INSERT and UPDATE")
+	}
+	if tab["joined"].CanInsert() || tab["joined"].CanUpdate() || !tab["joined"].ReadOnly() {
+		t.Error("a join view is read-only")
+	}
+	if !tab["trig"].CanInsert() || tab["trig"].CanUpdate() {
+		t.Error("an INSTEAD OF INSERT trigger makes the view insertable, not updatable")
+	}
+	if tab["mat"].CanInsert() || tab["mat"].CanUpdate() {
+		t.Error("a materialized view is read-only")
+	}
+
+	if !col("simple", "email").Updatable || !col("simple", "note").Updatable {
+		t.Error("plain references are writable")
+	}
+	if col("calc", "plus").Updatable {
+		t.Error("a computed column is not writable")
+	}
+	// Proven NOT NULL, and the defaults of the base column.
+	if e := col("simple", "email"); !e.NotNull || e.HasDefault {
+		t.Errorf("email: NOT NULL without a default, got %+v", e)
+	}
+	if b := col("simple", "balance"); !b.NotNull || !b.HasDefault {
+		t.Errorf("balance takes the DEFAULT of the table, got %+v", b)
+	}
+	if id := col("simple", "id"); !id.NotNull || id.Identity != "a" {
+		t.Errorf("id is GENERATED ALWAYS in the table, got %+v", id)
+	}
+	if n := col("simple", "note"); n.NotNull {
+		t.Error("note is nullable")
+	}
+	if e := col("dflt", "email"); !e.HasDefault {
+		t.Error("a default set on the view itself counts")
+	}
+}

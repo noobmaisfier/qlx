@@ -5251,6 +5251,8 @@ field UqT.A qlx.NumCol[qt.Null[int32]]
 field UqT.B qlx.NumCol[qt.Null[int32]]
 field VRow.A int32
 field VRow.B string
+field VRowPatch.A qt.Opt[int32]
+field VRowPatch.B qt.Opt[string]
 field VT.A qlx.NumCol[int32]
 field VT.B qlx.TextCol[string]
 func (*CpkRow) ScanTargets() []any
@@ -5330,6 +5332,8 @@ func (UqRowInsert) B(v qt.Null[int32]) UqRowInsert
 func (UqRowPatch) Assignments() []qlx.Assignment
 func (UqT) All() []qlx.Selectable
 func (UqT) As(alias string) UqT
+func (VRowInsert) Assignments() []qlx.Assignment
+func (VRowPatch) Assignments() []qlx.Assignment
 func (VT) All() []qlx.Selectable
 func (VT) As(alias string) VT
 func NewCpkRowInsert(a int32, b string) CpkRowInsert
@@ -5342,6 +5346,7 @@ func NewRef3RowInsert() Ref3RowInsert
 func NewTreeRowInsert(id int32) TreeRowInsert
 func NewUnlRowInsert() UnlRowInsert
 func NewUqRowInsert() UqRowInsert
+func NewVRowInsert(a int32, b string) VRowInsert
 type CpkRow struct
 type CpkRowInsert struct
 type CpkRowPatch struct
@@ -5385,6 +5390,8 @@ type UqRowInsert struct
 type UqRowPatch struct
 type UqT struct
 type VRow struct
+type VRowInsert struct
+type VRowPatch struct
 type VT struct
 var Cpk
 var CpkCpkPkey
@@ -5472,6 +5479,8 @@ field UqT.A qlx.NumCol[qt.Null[int32]]
 field UqT.B qlx.NumCol[qt.Null[int32]]
 field VRow.A int32
 field VRow.B string
+field VRowPatch.A qt.Opt[int32]
+field VRowPatch.B qt.Opt[string]
 field VT.A qlx.NumCol[int32]
 field VT.B qlx.TextCol[string]
 func (*CpkRow) ScanTargets() []any
@@ -5552,6 +5561,8 @@ func (UqRowInsert) B(v qt.Null[int32]) UqRowInsert
 func (UqRowPatch) Assignments() []qlx.Assignment
 func (UqT) All() []qlx.Selectable
 func (UqT) As(alias string) UqT
+func (VRowInsert) Assignments() []qlx.Assignment
+func (VRowPatch) Assignments() []qlx.Assignment
 func (VT) All() []qlx.Selectable
 func (VT) As(alias string) VT
 func NewCpkRowInsert(a int32, b string) CpkRowInsert
@@ -5564,6 +5575,7 @@ func NewRef3RowInsert() Ref3RowInsert
 func NewTreeRowInsert(id qt.ID[TreeIDSpace]) TreeRowInsert
 func NewUnlRowInsert() UnlRowInsert
 func NewUqRowInsert() UqRowInsert
+func NewVRowInsert(a int32, b string) VRowInsert
 type CpkRow struct
 type CpkRowInsert struct
 type CpkRowPatch struct
@@ -5609,6 +5621,8 @@ type UqRowInsert struct
 type UqRowPatch struct
 type UqT struct
 type VRow struct
+type VRowInsert struct
+type VRowPatch struct
 type VT struct
 var Cpk
 var CpkCpkPkey
