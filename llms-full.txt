@@ -80,34 +80,42 @@ defer client.Close()
 * `client.Maybe[R](ctx, stmt)`: Returns `(qt.Opt[R], error)`. If no row matches, returns `qt.Opt[R]{Set: false}` and `nil` error!
 * `client.Each[R](ctx, stmt)`: Returns Go 1.23 standard iterator `iter.Seq2[R, error]` for streaming without buffering.
 * `client.Exec(ctx, stmt)`: Executes non-query statements. Returns `(pgconn.CommandTag, error)`.
+* `client.InsertMany(ctx, base, rows, opt)`: Bulk inserts multiple rows chunked under 65,535 parameters in one transaction.
+* `client.InsertManyReturning[R](ctx, base, rows, opt)`: Bulk insert collecting RETURNING columns into `[]R`.
+* `client.InTx(ctx, opts, retry, func(ctx, tx *pgxexec.Tx) error)`: Runs closure in a managed transaction with automatic retry on deadlocks/serialization failures (40001, 40P01).
+* `client.CopyIn(ctx, stmt, r)`: High-speed binary COPY from io.Reader.
 * `client.Render(stmt)`: Renders SQL string and args slice without executing.
 * `client.DB()`: Returns underlying `Querier` (wrapped with tracer if configured).
 * `client.Close()`: Closes the connection pool.
 
-### 4.3 Package-Level Execution (Transactions & Queries on `pgx.Tx` / `*pgx.Conn`)
-When inside a transaction callback or working with raw pgx connections:
-* `pgxexec.All[R](ctx, tx, stmt)`
-* `pgxexec.One[R](ctx, tx, stmt)`
-* `pgxexec.Maybe[R](ctx, tx, stmt)`
-* `pgxexec.Each[R](ctx, tx, stmt)`
-* `pgxexec.Exec(ctx, tx, stmt)`
+### 4.3 Transactions (`*pgxexec.Tx`)
+Transactions started with `client.InTx` receive a `*pgxexec.Tx` wrapper carrying the client's dialect, shape cache, and tracer. All queries inside run directly on `tx`:
+* `tx.Exec(ctx, stmt, binds...)`
+* `tx.All[R](ctx, stmt, binds...)`
+* `tx.One[R](ctx, stmt, binds...)`
+* `tx.Maybe[R](ctx, stmt, binds...)`
+* `tx.Each[R](ctx, stmt, binds...)`
+* `tx.InsertMany(ctx, base, rows, opt)`
+* `tx.InsertManyReturning[R](ctx, base, rows, opt)`
+* `tx.Savepoint(ctx, name, func(ctx) error)`: Partial rollback savepoint.
+* `tx.Pgx()`: Underlying `pgx.Tx` for raw pgx operations if needed.
 
 ### 4.4 Bulk Operations (`InsertMany` & `InsertManyReturning`)
-Bulk inserts automatically split large datasets across statements to respect PostgreSQL's 65,535-parameter limit. If multiple statements are required, they execute automatically in a single transaction.
+Bulk inserts automatically split large datasets across statements to respect PostgreSQL's 65,535-parameter limit.
 
 ```go
-// 1. Bulk insert without RETURNING (returns count of inserted rows)
+// 1. Bulk insert on Client without RETURNING (returns count of inserted rows)
 rows := []qlx.RowAssigner{
     Users.Row(Users.Email.To("a@example.com"), Users.Tier.To("pro")),
     Users.Row(Users.Email.To("b@example.com"), Users.Tier.To("free")),
 }
-count, err := pgxexec.InsertMany(ctx, client.Pool, client.Dialect,
+count, err := client.InsertMany(ctx,
     q.InsertInto(Users).OnConflict(Users.Email).DoNothing(),
     rows,
     pgxexec.BulkOptions{MaxParams: 0}) // 0 = default MaxBindParams (65,535)
 
-// 2. Bulk insert with RETURNING (collects returned rows in order)
-ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
+// 2. Bulk insert on Client with RETURNING (collects returned rows in order)
+ids, err := client.InsertManyReturning[int64](ctx,
     q.InsertInto(Users).Returning(Users.ID),
     rows,
     pgxexec.BulkOptions{})
@@ -629,20 +637,31 @@ users, err := client.All[UserSummary](ctx,
 
 ## 12. Transactions & Retries
 
+Transactions are started via `client.InTx`. The callback receives a `*pgxexec.Tx` and statements run directly on it:
+
 ```go
-err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{
+err := client.InTx(ctx, pgx.TxOptions{
     IsoLevel: pgx.ReadCommitted,
 }, pgxexec.Retry{
     Attempts: 3, // Automatically retries deadlocks and serialization failures (40001, 40P01)
-}, func(ctx context.Context, tx pgx.Tx) error {
-    _, err := pgxexec.Exec(ctx, tx,
+}, func(ctx context.Context, tx *pgxexec.Tx) error {
+    _, err := tx.Exec(ctx,
         q.Update(Accounts).
             Set(Accounts.Balance.ToX(Accounts.Balance.Sub(100))).
             Where(Accounts.ID.Eq(fromID)))
     if err != nil {
-        return err // Rolls back
+        return err // Automatically rolls back
     }
-    return nil // Commits
+
+    _, err = tx.Exec(ctx,
+        q.Update(Accounts).
+            Set(Accounts.Balance.ToX(Accounts.Balance.Add(100))).
+            Where(Accounts.ID.Eq(toID)))
+    if err != nil {
+        return err // Automatically rolls back
+    }
+
+    return nil // Automatically commits
 })
 ```
 

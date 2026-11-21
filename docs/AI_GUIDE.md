@@ -192,12 +192,12 @@ _, err := client.Exec(ctx,
         OnConflict(Users.Email).
         DoUpdate(Users.Balance.ToX(Users.Balance.Add(100))))
 
-// Bulk insert
+// Bulk insert (directly on Client)
 rows := []qlx.RowAssigner{
     Users.Row(Users.Email.To("a@example.com"), Users.Tier.To("pro")),
     Users.Row(Users.Email.To("b@example.com"), Users.Tier.To("free")),
 }
-ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
+ids, err := client.InsertManyReturning[int64](ctx,
     q.InsertInto(Users).Returning(Users.ID), rows, pgxexec.BulkOptions{})
 ```
 
@@ -268,17 +268,17 @@ q.Select(Users.ID).From(Users).OrderBy(order...)
 ### 4.9 Transactions with Retries
 
 ```go
-err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{}, pgxexec.Retry{
+err := client.InTx(ctx, pgx.TxOptions{}, pgxexec.Retry{
     Attempts: 3,
-}, func(ctx context.Context, tx pgx.Tx) error {
-    _, err := pgxexec.Exec(ctx, tx,
+}, func(ctx context.Context, tx *pgxexec.Tx) error {
+    _, err := tx.Exec(ctx,
         q.Update(Users).
             Set(Users.Balance.ToX(Users.Balance.Sub(10))).
             Where(Users.ID.Eq(sourceID)))
     if err != nil {
-        return err
+        return err // Rolls back
     }
-    return nil
+    return nil // Commits
 })
 ```
 

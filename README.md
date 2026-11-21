@@ -456,6 +456,15 @@ ids, err := pgxexec.InsertManyReturning[int64](ctx, client.Pool, client.Dialect,
     q.InsertInto(Users).Returning(Users.ID), rows, pgxexec.BulkOptions{})
 ```
 
+The same calls exist on the client, which supplies the pool and the dialect
+(and `InsertManyReturning` takes the row type as a type parameter):
+
+```go
+n, err := client.InsertMany(ctx, q.InsertInto(Users), rows, pgxexec.BulkOptions{})
+ids, err := client.InsertManyReturning[int64](ctx,
+    q.InsertInto(Users).Returning(Users.ID), rows, pgxexec.BulkOptions{})
+```
+
 With a `pgx.Tx`, the chunks join your transaction; `MaxParams` lowers the
 budget when `ToX` values carry arguments of their own. The splitting alone is
 `InsertQuery.Chunks(rows, maxParams)`.
@@ -594,21 +603,29 @@ when the list endpoint has many of them.
 ### Transactions and retries
 
 ```go
-err := pgxexec.InTx(ctx, client.Pool, pgx.TxOptions{}, pgxexec.Retry{
-    Attempts: 3,
-}, func(ctx context.Context, tx pgx.Tx) error {
-    if _, err := pgxexec.Exec(ctx, tx,
-        q.Update(Users).
-            Set(Users.Balance.ToX(Users.Balance.Sub(5))).
-            Where(Users.ID.Eq(7))); err != nil {
+err := client.InTx(ctx, pgx.TxOptions{}, pgxexec.Retry{Attempts: 3},
+    func(ctx context.Context, tx *pgxexec.Tx) error {
+        if _, err := tx.Exec(ctx,
+            q.Update(Users).
+                Set(Users.Balance.ToX(Users.Balance.Sub(5))).
+                Where(Users.ID.Eq(7))); err != nil {
+            return err
+        }
+        _, err := tx.InsertMany(ctx, q.InsertInto(Ledger), rows, pgxexec.BulkOptions{})
         return err
-    }
-    return nil
-})
+    })
 ```
 
+`tx` has the methods of the client: `Exec`, `All[R]`, `One[R]`, `Maybe[R]`,
+`Each[R]`, `InsertMany`, `InsertManyReturning[R]`, `CopyIn`, plus
+`Savepoint` for a partial rollback. It uses the client's dialect, shape cache
+and tracer. `tx.Pgx()` returns the raw `pgx.Tx` for anything else; do not
+commit or roll it back, `InTx` does.
+
 `InTx` retries serialization failures and deadlocks; the callback must be safe
-to run again. Use `pgxexec.WithSavepoint` for a partial rollback.
+to run again. The package-level `pgxexec.InTx(ctx, pool, ...)` and
+`pgxexec.WithSavepoint` stay available for code that holds a pool or a
+`pgx.Tx` rather than a client.
 
 ### Mapping rows to Go values
 
