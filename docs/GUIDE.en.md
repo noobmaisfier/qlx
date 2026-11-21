@@ -132,6 +132,13 @@ For each table, for example `users`:
 
 Plus, for the whole schema: enums (Go type + constants), typed scalar functions and procedures, and `register.go` (schema specification for the startup check).
 
+Your own functions are wrapped as far as their signature can be typed:
+
+- a `VARIADIC` function takes a Go variadic (`JoinAll(sep, parts ...qlx.Operand[string])`);
+- a function with default arguments gets two wrappers: `Greet(who)` leaves the defaults to PostgreSQL, `GreetAll(who, greeting, punct)` passes every argument (there is no named-argument call);
+- a set-returning function with `OUT` or `TABLE` columns, or returning `SETOF` a scalar, becomes a `qlx.TableFunc` with a `<Name>Columns` struct and a `<Name>Cols` variable: `Pairs(n).As("p", PairsCols.Fields()...)`, then `q.Ref(p, PairsCols.A)`; every column is `qt.Null[T]`;
+- skipped, and listed by `qlx generate`: `VARIADIC "any"`, variadic with default arguments, `INOUT` parameters, `OUT` parameters of a function that does not return a set, and `SETOF` a composite or `record` without `OUT` columns.
+
 ---
 
 ## 3. Connecting

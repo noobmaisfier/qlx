@@ -130,6 +130,21 @@ CREATE FOREIGN DATA WRAPPER fdw_%[2]s;`, s, strings.TrimPrefix(s, "odd"))
 			}
 			return fmt.Sprintf("CREATE TABLE %[1]s.empty ();\nCREATE TABLE %[1]s.wide (%s);", s, strings.Join(cols, ","))
 		}},
+		oddCase{"functions", func(s string) string { // VARIADIC, defaults, SRFs, odd parameter names
+			return fmt.Sprintf(`
+CREATE FUNCTION %[1]s.join_all(sep text, VARIADIC parts text[]) RETURNS text LANGUAGE sql AS 'SELECT array_to_string(parts, sep)';
+CREATE FUNCTION %[1]s.sum_all(VARIADIC xs int[]) RETURNS int LANGUAGE sql AS 'SELECT sum(x)::int FROM unnest(xs) x';
+CREATE FUNCTION %[1]s.greet(who text, greeting text DEFAULT 'hello', punct text DEFAULT '!') RETURNS text LANGUAGE sql AS 'SELECT greeting || who || punct';
+CREATE FUNCTION %[1]s.clash("qlx" int, "type" int, "args" int, "end" int DEFAULT 1) RETURNS int LANGUAGE sql AS 'SELECT 1';
+CREATE FUNCTION %[1]s.pairs(n int, OUT a int, OUT b text) RETURNS SETOF record LANGUAGE sql AS 'SELECT i, i::text FROM generate_series(1, n) i';
+CREATE FUNCTION %[1]s.tbl(n int DEFAULT 3) RETURNS TABLE (x int, "Fields" int, "select" int) LANGUAGE sql AS 'SELECT i, i, i FROM generate_series(1, n) i';
+CREATE FUNCTION %[1]s.series(n int) RETURNS SETOF int LANGUAGE sql AS 'SELECT generate_series(1, n)';
+CREATE FUNCTION %[1]s.unnamed(int, text) RETURNS TABLE (c1 int, c2 text) LANGUAGE sql AS 'SELECT 1, ''a''';
+CREATE FUNCTION %[1]s.inout(INOUT x int) RETURNS int LANGUAGE sql AS 'SELECT x';
+CREATE PROCEDURE %[1]s.proc(a int, VARIADIC b text[]) LANGUAGE sql AS 'SELECT 1';
+CREATE PROCEDURE %[1]s.dproc(a int, b int DEFAULT 2) LANGUAGE sql AS 'SELECT 1';
+`, s)
+		}},
 	)
 	return cs
 }

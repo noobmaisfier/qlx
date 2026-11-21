@@ -65,6 +65,7 @@ Left to render time and to `PREPARE` because the source does not decide them: va
 - **XML special syntax, time-of-day types, a few JSON constructors**: see "Not supported" in [sql-to-go.md](sql-to-go.md). Each is tracked in the grammar ledger with a reason.
 - **Extensions not in a pack**: the generator reads any installed extension (`pgcat extract -ext`), but only the listed packs are generated and tested in CI.
 - **Unwrapped APIs in extension packs**: extension packs only wrap functions and operators whose types are mapped in Go. The PostGIS pack maps `box2d`, `box2df`, `box3d`, `gidx`, `spheroid`, `geometry_dump` and `valid_detail` as text-form named strings, so the functions that use them are generated from the committed ledger. Window functions of an extension (9 in PostGIS) are generated as `qlx.WinFn` and completed with `Over`; those of `pg_catalog` are hand-written in the core package. Functions and operators depending on them are omitted from `pgcat/ext/<pack>`.
+- **User functions that stay unwrapped**: `VARIADIC "any"`, a variadic function that also has default arguments, `INOUT` parameters, `OUT` parameters of a function that does not return a set, and a set of a composite or `record` type declared without `OUT`/`TABLE` columns. `qlx generate` lists them. Default arguments are reached through two wrappers (`F` without, `FAll` with them), not by name.
 - **A newer server than the generated code**: allowed (the ledger is pinned, the server is not); `ConnectOptions.OnAhead` reports it.
 
 ## What Go types cannot represent

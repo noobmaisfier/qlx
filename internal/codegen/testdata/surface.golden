@@ -6867,3 +6867,40 @@ var Empty
 var Spec
 var Wide
 
+== functions/def
+field PairsColumns.A qlx.Field[qt.Null[int32]]
+field PairsColumns.B qlx.Field[qt.Null[string]]
+field SeriesColumns.Series qlx.Field[qt.Null[int32]]
+field TblColumns.Fields_ qlx.Field[qt.Null[int32]]
+field TblColumns.Select qlx.Field[qt.Null[int32]]
+field TblColumns.X qlx.Field[qt.Null[int32]]
+field UnnamedColumns.C1 qlx.Field[qt.Null[int32]]
+field UnnamedColumns.C2 qlx.Field[qt.Null[string]]
+func (PairsColumns) Fields() []qlx.NameRef
+func (SeriesColumns) Fields() []qlx.NameRef
+func (TblColumns) Fields() []qlx.NameRef
+func (UnnamedColumns) Fields() []qlx.NameRef
+func Clash(qlx_ qlx.Operand[int32], type_ qlx.Operand[int32], args_ qlx.Operand[int32]) qlx.Expr[qt.Null[int32]]
+func ClashAll(qlx_ qlx.Operand[int32], type_ qlx.Operand[int32], args_ qlx.Operand[int32], end qlx.Operand[int32]) qlx.Expr[qt.Null[int32]]
+func Dproc(a qlx.Operand[int32]) qlx.Command
+func DprocAll(a qlx.Operand[int32], b qlx.Operand[int32]) qlx.Command
+func Greet(who qlx.Operand[string]) qlx.Expr[qt.Null[string]]
+func GreetAll(who qlx.Operand[string], greeting qlx.Operand[string], punct qlx.Operand[string]) qlx.Expr[qt.Null[string]]
+func JoinAll(sep qlx.Operand[string], parts ...qlx.Operand[string]) qlx.Expr[qt.Null[string]]
+func Pairs(n qlx.Operand[int32]) qlx.TableFunc
+func Proc(a qlx.Operand[int32], b ...qlx.Operand[string]) qlx.Command
+func Series(n qlx.Operand[int32]) qlx.TableFunc
+func SumAll(xs ...qlx.Operand[int32]) qlx.Expr[qt.Null[int32]]
+func Tbl() qlx.TableFunc
+func TblAll(n qlx.Operand[int32]) qlx.TableFunc
+func Unnamed(a1 qlx.Operand[int32], a2 qlx.Operand[string]) qlx.TableFunc
+type PairsColumns struct
+type SeriesColumns struct
+type TblColumns struct
+type UnnamedColumns struct
+var PairsCols
+var SeriesCols
+var Spec
+var TblCols
+var UnnamedCols
+

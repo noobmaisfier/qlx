@@ -515,13 +515,23 @@ q.Select(Users.Email).From(Users).Where(
 - **User-Defined Functions (`qlx gen`)**:
   - **Plain scalar functions** with `IN` parameters are automatically generated as typed Go wrappers returning `qlx.Expr[T]`.
   - **Strictness**: If the function is not `STRICT`, the return type is automatically wrapped in `qt.Null[T]`.
+  - **VARIADIC**: Functions with a `VARIADIC` parameter generate a Go variadic wrapper: `JoinAll(sep, parts ...qlx.Operand[string])` (also applies to procedures).
+  - **Default arguments**: Generates two wrappers: one omitting trailing defaults `Greet(who)` (leaving defaults to PostgreSQL) and one providing all arguments `GreetAll(who, greeting, punct)`.
+  - **Set-returning functions (SRF)**: Functions returning `SETOF` a scalar or having `TABLE` / `OUT` columns generate a `qlx.TableFunc` with a `<Name>Columns` struct and `<Name>Cols` descriptor for query projection/from clauses: `Pairs(n).As("p", PairsCols.Fields()...)` and referenced via `q.Ref(p, PairsCols.A)`. Columns are typed as `qt.Null[T]`.
   - **Procedures** (`CREATE PROCEDURE`): Generated as functions returning `qlx.Command` for execution with `qlx.Call(...)`.
-  - **Skipped by generator**: Set-returning functions (`RETURNS SETOF`/`TABLE`), `VARIADIC` parameters, default arguments (`DEFAULT`), and `OUT`/`INOUT` parameters are skipped during code generation.
+  - **Skipped by generator**: `VARIADIC "any"`, variadics with default arguments, `INOUT` parameters, `OUT` on non-set functions, and `SETOF` composite/record without `OUT` columns.
 - **Generic / Manual Function Call**: Any custom function can always be invoked explicitly using `qlx.FuncCall[RetType](schema, name, args...)`.
 
 ```go
 // Calling generated user function:
 q.Select(db.ComputeDiscount(Products.Price, q.Val(qt.NewNumeric("0.10")))).From(Products)
+
+// Variadic user function:
+q.Select(db.ConcatWithSeparator(q.Val("-"), Users.FirstName, Users.LastName, Users.Email))
+
+// Set-returning function (SRF) in FROM clause:
+srf := db.GenerateSeries(q.Val(1), q.Val(10)).As("s", db.GenerateSeriesCols.Fields()...)
+q.Select(q.Ref(srf, db.GenerateSeriesCols.GenerateSeries)).From(srf)
 
 // Manual invocation escape hatch:
 customExpr := qlx.FuncCall[string]("app", "format_label", qlx.Arg(Users.ID), qlx.Arg(q.Val("VIP")))

@@ -235,3 +235,47 @@ CREATE MATERIALIZED VIEW uv.mat AS SELECT id, email FROM uv.accounts;
 		t.Error("a default set on the view itself counts")
 	}
 }
+
+// proallargtypes, pronargdefaults and provariadic: what the generator needs to
+// type SRFs with OUT columns, default arguments and VARIADIC.
+func TestFunctionSignaturesFromTheServer(t *testing.T) {
+	srv := server(t)
+	sql := `
+CREATE SCHEMA fs;
+CREATE FUNCTION fs.join_all(VARIADIC parts text[]) RETURNS text LANGUAGE sql AS 'SELECT array_to_string(parts, '','')';
+CREATE FUNCTION fs.greet(who text, greeting text DEFAULT 'hello', punct text DEFAULT '!') RETURNS text LANGUAGE sql AS 'SELECT greeting || '' '' || who || punct';
+CREATE FUNCTION fs.pairs(n int, OUT a int, OUT b text) RETURNS SETOF record LANGUAGE sql AS 'SELECT i, i::text FROM generate_series(1, n) i';
+CREATE FUNCTION fs.tbl(n int) RETURNS TABLE (x int, y int) LANGUAGE sql AS 'SELECT i, i * 2 FROM generate_series(1, n) i';
+CREATE FUNCTION fs.series(n int) RETURNS SETOF int LANGUAGE sql AS 'SELECT generate_series(1, n)';
+`
+	f := t.TempDir() + "/fs.sql"
+	if err := os.WriteFile(f, []byte(sql), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.Conn().ExecFile(f); err != nil {
+		t.Fatal(err)
+	}
+	s, err := catalog.Load(srv.Conn(), []string{"fs"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := map[string]catalog.Func{}
+	for _, x := range s.Funcs {
+		fn[x.Name] = x
+	}
+	if v := fn["join_all"]; v.VariadicType == 0 || len(v.ArgModes) != 1 || v.ArgModes[0] != "v" {
+		t.Errorf("join_all: %+v", v)
+	}
+	if g := fn["greet"]; g.Defaults != 2 || len(g.ArgTypes) != 3 {
+		t.Errorf("greet: %+v", g)
+	}
+	if p := fn["pairs"]; len(p.AllArgTypes) != 3 || !p.ReturnsSet || len(p.ArgTypes) != 1 || p.ArgModes[1] != "o" {
+		t.Errorf("pairs: %+v", p)
+	}
+	if p := fn["tbl"]; len(p.AllArgTypes) != 3 || p.ArgModes[2] != "t" {
+		t.Errorf("tbl: %+v", p)
+	}
+	if p := fn["series"]; !p.ReturnsSet || len(p.AllArgTypes) != 0 {
+		t.Errorf("series: %+v", p)
+	}
+}

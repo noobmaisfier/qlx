@@ -132,6 +132,13 @@ Pour chaque table, par exemple `users` :
 
 Plus, pour le schéma entier : les enums (type Go + constantes), les fonctions scalaires et procédures typées, et `register.go` (spécification du schéma pour la vérification au démarrage).
 
+Vos propres fonctions sont enveloppées tant que leur signature se type :
+
+- une fonction `VARIADIC` prend un variadique Go (`JoinAll(sep, parts ...qlx.Operand[string])`) ;
+- une fonction à arguments par défaut a deux enveloppes : `Greet(who)` laisse les défauts à PostgreSQL, `GreetAll(who, greeting, punct)` passe tous les arguments (pas d'appel à arguments nommés) ;
+- une fonction set-returning avec colonnes `OUT` ou `TABLE`, ou qui renvoie `SETOF` un scalaire, devient un `qlx.TableFunc` avec une struct `<Nom>Columns` et une variable `<Nom>Cols` : `Pairs(n).As("p", PairsCols.Fields()...)`, puis `q.Ref(p, PairsCols.A)` ; chaque colonne est `qt.Null[T]` ;
+- ignorées, et listées par `qlx generate` : `VARIADIC "any"`, variadique avec arguments par défaut, paramètres `INOUT`, paramètres `OUT` d'une fonction qui ne renvoie pas un ensemble, et `SETOF` composite ou `record` sans colonnes `OUT`.
+
 ---
 
 ## 3. Se connecter

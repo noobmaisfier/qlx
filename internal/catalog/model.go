@@ -107,6 +107,14 @@ type Func struct {
 	Volatility  string   `json:"volatility"` // i, s, v
 	HasVariadic bool     `json:"has_variadic"`
 	HasDefaults bool     `json:"has_defaults"`
+	// AllArgTypes lists every argument, IN and OUT, in order (proallargtypes);
+	// ArgNames and ArgModes follow the same order. Empty when all are IN, then
+	// ArgTypes is the whole list.
+	AllArgTypes []uint32 `json:"all_arg_types,omitempty"`
+	// Defaults is how many trailing IN arguments have a default (pronargdefaults).
+	Defaults int `json:"defaults,omitempty"`
+	// VariadicType is the element type of the VARIADIC argument, 0 when none.
+	VariadicType uint32 `json:"variadic_type,omitempty"`
 }
 
 // Schema is the whole model; it is what schema.lock stores.

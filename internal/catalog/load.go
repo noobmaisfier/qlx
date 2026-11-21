@@ -67,7 +67,7 @@ rel AS (
 fn AS (
   SELECT p.oid, n.nspname AS schema, p.proname AS name, p.prokind::text AS kind, p.prokind, p.proargtypes,
          p.proargnames, p.proargmodes, p.prorettype, p.proretset, p.proisstrict, p.provolatile,
-         p.provariadic, p.pronargdefaults
+         p.provariadic, p.pronargdefaults, p.proallargtypes
   FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = ANY(%[1]s) AND p.prokind IN ('f', 'p')
     AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e')
@@ -76,6 +76,8 @@ seed(oid) AS (
   SELECT a.atttypid FROM pg_attribute a JOIN rel ON rel.oid = a.attrelid WHERE a.attnum > 0 AND NOT a.attisdropped
   UNION SELECT unnest(string_to_array(fn.proargtypes::text, ' ')::oid[]) FROM fn WHERE fn.proargtypes::text <> ''
   UNION SELECT fn.prorettype FROM fn WHERE fn.prokind = 'f'
+  UNION SELECT unnest(fn.proallargtypes) FROM fn WHERE fn.proallargtypes IS NOT NULL
+  UNION SELECT fn.provariadic FROM fn WHERE fn.provariadic <> 0
 ),
 ref(oid) AS (
   SELECT oid FROM seed
@@ -138,7 +140,9 @@ SELECT json_build_object(
      'arg_names', COALESCE(to_json(fn.proargnames), '[]'::json),
      'arg_modes', COALESCE(to_json(fn.proargmodes), '[]'::json),
      'return_type', fn.prorettype::int, 'returns_set', fn.proretset, 'strict', fn.proisstrict,
-     'volatility', fn.provolatile::text, 'has_variadic', fn.provariadic <> 0, 'has_defaults', fn.pronargdefaults > 0
+     'volatility', fn.provolatile::text, 'has_variadic', fn.provariadic <> 0, 'has_defaults', fn.pronargdefaults > 0,
+     'all_arg_types', CASE WHEN fn.proallargtypes IS NULL THEN NULL ELSE to_json(fn.proallargtypes::int[]) END,
+     'defaults', fn.pronargdefaults, 'variadic_type', fn.provariadic::int
    ) ORDER BY fn.schema, fn.name, fn.oid) FROM fn), '[]'::json)
 )::text;
 `

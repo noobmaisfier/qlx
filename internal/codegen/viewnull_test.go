@@ -156,3 +156,55 @@ func TestUpdatableViewsGetWriteTypes(t *testing.T) {
 		t.Error("a view that only accepts DELETE has no write types")
 	}
 }
+
+func TestFunctionsVariadicDefaultsAndSetReturning(t *testing.T) {
+	s := viewSchema()
+	s.Types = append(s.Types,
+		catalog.Type{OID: 1009, Schema: "pg_catalog", Name: "_text", Kind: "b", Category: "A", Elem: 25},
+		catalog.Type{OID: 2278, Schema: "pg_catalog", Name: "void", Kind: "p", Category: "P"},
+		catalog.Type{OID: 2276, Schema: "pg_catalog", Name: "any", Kind: "p", Category: "P"},
+		catalog.Type{OID: 2249, Schema: "pg_catalog", Name: "record", Kind: "p", Category: "P"})
+	s.Funcs = []catalog.Func{
+		{Schema: "app", Name: "join_all", Kind: "f", ReturnType: 25, ArgTypes: []uint32{1009}, ArgNames: []string{"parts"},
+			ArgModes: []string{"v"}, HasVariadic: true, VariadicType: 25, Strict: true},
+		{Schema: "app", Name: "greet", Kind: "f", ReturnType: 25, ArgTypes: []uint32{25, 25}, ArgNames: []string{"who", "greeting"},
+			HasDefaults: true, Defaults: 1, Strict: true},
+		{Schema: "app", Name: "anyv", Kind: "f", ReturnType: 25, ArgTypes: []uint32{2276}, ArgModes: []string{"v"},
+			HasVariadic: true, VariadicType: 2276},
+		{Schema: "app", Name: "find", Kind: "f", ReturnType: 2249, ReturnsSet: true, ArgTypes: []uint32{25},
+			AllArgTypes: []uint32{25, 20, 25}, ArgNames: []string{"q", "id", "label"}, ArgModes: []string{"i", "t", "t"}},
+		{Schema: "app", Name: "names", Kind: "f", ReturnType: 25, ReturnsSet: true, ArgTypes: []uint32{20}, ArgNames: []string{"n"}},
+		{Schema: "app", Name: "rows", Kind: "f", ReturnType: 2249, ReturnsSet: true},
+		{Schema: "app", Name: "inout", Kind: "f", ReturnType: 25, ArgTypes: []uint32{25},
+			AllArgTypes: []uint32{25}, ArgModes: []string{"b"}},
+	}
+	r, err := codegen.Generate(s, codegen.Config{Package: "db", Schemas: []string{"app"}, Out: "db"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var all string
+	for _, b := range r.Files {
+		all += string(b)
+	}
+	all = strings.Join(strings.Fields(all), " ")
+	for _, want := range []string{
+		"func JoinAll(parts ...qlx.Operand[string]) qlx.Expr[string]",
+		"args := []qlx.Value{}",
+		"func Greet(who qlx.Operand[string]) qlx.Expr[string]",
+		"func GreetAll(who qlx.Operand[string], greeting qlx.Operand[string]) qlx.Expr[string]",
+		"func Find(q qlx.Operand[string]) qlx.TableFunc",
+		"type FindColumns struct { ID qlx.Field[qt.Null[int64]] Label qlx.Field[qt.Null[string]] }",
+		"func Names(n qlx.Operand[int64]) qlx.TableFunc",
+		"type NamesColumns struct { Names qlx.Field[qt.Null[string]] }",
+	} {
+		if !strings.Contains(all, want) {
+			t.Errorf("missing %q in:\n%s", want, all)
+		}
+	}
+	skipped := strings.Join(r.Skipped, "\n")
+	for _, want := range []string{"app.anyv", "app.rows", "app.inout"} {
+		if !strings.Contains(skipped, want) {
+			t.Errorf("%s must be reported as skipped: %s", want, skipped)
+		}
+	}
+}
