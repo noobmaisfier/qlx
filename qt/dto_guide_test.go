@@ -117,7 +117,7 @@ func TestDTOCreateBodyNullVersusPointer(t *testing.T) {
 	type body struct {
 		N qt.Null[string]         `json:"n"`
 		P *string                 `json:"p"`
-		O qt.Opt[qt.Null[string]] `json:"o"`
+		O qt.Opt[qt.Null[string]] `json:"o"` //qlx:ignore decode-only body, never marshaled
 	}
 	var absent, null, value body
 	if err := json.Unmarshal([]byte(`{}`), &absent); err != nil {

@@ -189,7 +189,7 @@ func TestJSONOpt(t *testing.T) {
 
 func TestOptNullUnsetWithoutOmitzeroIsAnError(t *testing.T) {
 	type bad struct {
-		Nick qt.Opt[qt.Null[string]] `json:"nick"`
+		Nick qt.Opt[qt.Null[string]] `json:"nick"` //qlx:ignore the point of this test: no omitzero
 	}
 	if _, err := json.Marshal(bad{}); !errors.Is(err, qt.ErrUnsetOptNull) {
 		t.Fatalf("want ErrUnsetOptNull, got %v", err)

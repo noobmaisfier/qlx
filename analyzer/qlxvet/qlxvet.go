@@ -32,6 +32,7 @@
 //	V028 FOR UPDATE/SHARE together with DISTINCT, GROUP BY, HAVING, aggregates or window functions
 //	V029 SELECT DISTINCT ordered by a column that is not selected; DISTINCT ON not matching ORDER BY
 //	V030 ToNull() on a column whose Go type cannot hold NULL
+//	V031 qt.Opt[qt.Null[T]] struct field without omitzero in its json tag (unset, it cannot be marshaled)
 //	V018 result type that does not match the selected columns (count, names, Go types, nullability, order)
 //
 // A finding is suppressed by a comment on the same or the previous line:
@@ -231,6 +232,8 @@ func (c *checker) file(f *ast.File) {
 			c.ignoredError(n)
 		case *ast.CompositeLit:
 			c.gapLit(n)
+		case *ast.StructType:
+			c.optOmitZero(n)
 		case *ast.CallExpr:
 			c.register(n, stack)
 			c.unboundedDML(n, stack)

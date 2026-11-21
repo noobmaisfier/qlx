@@ -664,7 +664,7 @@ Cases worth a test per resource: absent / `null` / value for every nullable patc
 | `omitempty` on a `qt` struct field | the key is never omitted | `omitzero` |
 | `required` on `qt.ID`, `qt.Date`, `qt.Range` | skipped (non-pointer struct), so it always passes | `nonzero` (the only rule that reads the struct), or check `IsZero()` |
 | unknown keys inside `qt.JSONB[T]`, `qt.Opt[struct]`, `qt.Null[struct]`, `qt.Range`, `qt.Multirange` | `qjson` checks them too (error field `settings.theme_typo`); a type with its own `UnmarshalJSON` that is not a `qt` wrapper is not looked into | `qt.JSONB[map[string]any]` or `any` for a free-form document; a custom type can implement `JSONInner() reflect.Type`, or accept it as opaque |
-| `qt.Opt[qt.Null[T]]` without `omitzero` | marshaling an unset one returns `qt.ErrUnsetOptNull` (null would read back as a set NULL) | `json:"name,omitzero"` |
+| `qt.Opt[qt.Null[T]]` without `omitzero` | marshaling an unset one returns `qt.ErrUnsetOptNull` (null would read back as a set NULL) | `json:"name,omitzero"` (the analyzer reports a field without it: V031) |
 | binding a request into the generated patch or insert | mass assignment of every column | a DTO with an allow-list, converted |
 | `qt.Null` for a column with a `DEFAULT` | an absent key writes NULL over the default | `qt.Opt[T]` with `ToIf` |
 | `ToIf` on a required column | the column disappears | `To` for required columns |

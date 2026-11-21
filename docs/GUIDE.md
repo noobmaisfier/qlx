@@ -1583,6 +1583,7 @@ L'analyseur est le seul contrôleur statique : `go install github.com/noobmaisfi
 | V028 | verrou de lignes (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) sur une requête avec `Distinct`, `GroupBy`, `Having`, un agrégat ou une fonction de fenêtre : PostgreSQL le refuse |
 | V029 | `Distinct` avec un `OrderBy` sur une colonne non sélectionnée ; `DistinctOn` dont les expressions ne commencent pas le `OrderBy` |
 | V030 | `ToNull()` sur une colonne dont le type Go ne peut pas contenir `NULL` (le serveur répond 23502) |
+| V031 | champ `qt.Opt[qt.Null[T]]` sans `omitzero` dans son tag json : non renseigné, il ne peut pas être marshalé (`qt.ErrUnsetOptNull`) |
 
 Un constat accepté se supprime avec un commentaire sur la même ligne ou la précédente : `//qlx:ignore <raison>`. Avec `-audit`, chaque suppression est elle-même listée (V011).
 

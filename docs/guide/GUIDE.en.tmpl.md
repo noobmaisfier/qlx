@@ -1129,6 +1129,7 @@ The analyzer is the only static checker: `go install github.com/noobmaisfier/qlx
 | V028 | row lock (`ForUpdate`, `ForNoKeyUpdate`, `ForShare`, `ForKeyShare`) on a query with `Distinct`, `GroupBy`, `Having`, an aggregate or a window function: PostgreSQL rejects it |
 | V029 | `Distinct` with an `OrderBy` column that is not selected; `DistinctOn` whose expressions do not start the `OrderBy` |
 | V030 | `ToNull()` on a column whose Go type cannot hold `NULL` (the server answers 23502) |
+| V031 | `qt.Opt[qt.Null[T]]` struct field without `omitzero` in its json tag: unset, it cannot be marshaled (`qt.ErrUnsetOptNull`) |
 
 An accepted finding is suppressed with a comment on the same line or the previous one: `//qlx:ignore <reason>`. With `-audit`, each suppression is itself listed (V011).
 

@@ -724,7 +724,7 @@ It also runs in CI, gopls and golangci-lint. `qlx vet` no longer exists: the
 command prints these two lines and exits 2, so an old CI step cannot pass
 silently.
 
-The analyzer reports V001–V030, with V027 retired: a column outside `FROM`,
+The analyzer reports V001–V031, with V027 retired: a column outside `FROM`,
 `UPDATE` without `WHERE`, a bare column next to `GroupBy`, an aggregate in
 `WHERE`, a feature
 newer than your targets, `ToNull()` on a `NOT NULL` column. For mapping, V018
