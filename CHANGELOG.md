@@ -3,9 +3,9 @@
 Entries list user-visible changes. A **Breaking** line is a change that can make
 code that compiled, or produced a value, before behave differently.
 
-## Unreleased (towards 1.0)
+## v1.0.0 - 2026-11-21
 
-Changes since v1.0.0-rc4.
+First general-availability release. Changes since v1.0.0-rc4:
 
 ### Breaking
 
@@ -31,7 +31,4 @@ Changes since v1.0.0-rc4.
 
 - CodeQL #9 (`ParseTimeTZ` integer conversion) and #15 (JSON error field allocation size).
 - Deterministic encoding of table facts; hardened statement and shape caches.
-
-### Needs your CI before tagging
-
-Everything above was verified on PostgreSQL 16 and Go 1.24 only. Run the matrix on PostgreSQL 16–19 and Go 1.27 (generic methods, `pgxexec` client/tx generics, the analyzer on the pinned `x/tools`).
+- `pgxexec`: Ignore views and materialized views in `VerifyRow` nullability checks (views do not carry `attnotnull` constraints in PostgreSQL catalog).
