@@ -13,3 +13,5 @@
 - [Row Mapping & Scan](docs/mapping.md): Rules for position vs name scanning, `//qlx:row`, and zero-reflection DTOs.
 - [Configuration](docs/configuration.md): `qlx.yaml` reference, multi-schema setups, and migrations.
 - [Extension Helpers](docs/qext.md): High-level typed helpers for pgvector, PostGIS, text search, and trgm.
+- [Stability Guarantees](STABILITY.md): Semantic versioning promises, generated ABI, and frozen interfaces.
+- [Changelog](CHANGELOG.md): Breaking changes and evolution towards 1.0.

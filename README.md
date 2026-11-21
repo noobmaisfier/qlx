@@ -1170,6 +1170,8 @@ re-pinning on GA is tracked in [docs/watchlist.md](docs/watchlist.md).
 - [Migrating](docs/migration.md): from squirrel, goqu, bun, jet and raw pgx.
 - [Decisions](docs/decisions.md) and [watch list](docs/watchlist.md).
 - [Releasing](docs/release.md): the maintainer procedure for a versioned release.
+- [Stability](STABILITY.md): Semantic versioning promises, generated code ABI, and duck-typed interfaces.
+- [Changelog](CHANGELOG.md): User-visible changes and breaking changes between releases.
 - [Generated function reference](docs/pgcat/README.md).
 
 ## Known limits
