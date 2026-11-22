@@ -196,8 +196,8 @@ func TestOptOmitEmptySkipsUnset(t *testing.T) {
 
 func TestOptOmitNilSkipsUnsetAndNullButRejectsEmptySet(t *testing.T) {
 	type patch struct {
-		Name qt.Opt[string]           `json:"name" validate:"omitnil,min=1"`
-		Nick qt.Opt[qt.Null[string]]  `json:"nick" validate:"provided,omitnil,min=2"`
+		Name qt.Opt[string]          `json:"name" validate:"omitnil,min=1"`
+		Nick qt.Opt[qt.Null[string]] `json:"nick" validate:"provided,omitnil,min=2"`
 	}
 	v := qvalidator.New()
 

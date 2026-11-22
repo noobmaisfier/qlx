@@ -3,7 +3,7 @@
 Entries list user-visible changes. A **Breaking** line is a change that can make
 code that compiled, or produced a value, before behave differently.
 
-## Unreleased (1.1)
+## v1.1.0 - 2026-11-22
 
 ### Added
 
