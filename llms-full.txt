@@ -83,7 +83,7 @@ defer client.Close()
 * `client.InsertMany(ctx, base, rows, opt)`: Bulk inserts multiple rows chunked under 65,535 parameters in one transaction.
 * `client.InsertManyReturning[R](ctx, base, rows, opt)`: Bulk insert collecting RETURNING columns into `[]R`.
 * `client.InTx(ctx, opts, retry, func(ctx, tx *pgxexec.Tx) error)`: Runs closure in a managed transaction with automatic retry on deadlocks/serialization failures (40001, 40P01).
-* `client.CopyIn(ctx, stmt, r)`: High-speed binary COPY from io.Reader.
+* `client.CopyIn(ctx, st, rows)`: High-speed binary COPY (`st` is `qlx.CopyIn(Table, cols...)`, `rows` is `pgx.CopyFromSource` such as `pgxexec.CopyRows(...)`).
 * `client.Render(stmt)`: Renders SQL string and args slice without executing.
 * `client.DB()`: Returns underlying `Querier` (wrapped with tracer if configured).
 * `client.Close()`: Closes the connection pool.
@@ -97,28 +97,77 @@ Transactions started with `client.InTx` receive a `*pgxexec.Tx` wrapper carrying
 * `tx.Each[R](ctx, stmt, binds...)`
 * `tx.InsertMany(ctx, base, rows, opt)`
 * `tx.InsertManyReturning[R](ctx, base, rows, opt)`
+* `tx.CopyIn(ctx, st, rows)`
 * `tx.Savepoint(ctx, name, func(ctx) error)`: Partial rollback savepoint.
 * `tx.Pgx()`: Underlying `pgx.Tx` for raw pgx operations if needed.
 
-### 4.4 Bulk Operations (`InsertMany` & `InsertManyReturning`)
-Bulk inserts automatically split large datasets across statements to respect PostgreSQL's 65,535-parameter limit.
+### 4.4 Bulk Operations (`InsertMany`, `CopyIn`, `Pipeline`, `Batch`)
+
+#### Bulk INSERT & Upsert (`InsertMany` / `InsertManyReturning`)
+`InsertMany` and `InsertManyReturning` take `[]qlx.RowAssigner` (implemented by generated `*Insert` structs like `db.UserInsert` via `Assignments()`). They automatically split large slices under PostgreSQL's 65,535-parameter limit (`qlx.MaxBindParams`) and run all chunks in one transaction when called on a pool/connection (or join the existing `tx`):
 
 ```go
-// 1. Bulk insert on Client without RETURNING (returns count of inserted rows)
 rows := []qlx.RowAssigner{
-    Users.Row(Users.Email.To("a@example.com"), Users.Tier.To("pro")),
-    Users.Row(Users.Email.To("b@example.com"), Users.Tier.To("free")),
+    db.UserInsert{Email: "a@example.com", Tier: qt.Of("pro")},
+    db.UserInsert{Email: "b@example.com", Tier: qt.Of("free")},
 }
+
+// 1. Bulk insert with ON CONFLICT DO NOTHING (returns affected row count)
 count, err := client.InsertMany(ctx,
     q.InsertInto(Users).OnConflict(Users.Email).DoNothing(),
     rows,
-    pgxexec.BulkOptions{MaxParams: 0}) // 0 = default MaxBindParams (65,535)
+    pgxexec.BulkOptions{MaxParams: 0}) // 0 = qlx.MaxBindParams (65,535)
 
-// 2. Bulk insert on Client with RETURNING (collects returned rows in order)
+// 2. Bulk upsert (ON CONFLICT DO UPDATE using Excluded)
+_, err = client.InsertMany(ctx,
+    q.InsertInto(Users).OnConflict(Users.Email).DoUpdate(
+        Users.Tier.ToX(Users.Tier.Excluded()),
+    ),
+    rows,
+    pgxexec.BulkOptions{})
+
+// 3. Bulk insert with RETURNING (collects returned rows in chunk order)
 ids, err := client.InsertManyReturning[int64](ctx,
     q.InsertInto(Users).Returning(Users.ID),
     rows,
     pgxexec.BulkOptions{})
+```
+- Lower `BulkOptions{MaxParams: ...}` if rows use `ToX` expressions that carry extra bound arguments.
+- To build or split statements without executing them, use `base.Values(rows...)` or `base.Chunks(rows, maxParams)`.
+
+#### Binary COPY (`CopyIn` & `CopyRows`)
+For maximum throughput when `ON CONFLICT` / `RETURNING` are not needed, use PostgreSQL's binary COPY protocol (`q.CopyIn` + `pgxexec.CopyRows` or `pgx.CopyFromSlice`):
+
+```go
+st := q.CopyIn(Users, Users.Email, Users.Tier)
+n, err := client.CopyIn(ctx, st, pgxexec.CopyRows([][]any{
+    {"a@example.com", "pro"},
+    {"b@example.com", "free"},
+}))
+```
+(`q.CopyIn(...).Where(...).InlineArgs()` is also available; arguments in `Where` must be inlineable because `COPY` does not accept bound parameters.)
+
+#### Pipelines & Batches (One Round Trip)
+Send multiple independent statements in a single network round trip:
+
+```go
+// Typed Pipeline (recommended): futures are populated on Run()
+var p pgxexec.Pipeline
+userFut := pgxexec.PipeOne[db.User](&p, mustRender(q.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.Eq(1))))
+tagFut  := pgxexec.PipeExec(&p, mustRender(q.Update(Users).Set(Users.Tier.To("pro")).Where(Users.ID.Eq(1))))
+if err := p.Run(ctx, client.Pool); err != nil {
+    return err
+}
+user, err := userFut.Get()
+tag, err  := tagFut.Get()
+
+// Lower-level Batch wrapper over pgx.Batch
+var b pgxexec.Batch
+b.Queue(st1).Queue(st2)
+br, err := b.Send(ctx, client.Pool)
+defer br.Close()
+rows1, err := pgxexec.BatchAll[db.User](br)
+one2, err  := pgxexec.BatchOne[int64](br)
 ```
 
 ---
