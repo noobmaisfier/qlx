@@ -240,3 +240,38 @@ func TestRangeJSONKeysMatchTheMarshaledForm(t *testing.T) {
 		}
 	}
 }
+
+func TestOptUnmarshalText(t *testing.T) {
+	var s qt.Opt[string]
+	if err := s.UnmarshalText([]byte("x")); err != nil || !s.Set || s.V != "x" {
+		t.Fatalf("string: %+v %v", s, err)
+	}
+	var n qt.Opt[int32]
+	if err := n.UnmarshalText([]byte("-12")); err != nil || !n.Set || n.V != -12 {
+		t.Fatalf("int32: %+v %v", n, err)
+	}
+	if err := n.UnmarshalText([]byte("99999999999")); err == nil {
+		t.Fatal("int32 overflow accepted")
+	}
+	var b qt.Opt[bool]
+	if err := b.UnmarshalText([]byte("true")); err != nil || !b.V {
+		t.Fatalf("bool: %+v %v", b, err)
+	}
+	var d qt.Opt[qt.Date]
+	if err := d.UnmarshalText([]byte("2026-03-04")); err != nil || !d.Set {
+		t.Fatalf("date: %+v %v", d, err)
+	}
+	var p qt.Opt[*int]
+	if err := p.UnmarshalText([]byte("5")); err != nil || !p.Set || *p.V != 5 {
+		t.Fatalf("*int: %+v %v", p, err)
+	}
+	var bad qt.Opt[int]
+	bad = qt.Of(3)
+	if err := bad.UnmarshalText([]byte("x")); err == nil || !bad.Set || bad.V != 3 {
+		t.Fatalf("a failed parse must leave the option as it was: %+v %v", bad, err)
+	}
+	var nn qt.Opt[qt.Null[string]]
+	if err := nn.UnmarshalText([]byte("x")); err == nil {
+		t.Fatal("qt.Opt[qt.Null[T]] read from text")
+	}
+}

@@ -14,6 +14,9 @@
 //		}
 //	}
 //
+// DecodeQuery is the same contract for the URL query string: DecodeQuery[T](r) fills a struct from the query, with the
+// same strictness and the same *Error codes.
+//
 // The package depends on the standard library only. Validation is a separate
 // concern: see qjson/validator for the go-playground/validator adapter, or
 // implement Validatable and call Validate.
@@ -151,6 +154,7 @@ type config struct {
 	maxBytes       int64
 	strict         bool
 	anyContentType bool
+	keepEmpty      bool
 }
 
 func defaultConfig() config {

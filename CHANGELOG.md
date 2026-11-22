@@ -3,6 +3,13 @@
 Entries list user-visible changes. A **Breaking** line is a change that can make
 code that compiled, or produced a value, before behave differently.
 
+## Unreleased
+
+### Added
+
+- `qjson.DecodeQuery` / `DecodeQueryInto`, `KeepEmptyParams`, `QueryName`: strict query-string decoding with stable codes (`invalid_param`, `unknown_param`, `invalid_query`).
+- `qt.Opt[T]` implements `encoding.TextUnmarshaler` (not for `Opt[Null[T]]`).
+
 ## v1.2.0 - 2026-11-22
 
 ### Added

@@ -336,7 +336,13 @@ Two details:
 - Sort by a column **and a unique tie-breaker** (`ID`), otherwise rows with the same `created_at` can move between pages.
 - The search text is a bound parameter, so it cannot inject SQL. A client typing `%` or `_` still acts as a wildcard in `ILIKE`; escape them if that matters.
 
-`qt.Opt` has JSON methods only, so a framework that binds query strings (Echo does, with the `query` tag) will not fill it: use pointers as above. Columns also have `EqIf(qt.Opt[T])`, and `NeIf`, `InIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf`, `IsNullIf` and the text searches (`ContainsFoldIf`, `ILikeIf`, ...), which drop the predicate when the option is unset (an empty string counts as unset for text searches), if you already hold an `Opt`.
+Reading the query string is `qjson.DecodeQuery`, the counterpart of `DecodeRequest`: it fills a struct from the URL query, refuses unknown parameters, and reports every failure as a `*qjson.Error` (`invalid_param`, `unknown_param`, `invalid_query`) with the parameter name in `Field`. It decodes and nothing more: normalize and validate afterwards, as for a body.
+
+```go
+f, err := qjson.DecodeQuery[ListUsers](r) // ?tier=gold&q=ann&limit=50
+```
+
+A parameter is read into a string, a bool, an integer, a float, a `time.Duration`, any type that implements `encoding.TextUnmarshaler` (`qt.ID`, `qt.Date`, `time.Time`), a pointer to one of those, a `qt.Opt` of one of those, or a slice of one of those (`?id=1&id=2`). The parameter name is the `query` tag, then `form`, then `json`, then the lower-cased field name. An empty value (`?q=`) counts as absent; `qjson.KeepEmptyParams()` changes that. A `qt.Opt` field is filled when the parameter is present, so `Search qt.Opt[string]` works where pointers were needed before. Columns also have `EqIf(qt.Opt[T])`, and `NeIf`, `InIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf`, `IsNullIf` and the text searches (`ContainsFoldIf`, `ILikeIf`, ...), which drop the predicate when the option is unset (an empty string counts as unset for text searches).
 
 ### The response envelope
 

@@ -307,6 +307,28 @@ if err != nil {
 }
 ```
 
+### 6.1b Strict URL Query String Decoding (`qjson.DecodeQuery`)
+Decodes `r.URL.Query()` into typed structs with the same strict security guarantees as JSON decoding.
+Refuses unknown parameters by default (`unknown_param`), rejects non-slice parameters passed multiple times (`invalid_param`), treats empty parameters (`?q=`) as absent by default unless `qjson.KeepEmptyParams()` is passed, and supports `qt.Opt[T]` (via `encoding.TextUnmarshaler`). Tag priority: `query` -> `form` -> `json` -> field name.
+
+```go
+type ListUsersQuery struct {
+    Tier  qt.Opt[string] `query:"tier"`
+    Sort  string         `query:"sort"`
+    Limit qt.Opt[int]    `query:"limit"`
+}
+
+query, err := qjson.DecodeQuery[ListUsersQuery](r) // ?tier=gold&limit=50
+if err != nil {
+    var jerr *qjson.Error
+    if errors.As(err, &jerr) {
+        // jerr.Code can be "unknown_param", "invalid_param", "invalid_query"
+        http.Error(w, fmt.Sprintf("param %s: %s", jerr.Field, jerr.Code), http.StatusBadRequest)
+        return
+    }
+}
+```
+
 ### 6.2 DTO Validation (`qjson/validator`)
 Adapts `github.com/go-playground/validator/v10` specifically for QLX types and unwraps `qt.Opt` and `qt.Null`:
 

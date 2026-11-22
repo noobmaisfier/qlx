@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/noobmaisfier/qlx/internal/textval"
 )
 
 // The JSON forms of the types that carry optionality or a PostgreSQL-only
@@ -60,6 +62,26 @@ func (o *Opt[T]) UnmarshalJSON(b []byte) error {
 	}
 	var v T
 	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	*o = Opt[T]{V: v, Set: true}
+	return nil
+}
+
+// UnmarshalText sets the option from a text value, so a URL query parameter
+// (or any other text source) fills an Opt without a special case: the option
+// is set with the parsed value. It reads what qjson.DecodeQuery reads: a
+// string, a bool, an integer, a float, a time.Duration, or any T whose pointer
+// implements encoding.TextUnmarshaler (qt.ID, qt.Date, time.Time...). Empty
+// text is a value like any other: an absent parameter is the unset option, and
+// qjson.DecodeQuery never calls UnmarshalText for it. An Opt[Null[T]] is not
+// supported: text has no NULL.
+func (o *Opt[T]) UnmarshalText(b []byte) error {
+	var v T
+	if _, ok := any(&v).(interface{ holdsNull() }); ok {
+		return errors.New("qt: Opt[Null[T]] cannot be read from text")
+	}
+	if err := textval.Set(reflect.ValueOf(&v).Elem(), string(b)); err != nil {
 		return err
 	}
 	*o = Opt[T]{V: v, Set: true}
