@@ -282,6 +282,12 @@ if err := v.Validate(dto); err != nil {
 - `provided`: Checks that an `Opt[T]` was explicitly present in the JSON body (even if set to `null`).
 - `notnull`: Checks that a `Null[T]` is not SQL NULL.
 - `nonzero`: Checks that types like `qt.Date`, `qt.ID`, `qt.Timestamptz`, or `qt.Range` are not their zero-value struct. (Standard `required` evaluates the struct header and falsely passes zero-value structs; always use `nonzero` on them!).
+- `omitnil` (built into `go-playground/validator/v10`): Unset `Opt[T]` and NULL `Null[T]` unwrap to a typed `nil` pointer, so `omitnil` skips absent/null values **without** skipping `""`, `0`, or `false` when the client sends them. Prefer `validate:"omitnil,min=1"` over `validate:"omitempty,min=1"` for PATCH fields.
+
+#### Tag Pitfalls:
+- **`validate:"omitempty,..."` on `qt.Opt[string]`**: `omitempty` skips `""` as well as `nil`, so `{"name": ""}` silently passes `min=1`. Use `omitnil` instead.
+- **`json:",omitempty"` on `qt` structs**: `omitempty` never omits structs (`qt.Opt`, `qt.Null`, `qt.Date`); always use `json:",omitzero"` (Go 1.24+). `qt.Opt[qt.Null[T]]` without `omitzero` returns `qt.ErrUnsetOptNull` on `json.Marshal`.
+- **`validate:"provided,max=5"` on `qt.Opt[qt.Null[T]]`**: an explicit `null` passes `provided` and unwraps to nil, causing a tag error on `max=5`; write `validate:"provided,omitnil,max=5"`.
 
 ---
 
@@ -734,3 +740,4 @@ When generating Go code with QLX, you **MUST** follow these rules:
    - ✅ `q.Select(q.CountAll().As("count")).From(...)`
 7. **ALWAYS remember to place `//qlx:row` above custom result structs and instruct running `qlx rows ./...`**.
 8. **ALWAYS use `nonzero` instead of `required` for `qt.Date`, `qt.ID`, `qt.Timestamptz`, `qt.Range` in DTO validation**.
+9. **ALWAYS use `validate:"omitnil,..."` (not `omitempty`) on `qt.Opt` PATCH fields when `""` or `0` should fail validation, and `json:",omitzero"` (not `omitempty`) on `qt` struct fields**.

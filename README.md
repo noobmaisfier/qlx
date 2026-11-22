@@ -973,7 +973,8 @@ parameter after `=`:
 | `min=`, `max=`, `len=`, `gte=`, `lte=`, `gt=`, `lt=` | numeric or length bounds | |
 | `oneof=a b c` | the value is one of the listed values | space-separated |
 | `numeric`/`number`, `alphanum`, `boolean` | the text has that form | |
-| `omitempty` | skips the other rules when the value is empty | a rule modifier, not a test |
+| `omitempty` | skips the other rules when the value is empty (`""`, `0`, `false`, nil) | a rule modifier, not a test |
+| `omitnil` | skips the other rules **only** when the value is `nil` (unset `Opt` or `NULL`) | preferred over `omitempty` for `PATCH` fields so `""` or `0` is still validated |
 | `dive` | validates each element of a slice/map | `dive,keys,...,endkeys` for map keys |
 
 Only `Opt` carries a presence bit. On a plain `qt.Null` field, `provided` no
@@ -992,28 +993,30 @@ the other exception: it is convertible to `time.Time`, so `required` runs on it
 and catches its zero value.
 
 `qvalidator` unwraps `qt.Opt[T]` and `qt.Null[T]` before running the other
-rules: an **unset** `Opt` or a **NULL** is seen as a nil value, which
-`omitempty` skips, and a **set** `Opt` or a **non-NULL** `Null` becomes its
-`.V`, so the content rules finally see the value. Presence and format therefore
-fit in one tag:
+rules: an **unset** `Opt` or a **NULL** is seen as a nil pointer, which
+`omitnil` (or `omitempty`) skips, and a **set** `Opt` or a **non-NULL** `Null`
+becomes its `.V`, so the content rules finally see the value. Presence and
+format therefore fit in one tag:
 
 ```go
 type PatchUser struct {
     Email qt.Opt[string] `json:"email" validate:"provided,email"`
-    Name  qt.Opt[string] `json:"name"  validate:"omitempty,min=3"`
+    Name  qt.Opt[string] `json:"name"  validate:"omitnil,min=3"`
 }
 ```
 
 `provided,email` rejects a missing key (`provided`) and a malformed address
-(`email`); `omitempty,min=3` accepts a missing key and rejects `"ab"`. The same
-holds for `qt.Null[T]`: its content rules judge the value, and a NULL is seen as
-a nil value (skipped by `omitempty`). On an `Opt[Null[T]]`, write
-`provided,omitempty,max=5`: the key must be present, and the content rules run
+(`email`); `omitnil,min=3` accepts a missing key and rejects both `""` and
+`"ab"` (whereas `omitempty,min=3` would skip `""`). The same holds for
+`qt.Null[T]`: its content rules judge the value, and a NULL is seen as a nil
+pointer (skipped by `omitnil`). On an `Opt[Null[T]]`, write
+`provided,omitnil,max=5`: the key must be present, and the content rules run
 only when it is not `null`. A tag that cannot fit its field (a content rule that
-runs on a NULL without `omitempty`) is returned by `Struct` as an error, never a
-panic. Without `provided` or `omitempty`, an unset `Opt` fails the first rule,
-like a nil pointer. `notnull` on `qt.Opt[qt.Null[T]]` is only reached once the
-key is present, so `provided,notnull` means "sent, and not `null`".
+runs on a NULL without `omitnil`/`omitempty`) is returned by `Struct` as an
+error, never a panic. Without `provided`, `omitnil` or `omitempty`, an unset
+`Opt` fails the first rule, like a nil pointer. `notnull` on
+`qt.Opt[qt.Null[T]]` is only reached once the key is present, so
+`provided,notnull` means "sent, and not `null`".
 
 With `go-playground/validator`, the `github.com/noobmaisfier/qlx/qjson/validator`
 module registers `provided`, `notnull` and `nonzero` and reports each failure
@@ -1027,6 +1030,25 @@ qvalidator.Register(v)
 qvalidator.RegisterOpts(v, body) // unwraps every Opt[T] field of body
 v.Struct(body)
 ```
+
+#### Tag pitfalls
+
+- **`validate:"omitempty,..."` vs `validate:"omitnil,..."` on `Opt` / `Null`**:
+  `omitempty` skips `""`, `0`, `false` and empty slices, so
+  `validate:"omitempty,min=1"` silently accepts `{"name": ""}`. Use `omitnil`
+  when an absent key (or `null`) should be skipped, but a provided empty/zero
+  value must still be validated.
+- **`json:",omitempty"` vs `json:",omitzero"` on `qt` structs**: `omitempty`
+  never omits a struct (`qt.Opt`, `qt.Null`, `qt.Date`, ...). Use
+  `json:",omitzero"` (Go 1.24+); `qt.Opt[qt.Null[T]]` without `omitzero` returns
+  `qt.ErrUnsetOptNull` on `json.Marshal`.
+- **`validate:"required"` on `qt.ID`, `qt.Date`, `qt.Timestamptz`, `qt.Range`**:
+  `go-playground/validator` skips `required` on non-pointer structs, so a zero
+  value passes. Use `nonzero` instead.
+- **`validate:"provided,max=5"` on `qt.Opt[qt.Null[T]]` without `omitnil`**:
+  an explicit JSON `null` passes `provided` and unwraps to a nil pointer, which
+  `max=5` cannot judge (`Validate` returns a tag error). Pair it with
+  `omitnil`: `validate:"provided,omitnil,max=5"`.
 
 `Validate` returns `qjson.Errors`, whose `Field` is the `json` name
 (`nick_name`, not `NickName`), so the response needs no translation table.

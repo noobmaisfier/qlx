@@ -194,6 +194,34 @@ func TestOptOmitEmptySkipsUnset(t *testing.T) {
 	}
 }
 
+func TestOptOmitNilSkipsUnsetAndNullButRejectsEmptySet(t *testing.T) {
+	type patch struct {
+		Name qt.Opt[string]           `json:"name" validate:"omitnil,min=1"`
+		Nick qt.Opt[qt.Null[string]]  `json:"nick" validate:"provided,omitnil,min=2"`
+	}
+	v := qvalidator.New()
+
+	if err := v.Validate(patch{
+		Nick: qt.Of(qt.None[string]()),
+	}); err != nil {
+		t.Fatalf("unset Opt and explicit null with omitnil must pass: %v", err)
+	}
+	if err := v.Validate(patch{
+		Name: qt.Of("Ada"),
+		Nick: qt.Of(qt.Some("ad")),
+	}); err != nil {
+		t.Fatalf("valid set values must pass: %v", err)
+	}
+	err := v.Validate(patch{
+		Name: qt.Of(""),
+		Nick: qt.Of(qt.Some("")),
+	})
+	var fe qjson.Errors
+	if !errors.As(err, &fe) || len(fe) != 2 {
+		t.Fatalf("empty set strings must fail min under omitnil, got %v", err)
+	}
+}
+
 func TestOptNullUsesPresenceAndNullRules(t *testing.T) {
 	type patch struct {
 		Nick qt.Opt[qt.Null[string]] `json:"nickname" validate:"provided,notnull"`
