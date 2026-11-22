@@ -28,4 +28,8 @@ func (c *Client) Each[R any](ctx any, st q.Statement, binds ...q.Binding) iter.S
 	return nil
 }
 
+func (c *Client) Page[R any](ctx any, base q.SelectQuery, sorts any, req any, binds ...q.Binding) (any, error) {
+	return nil, nil
+}
+
 func (c *Client) Exec(ctx any, st q.Statement, binds ...q.Binding) error { return nil }

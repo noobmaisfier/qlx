@@ -64,6 +64,13 @@ func (q SelectQuery) outNames() []string {
 // check that a column is selected.
 func (q SelectQuery) OutputNames() []string { return q.outNames() }
 
+// HasOrderOrLimit reports whether the query already has an ORDER BY, LIMIT,
+// OFFSET or FETCH FIRST clause. Pagination helpers such as qpage use it to
+// refuse base queries whose order or bounds would conflict with cursor paging.
+func (q SelectQuery) HasOrderOrLimit() bool {
+	return len(q.order) > 0 || q.limit != nil || q.offset != nil || q.fetch != nil
+}
+
 func (q SelectQuery) needsParens() bool {
 	return len(q.order) > 0 || q.limit != nil || q.offset != nil || q.fetch != nil || q.lock != nil || len(q.ctes) > 0
 }

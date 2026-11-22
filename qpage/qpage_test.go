@@ -376,6 +376,16 @@ func TestApplyChecksTheSelectList(t *testing.T) {
 	if _, err := other.Page(w, nil); err == nil {
 		t.Error("a Window of another SortSet must be refused")
 	}
+	for name, bad := range map[string]q.SelectQuery{
+		"OrderBy":    selectRows().OrderBy(Users.ID.Asc()),
+		"Limit":      selectRows().Limit(10),
+		"Offset":     selectRows().Offset(5),
+		"FetchFirst": selectRows().FetchFirst(10),
+	} {
+		if _, err := w.Apply(bad); err == nil {
+			t.Errorf("Apply must refuse a base SELECT with %s", name)
+		}
+	}
 }
 
 type embedded struct {

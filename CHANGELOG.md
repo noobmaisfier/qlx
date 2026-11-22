@@ -7,8 +7,9 @@ code that compiled, or produced a value, before behave differently.
 
 ### Added
 
-- `qlxvet` V032 (`OrderBy`/`Limit`/`Offset`/`FetchFirst` on the SELECT given to `Client.Page`, `Tx.Page`, `Window.Apply`) and V033 (`qpage.Sorts` without `Tiebreak`).
+- `qlxvet` V032 (`OrderBy`/`Limit`/`Offset`/`FetchFirst` on the SELECT given to `Client.Page`, `Tx.Page`, `Window.Apply`), V033 (`qpage.Sorts` without `Tiebreak`), and V018 result mapping on `Client.Page`/`Tx.Page`.
 - `qpage.CheckSecret()`; `SortSet.Window` now reports `ErrCursorKey` on every request, the first page included, instead of only when a next page makes a cursor.
+- `qlx.SelectQuery.HasOrderOrLimit()`, used by `Window.Apply` to reject at run time any base `SELECT` that already carries `ORDER BY`, `LIMIT`, `OFFSET` or `FETCH FIRST` (including queries held in variables or built by helper functions).
 
 ## v1.1.0 - 2026-11-22
 

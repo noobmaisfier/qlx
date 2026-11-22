@@ -102,6 +102,9 @@ func (w *Window) Apply(sel q.SelectQuery) (q.SelectQuery, error) {
 	if w.sort == nil {
 		return sel, errors.New("qpage: Window not made by SortSet.Window")
 	}
+	if sel.HasOrderOrLimit() {
+		return sel, errors.New("qpage: the base SELECT must not have ORDER BY, LIMIT, OFFSET or FETCH FIRST")
+	}
 	index := map[string]int{}
 	for i, n := range sel.OutputNames() {
 		if _, dup := index[n]; dup {

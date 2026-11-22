@@ -31,7 +31,7 @@ const qtPath = "github.com/noobmaisfier/qlx/qt"
 // rowFuncs are the pgxexec entry points whose first type argument is the
 // result type; the statement is the first argument that resolves to a Select.
 var rowFuncs = map[string]bool{
-	"All": true, "One": true, "Maybe": true, "Each": true,
+	"All": true, "One": true, "Maybe": true, "Each": true, "Page": true,
 	"AllScan": true, "OneScan": true, "EachScan": true,
 	"PipeAll": true, "PipeOne": true,
 	"NewStatic0": true, "NewStatic1": true, "NewStatic2": true, "NewStatic3": true, "NewStatic4": true,
