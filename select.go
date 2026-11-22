@@ -59,6 +59,11 @@ func (q SelectQuery) outNames() []string {
 	return out
 }
 
+// OutputNames lists the names of the result columns, in order: the column name,
+// or the alias given with As. A tool that reads rows back by name uses it to
+// check that a column is selected.
+func (q SelectQuery) OutputNames() []string { return q.outNames() }
+
 func (q SelectQuery) needsParens() bool {
 	return len(q.order) > 0 || q.limit != nil || q.offset != nil || q.fetch != nil || q.lock != nil || len(q.ctes) > 0
 }

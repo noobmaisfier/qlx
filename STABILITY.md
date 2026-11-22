@@ -9,6 +9,10 @@ From 1.0, the root module and its sub-modules follow semantic versioning.
 - The `qlx.yaml` keys, the `schema.lock` format version, and the `qlxvet` rule codes (V001–V031): a code is never reused.
 - The documented JSON contract of `qt` types (`Null`, `Opt`, `JSONB`, `Range`, `Multirange`).
 
+## Cursor format of `qpage`
+
+The cursor string is a contract with clients that hold it between requests. Within 1.x a cursor issued by one release is accepted by the next, so a rolling deploy never invalidates the pages in flight; the layout is versioned (first byte) and a new one is added alongside, not substituted. The sentinels `qpage.ErrSort`, `qpage.ErrCursor` and `qpage.ErrCursorKey` are part of the API.
+
 ## Optional interfaces read by qjson's strict decoder
 
 `qjson` finds the types hidden inside a wrapper by duck typing, so a custom type can take part without importing `qjson`:

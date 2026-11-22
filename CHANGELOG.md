@@ -3,6 +3,13 @@
 Entries list user-visible changes. A **Breaking** line is a change that can make
 code that compiled, or produced a value, before behave differently.
 
+## Unreleased (1.1)
+
+### Added
+
+- `qpage`: cursor pagination for a service layer. Declare the sortable fields (`qpage.Sorts`, `Sort`, `Asc`, `Desc`, `Tiebreak`), set the secret once at startup (`qpage.SetSecret`, with rotation), and call `client.Page[Row](ctx, base, sorts, req)` (or `tx.Page`): items and next cursor as a string, no HTTP or JSON coupling. Signed cursors bound to their sort, client-chosen sort from an allowlist, bounded size. Sentinels: `qpage.ErrSort` (the same value as `qlx.ErrSort`), `qpage.ErrCursor`, `qpage.ErrCursorKey`. Without pgxexec: `SortSet.Window`, `Window.Apply`, `SortSet.Page`. The key of a page is read from the last row the way pgxexec scans the row type: by `db` tag or field name, or by position for a row that implements `ScanTargets` (generated rows, `//qlx:row`), so a DTO needs no tag.
+- `qlx.KeyCol.Column` and `qlx.SelectQuery.OutputNames`, which qpage uses to read a key back from a row and to check the select list.
+
 ## v1.0.0 - 2026-11-21
 
 First general-availability release. Changes since v1.0.0-rc4:

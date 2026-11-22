@@ -1660,6 +1660,29 @@ sel = sel.OrderBy(order...)
 
 A `-` before a name sorts descending. The tiebreak is always appended last, which makes the order total. The number of statement shapes stays bounded by the allowlist.
 
+### 13.1c Cursor pagination in one call: qpage
+
+Declare the sortable fields once; `client.Page` runs the query and returns the items and the next cursor string, with no HTTP or JSON coupling.
+
+```go
+var userSorts = qpage.Sorts[UserRow](
+    qpage.Sort("created", qpage.Desc(Users.CreatedAt)), // the first sort is the default
+    qpage.Sort("email", qpage.Asc(Users.Email)),
+    qpage.Tiebreak(qpage.Desc(Users.ID)),               // ends every sort
+)
+
+// at startup, once
+qpage.SetSecret(secret) // SetSecret(newSecret, oldSecret) rotates
+
+// in the service
+page, err := client.Page[UserRow](ctx,
+    q.Select(Users.ID, Users.Email, Users.CreatedAt).From(Users).Where(Users.Active.IsTrue()),
+    userSorts, qpage.Request{Sort: sort, Cursor: cursor, Size: size})
+// errors.Is(err, qpage.ErrSort) or qpage.ErrCursor: 400. page.Items, page.Next ("" on the last page).
+```
+
+Rules: the key columns are NOT NULL and, with the tiebreak, unique; they are in the select list under their own names. The cursor is read from the last row the way pgxexec scans that row type: through the `db` tag (else the lowercased field name) for a struct scanned by name, and by position for a row that implements `ScanTargets` (generated rows, `//qlx:row` structs), so a DTO marked `//qlx:row` needs no tag: the key at column *i* of the SELECT is read from the field scanned at *i*, and the type of that field is checked against the key's; the base SELECT has no ORDER BY or LIMIT. A declaration that cannot work (no field for a key, a nullable key, an expression) panics at startup. The cursor is signed, bound to its sort and URL-safe; `qpage.ErrCursor` never says why it was refused, and a missing `SetSecret` is `qpage.ErrCursorKey` (500). The size defaults to 20 and is capped at 100 (`qpage.Sizes`). Without pgxexec, `Window`, `Apply` and `Page` are the three steps `client.Page` does.
+
 ### 13.2 Atomic counter
 
 ```go

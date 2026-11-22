@@ -178,6 +178,8 @@ When all keys go the same way, `After` renders one row comparison
 `(a, b) > ($1, $2)`; mixed directions render the equivalent expansion. With no
 key the predicate is absent, so the first page needs no special case.
 
+For a REST list, `qpage` declares the sortable fields and `client.Page[Row](ctx, base, sorts, req)` returns the items and the next cursor string: signed cursor, page size bound, client-chosen sort from an allowlist (see the cookbook).
+
 A sort string from a URL must never reach the SQL. `NewSorts` maps names to
 columns and rejects anything else with `ErrSort`:
 

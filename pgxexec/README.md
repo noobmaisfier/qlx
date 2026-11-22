@@ -68,6 +68,7 @@ if opt.Set {
   `pgx.ErrTooManyRows` otherwise.
 - `Maybe` returns an unset `qt.Opt[R]` for zero rows and an error for more.
 - `Each[R]` returns `iter.Seq2[R, error]` and streams rows without a slice.
+- `Page[R]` runs a base SELECT for one page of a cursor-paginated list (package `qpage`): `client.Page[UserRow](ctx, base, userSorts, qpage.Request{Sort, Cursor, Size})` returns the items and the next cursor string. Also on `Tx`.
 - Package-level `AllScan`/`OneScan`/`EachScan` are the positional forms (they take a rendered `qlx.Stmt`): the type constraint
   checks at compile time that `R` has `ScanTargets`.
 

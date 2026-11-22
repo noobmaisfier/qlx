@@ -47,6 +47,7 @@ import (
     q "github.com/noobmaisfier/qlx"                 // Core query builder DSL
     "github.com/noobmaisfier/qlx/qt"                // Complete value types: Null, Opt, Date, ID, Numeric, etc.
     "github.com/noobmaisfier/qlx/pgxexec"           // Connection, execution, bulk & transactions
+    "github.com/noobmaisfier/qlx/qpage"             // Signed cursor pagination for service layers
     "github.com/noobmaisfier/qlx/qjson"             // Strict JSON request decoding for HTTP APIs
     "github.com/noobmaisfier/qlx/qjson/validator"   // DTO validator adapter for go-playground/validator
     "github.com/noobmaisfier/qlx/pg"                // PostgreSQL built-in functions
@@ -79,6 +80,7 @@ defer client.Close()
 * `client.One[R](ctx, stmt)`: Returns `(R, error)`. Returns `pgx.ErrNoRows` if no row matches; returns error if >1 row.
 * `client.Maybe[R](ctx, stmt)`: Returns `(qt.Opt[R], error)`. If no row matches, returns `qt.Opt[R]{Set: false}` and `nil` error!
 * `client.Each[R](ctx, stmt)`: Returns Go 1.23 standard iterator `iter.Seq2[R, error]` for streaming without buffering.
+* `client.Page[R](ctx, base, sorts, req, binds...)`: Runs cursor pagination via `qpage.SortSet[R]` and returns `(qpage.Page[R], error)`.
 * `client.Exec(ctx, stmt)`: Executes non-query statements. Returns `(pgconn.CommandTag, error)`.
 * `client.InsertMany(ctx, base, rows, opt)`: Bulk inserts multiple rows chunked under 65,535 parameters in one transaction.
 * `client.InsertManyReturning[R](ctx, base, rows, opt)`: Bulk insert collecting RETURNING columns into `[]R`.
@@ -95,6 +97,7 @@ Transactions started with `client.InTx` receive a `*pgxexec.Tx` wrapper carrying
 * `tx.One[R](ctx, stmt, binds...)`
 * `tx.Maybe[R](ctx, stmt, binds...)`
 * `tx.Each[R](ctx, stmt, binds...)`
+* `tx.Page[R](ctx, base, sorts, req, binds...)`
 * `tx.InsertMany(ctx, base, rows, opt)`
 * `tx.InsertManyReturning[R](ctx, base, rows, opt)`
 * `tx.CopyIn(ctx, st, rows)`
@@ -528,6 +531,39 @@ users, err := client.All[UserSummary](ctx,
     Limit(20))
 ```
 
+### 9.4b Service-Layer Cursor Pagination (`qpage`)
+For HTTP/API pagination without coupling to HTTP or JSON envelopes, use `qpage` with `client.Page[R]` (or `tx.Page[R]`):
+
+```go
+// Declare once at package level (panics at init if invalid: missing field, nullable key, expression)
+var userSorts = qpage.Sorts[UserSummary](
+    qpage.Sort("created", qpage.Desc(Users.CreatedAt)), // first sort is the default
+    qpage.Sort("email", qpage.Asc(Users.Email)),
+    qpage.Tiebreak(qpage.Desc(Users.ID)),               // appended to every sort (must be NOT NULL + unique)
+    qpage.Sizes(20, 100),                               // optional: default 20, max 100
+)
+
+// Once at startup (at least 16 bytes; pass previous secrets for zero-downtime rotation):
+if err := qpage.SetSecret(secret); err != nil {
+    log.Fatal(err)
+}
+
+// In service layer:
+page, err := client.Page[UserSummary](ctx,
+    q.Select(Users.ID, Users.Email, Users.CreatedAt).From(Users).Where(Users.Active.IsTrue()),
+    userSorts,
+    qpage.Request{Sort: sort, Cursor: cursor, Size: size})
+// errors.Is(err, qpage.ErrSort) or errors.Is(err, qpage.ErrCursor) -> 400 Bad Request
+// errors.Is(err, qpage.ErrCursorKey) -> 500 (missing qpage.SetSecret)
+// Returns page.Items ([]UserSummary, never nil) and page.Next ("" on the last page).
+```
+
+Rules & low-level use:
+- Key columns must be `NOT NULL` and selected in the base `SELECT` under their own names.
+- Cursor values are extracted from the last row the way `pgxexec` scans `R`: by position if `R` implements `ScanTargets` (generated rows, structs marked `//qlx:row`), so a DTO needs no `db` tag; otherwise by `db` tag or lowercased field name.
+- The base `SELECT` must **not** have its own `ORDER BY` or `LIMIT`.
+- Without `pgxexec`, use the three steps: `w, err := userSorts.Window(req)` -> `sel, err := w.Apply(base)` (`w.Apply` has a pointer receiver and records column positions) -> execute `sel` -> `page, err := userSorts.Page(w, rows)`.
+
 ### 9.5 Safe URL Sort Parser
 ```go
 var userSorts = q.NewSorts(map[string]q.Orderable{
@@ -792,3 +828,4 @@ When generating Go code with QLX, you **MUST** follow these rules:
 7. **ALWAYS remember to place `//qlx:row` above custom result structs and instruct running `qlx rows ./...`**.
 8. **ALWAYS use `nonzero` instead of `required` for `qt.Date`, `qt.ID`, `qt.Timestamptz`, `qt.Range` in DTO validation**.
 9. **ALWAYS use `validate:"omitnil,..."` (not `omitempty`) on `qt.Opt` PATCH fields when `""` or `0` should fail validation, and `json:",omitzero"` (not `omitempty`) on `qt` struct fields**.
+10. **ALWAYS call `qpage.SetSecret` at startup, select all `qpage` sort/tiebreak key columns under their own names, and NEVER add `.OrderBy(...)` or `.Limit(...)` to the base `SELECT` passed to `client.Page` / `tx.Page`**.

@@ -44,6 +44,16 @@ func (k KeyCol[T]) After(v T) Key { return Key{n: k.n, v: v, desc: k.desc} }
 
 func (k KeyCol[T]) keyDef() (node, bool) { return k.n, k.desc }
 
+// Column is the name of the key's column, or "" when the key is an expression.
+// A tool that reads the key back from a result row (cursor pagination) needs
+// the name the column has in the select list.
+func (k KeyCol[T]) Column() string {
+	if c, ok := k.n.(colRef); ok {
+		return c.name
+	}
+	return ""
+}
+
 // Key is a key column with the value of the last row seen.
 type Key struct {
 	n    node

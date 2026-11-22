@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/noobmaisfier/qlx"
+	"github.com/noobmaisfier/qlx/qpage"
 	"github.com/noobmaisfier/qlx/qt"
 )
 
@@ -43,6 +44,19 @@ func (c *Client) Maybe[R any](ctx context.Context, st qlx.Statement, binds ...ql
 // Each streams rows without materialising the slice.
 func (c *Client) Each[R any](ctx context.Context, st qlx.Statement, binds ...qlx.Binding) iter.Seq2[R, error] {
 	return eachR[R](ctx, c.db, c.resolver(st), binds)
+}
+
+// Page runs base for one page of a cursor-paginated list and returns the items
+// and the next cursor. base is a SELECT without its own ORDER BY or LIMIT that
+// returns the key columns of the sorts; req carries the sort name, the cursor
+// string and the size (see package qpage). A sort that is not declared is an
+// error wrapping qpage.ErrSort, a cursor that does not belong is qpage.ErrCursor.
+//
+//	page, err := client.Page[UserRow](ctx,
+//	    qlx.Select(Users.ID, Users.Email, Users.CreatedAt).From(Users).Where(Users.Active.IsTrue()),
+//	    userSorts, qpage.Request{Sort: sort, Cursor: cursor, Size: size})
+func (c *Client) Page[R any](ctx context.Context, base qlx.SelectQuery, s *qpage.SortSet[R], req qpage.Request, binds ...qlx.Binding) (qpage.Page[R], error) {
+	return pageR[R](ctx, c.db, c.resolver, base, s, req, binds)
 }
 
 // Exec runs a statement that returns no rows.

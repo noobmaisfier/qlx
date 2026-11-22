@@ -1664,6 +1664,29 @@ sel = sel.OrderBy(order...)
 
 `-` devant un nom trie en décroissant. Le départage est toujours ajouté en dernier, ce qui rend l'ordre total. Le nombre de formes de requête reste borné par la liste blanche.
 
+### 13.1c Pagination par curseur en un appel : qpage
+
+On déclare une fois les champs triables ; `client.Page` exécute la requête et renvoie les éléments et le curseur suivant en chaîne, sans couplage HTTP ni JSON.
+
+```go
+var userSorts = qpage.Sorts[UserRow](
+    qpage.Sort("created", qpage.Desc(Users.CreatedAt)), // the first sort is the default
+    qpage.Sort("email", qpage.Asc(Users.Email)),
+    qpage.Tiebreak(qpage.Desc(Users.ID)),               // ends every sort
+)
+
+// at startup, once
+qpage.SetSecret(secret) // SetSecret(newSecret, oldSecret) rotates
+
+// in the service
+page, err := client.Page[UserRow](ctx,
+    q.Select(Users.ID, Users.Email, Users.CreatedAt).From(Users).Where(Users.Active.IsTrue()),
+    userSorts, qpage.Request{Sort: sort, Cursor: cursor, Size: size})
+// errors.Is(err, qpage.ErrSort) or qpage.ErrCursor: 400. page.Items, page.Next ("" on the last page).
+```
+
+Règles : les colonnes de clé sont `NOT NULL` et, avec le `Tiebreak`, uniques ; elles sont dans le `SELECT` sous leur propre nom. Le curseur est lu dans la dernière ligne comme pgxexec scanne ce type de ligne : par le tag `db` (sinon le nom du champ en minuscules) pour une struct scannée par nom, et par position pour une ligne qui implémente `ScanTargets` (lignes générées, structs `//qlx:row`) ; un DTO `//qlx:row` n'a donc besoin d'aucun tag : la clé à la colonne *i* du `SELECT` est lue dans le champ scanné en *i*, et le type de ce champ est comparé à celui de la clé ; le `SELECT` de base n'a ni `ORDER BY` ni `LIMIT`. Une déclaration impossible (pas de champ pour une clé, clé nullable, expression) panique au démarrage. Le curseur est signé, lié à son tri et sûr dans une URL ; `qpage.ErrCursor` ne dit jamais pourquoi, et un `SetSecret` oublié donne `qpage.ErrCursorKey` (500). La taille vaut 20 par défaut, plafonnée à 100 (`qpage.Sizes`). Sans pgxexec, `Window`, `Apply` et `Page` sont les trois étapes de `client.Page`.
+
 ### 13.2 Compteur atomique
 
 ```go

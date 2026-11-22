@@ -5,6 +5,7 @@ import (
 	"iter"
 
 	"github.com/noobmaisfier/qlx"
+	"github.com/noobmaisfier/qlx/qpage"
 	"github.com/noobmaisfier/qlx/qt"
 )
 
@@ -16,6 +17,11 @@ import (
 // All runs st in the transaction and scans every row into R.
 func (t *Tx) All[R any](ctx context.Context, st qlx.Statement, binds ...qlx.Binding) ([]R, error) {
 	return allR[R](ctx, t.tx, t.c.resolver(st), binds)
+}
+
+// Page is Client.Page inside the transaction.
+func (t *Tx) Page[R any](ctx context.Context, base qlx.SelectQuery, s *qpage.SortSet[R], req qpage.Request, binds ...qlx.Binding) (qpage.Page[R], error) {
+	return pageR[R](ctx, t.tx, t.c.resolver, base, s, req, binds)
 }
 
 // One scans exactly one row; pgx.ErrNoRows / pgx.ErrTooManyRows otherwise.
