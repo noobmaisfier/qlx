@@ -192,13 +192,13 @@ QLX provides first-class Go representations for every PostgreSQL data type. Neve
 
 ### 5.2 Date & Time
 - `qt.Date`: PostgreSQL `date` (days since 2000-01-01). Formats to/from JSON `"YYYY-MM-DD"`.
-  - Constructors: `qt.NewDate(year, month, day)`, `qt.ParseDate("2026-03-30")`.
+  - Constructors: `qt.DateOf(year, month, day)`, `qt.DateFromTime(t)`, `qt.Today(loc)`, `qt.ParseDate("2026-03-30")`.
 - `qt.TimeOfDay`: PostgreSQL `time without time zone` (microsecond resolution since midnight). JSON `"15:04:05.999999"`.
-  - Constructors: `qt.NewTimeOfDay(hour, min, sec, micro)`.
-- `qt.TimeTZ`: PostgreSQL `time with time zone`.
+  - Constructors: `qt.TimeOfDayOf(hour, min, sec, micro)`, `qt.TimeOfDayFromTime(t)`, `qt.ParseTimeOfDay("15:04:05")`.
+- `qt.TimeTZ`: PostgreSQL `time with time zone` (`qt.ParseTimeTZ(...)`).
 - `qt.Timestamptz`: PostgreSQL `timestamptz` (stored as microsecond UTC timestamp). Formats to ISO 8601 UTC.
 - `qt.LocalTime`: PostgreSQL `timestamp without time zone` (distinct from `time.Time` to prevent timezone confusion).
-- `qt.Interval`: PostgreSQL `interval` (Months, Days, Microseconds).
+- `qt.Interval`: PostgreSQL `interval` (Months, Days, Microseconds; `qt.ParseInterval(...)`).
 
 ### 5.3 Typed Obfuscated Entity IDs (`qt.ID[Space]`)
 Protects internal auto-increment integer IDs from enumeration by formatting them as prefixed, typed, scrambled strings (e.g. `usr_8v92kf9`):
@@ -210,15 +210,15 @@ func (UserSpace) IDSpace() string { return "usr" }
 type UserID = qt.ID[UserSpace]
 
 // Usage:
-id := UserID.FromInt64(42)
+id := qt.IDOf[UserSpace](42)
 encoded := id.String() // "usr_..."
 parsed, err := qt.ParseID[UserSpace](encoded)
 rawInt := parsed.Int64()
 ```
 
 ### 5.4 Numeric & Decimals
-- `qt.Numeric`: Arbitrary precision decimal for PostgreSQL `NUMERIC` / `DECIMAL`. Avoids float rounding bugs.
-  - `qt.NewNumeric("12345.6789")`
+- `qt.Numeric`: Arbitrary precision decimal for PostgreSQL `NUMERIC` / `DECIMAL` (`type Numeric string`). Avoids float rounding bugs.
+  - `qt.Numeric("12345.6789")`
 
 ### 5.5 JSON Columns
 - `qt.JSONB[T]`: Strongly typed JSONB column. Automatically marshals/unmarshals `T` on read and write. Implements `fmt.Stringer` (`.String()` returns compact JSON representation).
@@ -238,6 +238,8 @@ rawInt := parsed.Int64()
 - `qt.Geometry` & `qt.Geography`: PostGIS spatial types.
 - `qt.LTree`, `qt.LQuery`, `qt.LTxtQuery`: Hierarchical tree labels for `ltree`.
 - `qt.Hstore`: Key-value pairs (`map[string]qt.Null[string]`).
+- `qt.Char`: PostgreSQL internal 1-byte `"char"` type (`type Char byte`).
+- `qt.Void`: PostgreSQL `void` return type for functions/procedures (`type Void struct{}`).
 - `qt.MacAddr` & `qt.MacAddr8`: MAC network hardware addresses.
 - `qt.Char`: PostgreSQL internal 1-byte `"char"` type.
 
