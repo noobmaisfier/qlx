@@ -6,7 +6,7 @@ From 1.0, the root module and its sub-modules follow semantic versioning.
 
 - The exported API of `qlx`, `qt`, `qjson`, `pgxexec`, `otelqlx`, `qjson/validator` and `qext/*`, checked by the API audit test.
 - The **shape of generated code**: names and types users write (`surface.golden`). A change to it is a minor release at least, announced in the CHANGELOG; generated code carries `qlx.ABI1` so a runtime that cannot compile it refuses early.
-- The `qlx.yaml` keys, the `schema.lock` format version, and the `qlxvet` rule codes (V001–V031): a code is never reused.
+- The `qlx.yaml` keys, the `schema.lock` format version, and the `qlxvet` rule codes (V001–V033): a code is never reused.
 - The documented JSON contract of `qt` types (`Null`, `Opt`, `JSONB`, `Range`, `Multirange`).
 
 ## Cursor format of `qpage`

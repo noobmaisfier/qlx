@@ -565,7 +565,7 @@ page, err := client.Page[UserSummary](ctx,
 Rules & low-level use:
 - Key columns must be `NOT NULL` and selected in the base `SELECT` under their own names.
 - Cursor values are extracted from the last row the way `pgxexec` scans `R`: by position if `R` implements `ScanTargets` (generated rows, structs marked `//qlx:row`), so a DTO needs no `db` tag; otherwise by `db` tag or lowercased field name.
-- The base `SELECT` must **not** have its own `ORDER BY`, `LIMIT`, `OFFSET`, or `FETCH FIRST` (`qlxvet` rule V032 catches this at build time).
+- The base `SELECT` must **not** have its own `ORDER BY`, `LIMIT`, `OFFSET`, or `FETCH FIRST` (`qlxvet` rule V032 catches this at build time, and `Window.Apply` rejects it at runtime).
 - `qpage.Sorts` must always specify a unique `Tiebreak` (primary key), otherwise `qlxvet` rule V033 warns (suppress with `//qlx:ignore <reason>` if a Sort already ends with unique keys).
 - Without `pgxexec`, use the three steps: `w, err := userSorts.Window(req)` -> `sel, err := w.Apply(base)` (`w.Apply` has a pointer receiver and records column positions) -> execute `sel` -> `page, err := userSorts.Page(w, rows)`.
 
