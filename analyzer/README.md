@@ -3,7 +3,7 @@
 `qlxvet` is the `go/analysis` pass for QLX. It catches SQL mistakes that the Go
 type system cannot see, before the program runs and without a database.
 
-It reports the stable codes V001 to V031; V027 is retired. A finding names
+It reports the stable codes V001 to V033; V027 is retired. A finding names
 the rule, the statement and the column or clause involved; a valid query stays
 silent.
 
@@ -60,6 +60,8 @@ go vet -vettool="$(go env GOPATH)/bin/qlxvet" \
 | V029 | `SELECT DISTINCT` ordering, or `DISTINCT ON` not matching the leading `ORDER BY` |
 | V030 | `ToNull()` on a column whose Go type cannot hold `NULL` (the server answers 23502) |
 | V031 | `qt.Opt[qt.Null[T]]` struct field without `omitzero` in its json tag: unset, it cannot be marshaled (`qt.ErrUnsetOptNull`) |
+| V032 | `OrderBy`, `Limit`, `Offset` or `FetchFirst` on the SELECT given to `Client.Page`, `Tx.Page` or `Window.Apply` (qpage adds its own order and limit) |
+| V033 | `qpage.Sorts` without a `Tiebreak` (rows sharing a sort value can be skipped or repeated at a page boundary) |
 
 V018 also follows exported helpers whose whole body is `return <Select chain>`,
 including helpers in another package: the defining package exports the selected

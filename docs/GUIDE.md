@@ -1591,6 +1591,8 @@ L'analyseur est le seul contrôleur statique : `go install github.com/noobmaisfi
 | V029 | `Distinct` avec un `OrderBy` sur une colonne non sélectionnée ; `DistinctOn` dont les expressions ne commencent pas le `OrderBy` |
 | V030 | `ToNull()` sur une colonne dont le type Go ne peut pas contenir `NULL` (le serveur répond 23502) |
 | V031 | champ `qt.Opt[qt.Null[T]]` sans `omitzero` dans son tag json : non renseigné, il ne peut pas être marshalé (`qt.ErrUnsetOptNull`) |
+| V032 | `OrderBy`, `Limit`, `Offset` ou `FetchFirst` sur le SELECT donné à `Client.Page`, `Tx.Page` ou `Window.Apply` (qpage ajoute son propre ordre et sa limite) |
+| V033 | `qpage.Sorts` sans `Tiebreak` (des lignes de même valeur de tri peuvent être sautées ou répétées à une frontière de page) |
 
 Un constat accepté se supprime avec un commentaire sur la même ligne ou la précédente : `//qlx:ignore <raison>`. Avec `-audit`, chaque suppression est elle-même listée (V011).
 
@@ -1685,7 +1687,7 @@ page, err := client.Page[UserRow](ctx,
 // errors.Is(err, qpage.ErrSort) or qpage.ErrCursor: 400. page.Items, page.Next ("" on the last page).
 ```
 
-Règles : les colonnes de clé sont `NOT NULL` et, avec le `Tiebreak`, uniques ; elles sont dans le `SELECT` sous leur propre nom. Le curseur est lu dans la dernière ligne comme pgxexec scanne ce type de ligne : par le tag `db` (sinon le nom du champ en minuscules) pour une struct scannée par nom, et par position pour une ligne qui implémente `ScanTargets` (lignes générées, structs `//qlx:row`) ; un DTO `//qlx:row` n'a donc besoin d'aucun tag : la clé à la colonne *i* du `SELECT` est lue dans le champ scanné en *i*, et le type de ce champ est comparé à celui de la clé ; le `SELECT` de base n'a ni `ORDER BY` ni `LIMIT`. Une déclaration impossible (pas de champ pour une clé, clé nullable, expression) panique au démarrage. Le curseur est signé, lié à son tri et sûr dans une URL ; `qpage.ErrCursor` ne dit jamais pourquoi, et un `SetSecret` oublié donne `qpage.ErrCursorKey` (500). La taille vaut 20 par défaut, plafonnée à 100 (`qpage.Sizes`). Sans pgxexec, `Window`, `Apply` et `Page` sont les trois étapes de `client.Page`.
+Règles : les colonnes de clé sont `NOT NULL` et, avec le `Tiebreak`, uniques ; elles sont dans le `SELECT` sous leur propre nom. Le curseur est lu dans la dernière ligne comme pgxexec scanne ce type de ligne : par le tag `db` (sinon le nom du champ en minuscules) pour une struct scannée par nom, et par position pour une ligne qui implémente `ScanTargets` (lignes générées, structs `//qlx:row`) ; un DTO `//qlx:row` n'a donc besoin d'aucun tag : la clé à la colonne *i* du `SELECT` est lue dans le champ scanné en *i*, et le type de ce champ est comparé à celui de la clé ; le `SELECT` de base n'a ni `ORDER BY` ni `LIMIT`. Une déclaration impossible (pas de champ pour une clé, clé nullable, expression) panique au démarrage. Le curseur est signé, lié à son tri et sûr dans une URL ; `qpage.ErrCursor` ne dit jamais pourquoi, et un `SetSecret` oublié donne `qpage.ErrCursorKey` (500) dès la première requête, et `qpage.CheckSecret()` le vérifie au démarrage. La taille vaut 20 par défaut, plafonnée à 100 (`qpage.Sizes`). Sans pgxexec, `Window`, `Apply` et `Page` sont les trois étapes de `client.Page`.
 
 ### 13.2 Compteur atomique
 

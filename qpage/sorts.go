@@ -240,8 +240,12 @@ func (s *SortSet[R]) Names() []string {
 }
 
 // Window decodes the request into the pieces of the query. An unknown sort is
-// an error wrapping ErrSort; a cursor that does not belong is ErrCursor.
+// an error wrapping ErrSort; a cursor that does not belong is ErrCursor; a
+// missing SetSecret is ErrCursorKey, whatever the page.
 func (s *SortSet[R]) Window(req Request) (Window, error) {
+	if err := CheckSecret(); err != nil {
+		return Window{}, err // on the first page too: a cursor is made only when a next page exists
+	}
 	sd := s.sorts[0]
 	if req.Sort != "" {
 		if sd = s.byName[req.Sort]; sd == nil {

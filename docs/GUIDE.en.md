@@ -1587,6 +1587,8 @@ The analyzer is the only static checker: `go install github.com/noobmaisfier/qlx
 | V029 | `Distinct` with an `OrderBy` column that is not selected; `DistinctOn` whose expressions do not start the `OrderBy` |
 | V030 | `ToNull()` on a column whose Go type cannot hold `NULL` (the server answers 23502) |
 | V031 | `qt.Opt[qt.Null[T]]` struct field without `omitzero` in its json tag: unset, it cannot be marshaled (`qt.ErrUnsetOptNull`) |
+| V032 | `OrderBy`, `Limit`, `Offset` or `FetchFirst` on the SELECT given to `Client.Page`, `Tx.Page` or `Window.Apply` (qpage adds its own order and limit) |
+| V033 | `qpage.Sorts` without a `Tiebreak` (rows sharing a sort value can be skipped or repeated at a page boundary) |
 
 An accepted finding is suppressed with a comment on the same line or the previous one: `//qlx:ignore <reason>`. With `-audit`, each suppression is itself listed (V011).
 
@@ -1681,7 +1683,7 @@ page, err := client.Page[UserRow](ctx,
 // errors.Is(err, qpage.ErrSort) or qpage.ErrCursor: 400. page.Items, page.Next ("" on the last page).
 ```
 
-Rules: the key columns are NOT NULL and, with the tiebreak, unique; they are in the select list under their own names. The cursor is read from the last row the way pgxexec scans that row type: through the `db` tag (else the lowercased field name) for a struct scanned by name, and by position for a row that implements `ScanTargets` (generated rows, `//qlx:row` structs), so a DTO marked `//qlx:row` needs no tag: the key at column *i* of the SELECT is read from the field scanned at *i*, and the type of that field is checked against the key's; the base SELECT has no ORDER BY or LIMIT. A declaration that cannot work (no field for a key, a nullable key, an expression) panics at startup. The cursor is signed, bound to its sort and URL-safe; `qpage.ErrCursor` never says why it was refused, and a missing `SetSecret` is `qpage.ErrCursorKey` (500). The size defaults to 20 and is capped at 100 (`qpage.Sizes`). Without pgxexec, `Window`, `Apply` and `Page` are the three steps `client.Page` does.
+Rules: the key columns are NOT NULL and, with the tiebreak, unique; they are in the select list under their own names. The cursor is read from the last row the way pgxexec scans that row type: through the `db` tag (else the lowercased field name) for a struct scanned by name, and by position for a row that implements `ScanTargets` (generated rows, `//qlx:row` structs), so a DTO marked `//qlx:row` needs no tag: the key at column *i* of the SELECT is read from the field scanned at *i*, and the type of that field is checked against the key's; the base SELECT has no ORDER BY or LIMIT. A declaration that cannot work (no field for a key, a nullable key, an expression) panics at startup. The cursor is signed, bound to its sort and URL-safe; `qpage.ErrCursor` never says why it was refused, and a missing `SetSecret` is `qpage.ErrCursorKey` (500) on the very first request, and `qpage.CheckSecret()` checks it at startup. The size defaults to 20 and is capped at 100 (`qpage.Sizes`). Without pgxexec, `Window`, `Apply` and `Page` are the three steps `client.Page` does.
 
 ### 13.2 Atomic counter
 

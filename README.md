@@ -726,7 +726,7 @@ It also runs in CI, gopls and golangci-lint. `qlx vet` no longer exists: the
 command prints these two lines and exits 2, so an old CI step cannot pass
 silently.
 
-The analyzer reports V001–V031, with V027 retired: a column outside `FROM`,
+The analyzer reports V001–V033, with V027 retired: a column outside `FROM`,
 `UPDATE` without `WHERE`, a bare column next to `GroupBy`, an aggregate in
 `WHERE`, a feature
 newer than your targets, `ToNull()` on a `NOT NULL` column, `qt.Opt[qt.Null[T]]`
@@ -759,7 +759,7 @@ Statements become OpenTelemetry spans and a duration histogram, labelled by the
 | Tier | Catches |
 | --- | --- |
 | **Go compiler** | wrong operand types, nullability, `LIKE` on a number, `SUM` over text, an aggregate in `WHERE`, an insert missing a required column |
-| **Analyzer** (`go vet`, gopls) | a column outside `FROM`, `UPDATE` without `WHERE`, a row type that does not match the selected columns, a PostgreSQL feature newer than your targets, `ToNull()` on a `NOT NULL` column, `qt.Opt[qt.Null[T]]` without `omitzero` (V001–V031, with V027 retired) |
+| **Analyzer** (`go vet`, gopls) | a column outside `FROM`, `UPDATE` without `WHERE`, a row type that does not match the selected columns, a PostgreSQL feature newer than your targets, `ToNull()` on a `NOT NULL` column, `qt.Opt[qt.Null[T]]` without `omitzero` (V001–V033, with V027 retired) |
 | **Render time** | scope, grouping, shape and version rules on statements built dynamically (`ErrScope`, `ErrShape`, `ErrUnsupportedByServer`) |
 | **The server** | what only PostgreSQL knows: `PREPARE` in tests (`qlx prepare`), `VerifyRow`, `VerifySchema` |
 

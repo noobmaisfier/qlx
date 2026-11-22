@@ -33,6 +33,8 @@
 //	V029 SELECT DISTINCT ordered by a column that is not selected; DISTINCT ON not matching ORDER BY
 //	V030 ToNull() on a column whose Go type cannot hold NULL
 //	V031 qt.Opt[qt.Null[T]] struct field without omitzero in its json tag (unset, it cannot be marshaled)
+//	V032 ORDER BY, LIMIT, OFFSET or FETCH FIRST on the SELECT given to Client.Page, Tx.Page or Window.Apply
+//	V033 qpage.Sorts without a Tiebreak
 //	V018 result type that does not match the selected columns (count, names, Go types, nullability, order)
 //
 // A finding is suppressed by a comment on the same or the previous line:
@@ -242,6 +244,7 @@ func (c *checker) file(f *ast.File) {
 			c.mappingCheck(n)
 			c.nullAssign(n)
 			c.gapCall(n, stack)
+			c.pageCall(n)
 			if outermost(n, stack) {
 				// A chain inside another QLX call is reached by that
 				// call's own descent, with the outer query's tables in scope

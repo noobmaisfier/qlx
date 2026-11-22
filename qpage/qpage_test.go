@@ -176,6 +176,7 @@ func TestExactMultipleEmptyAndSizes(t *testing.T) {
 			t.Errorf("size %d: got %d (limit %d), want %d", size, w.Size(), w.Limit, want)
 		}
 	}
+	//qlx:ignore test without tiebreak
 	small := Sorts[row](Sort("a", Asc(Users.ID)), Sizes(50, 10))
 	if w, _ := small.Window(Request{}); w.Size() != 10 {
 		t.Errorf("a default above the maximum is capped: %d", w.Size())
@@ -264,7 +265,18 @@ func TestSecretSetupAndRotation(t *testing.T) {
 	}
 
 	secret.Store(nil)
+	if _, err := s.Window(Request{Size: 2}); !errors.Is(err, ErrCursorKey) {
+		t.Errorf("no secret, first page: %v", err)
+	}
+	if err := CheckSecret(); !errors.Is(err, ErrCursorKey) {
+		t.Errorf("CheckSecret without a secret: %v", err)
+	}
+	_ = SetSecret(testSecret)
+	if err := CheckSecret(); err != nil {
+		t.Errorf("CheckSecret with a secret: %v", err)
+	}
 	w, _ := s.Window(Request{Size: 2})
+	secret.Store(nil) // the secret goes away between the two steps
 	if _, err := s.Page(w, table(5)[:3]); !errors.Is(err, ErrCursorKey) {
 		t.Errorf("no secret, making a cursor: %v", err)
 	}
@@ -308,9 +320,18 @@ func TestKeyKeepsNanoseconds(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sel, _ := w.Apply(selectRows())
-	st, _ := q.Render(q.Dialect{Version: q.PG18}, sel)
-	args, _ := st.Args()
+	sel, err := w.Apply(selectRows())
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := q.Render(q.Dialect{Version: q.PG18}, sel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	args, err := st.Args()
+	if err != nil {
+		t.Fatal(err)
+	}
 	if got := args[0].(time.Time); !got.Equal(rows[1].Created) {
 		t.Errorf("key came back as %v, want %v", got, rows[1].Created)
 	}
@@ -323,8 +344,14 @@ func TestMixedDirectionsRender(t *testing.T) {
 	w, _ := s.Window(Request{Size: 2})
 	p, _ := s.Page(w, rows)
 	w, _ = s.Window(Request{Cursor: p.Next, Size: 2})
-	sel, _ := w.Apply(selectRows())
-	st, _ := q.Render(q.Dialect{Version: q.PG18}, sel)
+	sel, err := w.Apply(selectRows())
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := q.Render(q.Dialect{Version: q.PG18}, sel)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !strings.Contains(st.SQL, `"users"."created_at" < $1 OR ("users"."created_at" = $2 AND "users"."id" > $3)`) {
 		t.Errorf("mixed directions: %s", st.SQL)
 	}
@@ -344,6 +371,7 @@ func TestApplyChecksTheSelectList(t *testing.T) {
 	if _, err := zero.Apply(selectRows()); err == nil {
 		t.Error("a zero Window must be refused")
 	}
+	//qlx:ignore test without tiebreak
 	other := Sorts[row](Sort("x", Asc(Users.ID)))
 	if _, err := other.Page(w, nil); err == nil {
 		t.Error("a Window of another SortSet must be refused")
@@ -394,6 +422,7 @@ func TestDeclarationsThatCannotWork(t *testing.T) {
 			t.Error("Sorts must panic on a declaration that cannot work")
 		}
 	}()
+	//qlx:ignore test empty declaration
 	Sorts[row]()
 }
 
@@ -423,8 +452,14 @@ func TestTiebreakAlreadyAKeyIsKept(t *testing.T) {
 		t.Fatal(err)
 	}
 	w, _ := s.Window(Request{})
-	sel, _ := w.Apply(selectRows())
-	st, _ := q.Render(q.Dialect{Version: q.PG18}, sel)
+	sel, err := w.Apply(selectRows())
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := q.Render(q.Dialect{Version: q.PG18}, sel)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !strings.Contains(st.SQL, `ORDER BY "users"."id" DESC LIMIT`) {
 		t.Errorf("the sort's own key must win over the tiebreak: %s", st.SQL)
 	}

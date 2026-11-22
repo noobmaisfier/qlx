@@ -15,7 +15,7 @@
    - Methods with `X` accept columns or SQL expressions: `.EqX(col)`, `.NeX(col)`, `.GtX(expr)`, `.ToX(expr)`.
 4. **Compile-Time & Analyzer Safety**:
    - Columns are strictly typed; an integer column cannot accept a string.
-   - `qlxvet` analyzer catches logical errors at build time: `Update` or `DeleteFrom` without `.Where(...)` or `.All()` fails compilation/linting; setting `ToNull()` on a non-nullable column fails (V030); struct fields of type `qt.Opt[qt.Null[T]]` without `omitzero` in their `json` tag fail (V031: prevents unset fields from marshaling as explicit `null`).
+   - `qlxvet` analyzer catches logical errors at build time (V001–V033): `Update` or `DeleteFrom` without `.Where(...)` or `.All()` fails compilation/linting; setting `ToNull()` on a non-nullable column fails (V030); struct fields of type `qt.Opt[qt.Null[T]]` without `omitzero` in their `json` tag fail (V031: prevents unset fields from marshaling as explicit `null`); `OrderBy`/`Limit` on `Page` queries fails (V032); `Sorts` without `Tiebreak` warns (V033).
 5. **Zero-Reflection Row Scanning**:
    - Use `//qlx:row` above custom result structs and run `qlx rows ./...`.
    - Generates a `ScanTargets()` method for positional scanning directly into memory pointers with zero reflection overhead.
@@ -547,6 +547,10 @@ var userSorts = qpage.Sorts[UserSummary](
 if err := qpage.SetSecret(secret); err != nil {
     log.Fatal(err)
 }
+// Optional startup sanity check (SortSet.Window reports ErrCursorKey on the first request if unset):
+if err := qpage.CheckSecret(); err != nil {
+    log.Fatal(err)
+}
 
 // In service layer:
 page, err := client.Page[UserSummary](ctx,
@@ -561,7 +565,8 @@ page, err := client.Page[UserSummary](ctx,
 Rules & low-level use:
 - Key columns must be `NOT NULL` and selected in the base `SELECT` under their own names.
 - Cursor values are extracted from the last row the way `pgxexec` scans `R`: by position if `R` implements `ScanTargets` (generated rows, structs marked `//qlx:row`), so a DTO needs no `db` tag; otherwise by `db` tag or lowercased field name.
-- The base `SELECT` must **not** have its own `ORDER BY` or `LIMIT`.
+- The base `SELECT` must **not** have its own `ORDER BY`, `LIMIT`, `OFFSET`, or `FETCH FIRST` (`qlxvet` rule V032 catches this at build time).
+- `qpage.Sorts` must always specify a unique `Tiebreak` (primary key), otherwise `qlxvet` rule V033 warns (suppress with `//qlx:ignore <reason>` if a Sort already ends with unique keys).
 - Without `pgxexec`, use the three steps: `w, err := userSorts.Window(req)` -> `sel, err := w.Apply(base)` (`w.Apply` has a pointer receiver and records column positions) -> execute `sel` -> `page, err := userSorts.Page(w, rows)`.
 
 ### 9.5 Safe URL Sort Parser
@@ -828,4 +833,4 @@ When generating Go code with QLX, you **MUST** follow these rules:
 7. **ALWAYS remember to place `//qlx:row` above custom result structs and instruct running `qlx rows ./...`**.
 8. **ALWAYS use `nonzero` instead of `required` for `qt.Date`, `qt.ID`, `qt.Timestamptz`, `qt.Range` in DTO validation**.
 9. **ALWAYS use `validate:"omitnil,..."` (not `omitempty`) on `qt.Opt` PATCH fields when `""` or `0` should fail validation, and `json:",omitzero"` (not `omitempty`) on `qt` struct fields**.
-10. **ALWAYS call `qpage.SetSecret` at startup, select all `qpage` sort/tiebreak key columns under their own names, and NEVER add `.OrderBy(...)` or `.Limit(...)` to the base `SELECT` passed to `client.Page` / `tx.Page`**.
+10. **ALWAYS call `qpage.SetSecret` at startup, select all `qpage` sort/tiebreak key columns under their own names, and NEVER add `.OrderBy(...)` or `.Limit(...)` to the base `SELECT` passed to `client.Page` / `tx.Page` (enforced by `qlxvet` V032/V033)**.

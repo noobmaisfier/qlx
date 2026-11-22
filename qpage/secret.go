@@ -47,6 +47,17 @@ func SetSecret(current []byte, previous ...[]byte) error {
 	return nil
 }
 
+// CheckSecret returns ErrCursorKey when SetSecret has not been called. Call it
+// at startup to fail at launch rather than at the first request. Window makes
+// the same check on every request, the first page included, so a program that
+// forgot the secret fails on its first list, not on its second page.
+func CheckSecret() error {
+	if secret.Load() == nil {
+		return ErrCursorKey
+	}
+	return nil
+}
+
 func mac(key, msg []byte) []byte {
 	h := hmac.New(sha256.New, key)
 	h.Write(msg)

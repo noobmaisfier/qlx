@@ -3,6 +3,13 @@
 Entries list user-visible changes. A **Breaking** line is a change that can make
 code that compiled, or produced a value, before behave differently.
 
+## Unreleased
+
+### Added
+
+- `qlxvet` V032 (`OrderBy`/`Limit`/`Offset`/`FetchFirst` on the SELECT given to `Client.Page`, `Tx.Page`, `Window.Apply`) and V033 (`qpage.Sorts` without `Tiebreak`).
+- `qpage.CheckSecret()`; `SortSet.Window` now reports `ErrCursorKey` on every request, the first page included, instead of only when a next page makes a cursor.
+
 ## v1.1.0 - 2026-11-22
 
 ### Added
