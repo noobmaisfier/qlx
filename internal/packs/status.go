@@ -9,7 +9,7 @@ package packs
 // fails while both exist.
 var extractionOnly = map[string]bool{
 	// The contrib packs: definitions only, until the ledgers are extracted on
-	// PostgreSQL 16 to 19 (docs/HANDOFF.md, "Adding a contrib pack").
+	// PostgreSQL 16 to 19 (docs/extensions.md).
 	"pgcrypto":      true,
 	"uuid-ossp":     true,
 	"unaccent":      true,

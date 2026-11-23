@@ -56,5 +56,3 @@ themselves when the extension is missing.
 2. Remove the pack from `extractionOnly` in `internal/packs/status.go`
    (`TestExtractionOnlyHasNoLedger` fails while both exist).
 3. Add the round-trip test and update the extension section of the guide.
-4. Record the counts (functions and operators wrapped, SHA-256 of the ledger)
-   in `docs/HANDOFF.md`.
