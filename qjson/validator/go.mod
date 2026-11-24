@@ -4,7 +4,7 @@ go 1.27.4
 
 require (
 	github.com/go-playground/validator/v10 v10.30.5
-	github.com/noobmaisfier/qlx v1.3.0
+	github.com/noobmaisfier/qlx v1.3.1
 )
 
 require (
