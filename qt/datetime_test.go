@@ -59,7 +59,11 @@ func TestTimeOfDay(t *testing.T) {
 			t.Fatal(p)
 		}
 	}
-	for _, in := range []string{"", "24:00:01", "12:60", "ab:cd", "12:00:00x"} {
+	for _, in := range []string{
+		"", "24:00:01", "12:60", "ab:cd", "12:00:00x",
+		"12:-1", "12:00:-1", "-1:00", "12:+1",
+		"12:00:00.", "12:00:00.1234567",
+	} {
 		if _, err := ParseTimeOfDay(in); err == nil {
 			t.Fatalf("%q accepted", in)
 		}
@@ -79,6 +83,8 @@ func TestTimeTZ(t *testing.T) {
 		"12:00:00.5-05:30":  "12:00:00.5-05:30",
 		"01:02:03Z":         "01:02:03+00:00",
 		"01:02:03+05:30:15": "01:02:03+05:30:15",
+		"12:00:00+15:59:59": "12:00:00+15:59:59",
+		"12:00:00-15:59:59": "12:00:00-15:59:59",
 	} {
 		v, err := ParseTimeTZ(in)
 		if err != nil || v.String() != want {
@@ -91,6 +97,10 @@ func TestTimeTZ(t *testing.T) {
 	for _, in := range []string{
 		"12:00:00+2147483648",
 		"12:00:00+596523:59:59",
+		"12:00:00+99:00",
+		"12:00:00+16:00",
+		"12:00:00-16:00",
+		"12:00:00++02",
 	} {
 		if _, err := ParseTimeTZ(in); err == nil {
 			t.Errorf("%q: overflowing offset accepted", in)

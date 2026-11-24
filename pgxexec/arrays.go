@@ -39,6 +39,9 @@ func (g sliceArrayGuard) SetDimensions(dims []pgtype.ArrayDimension) error {
 	}
 	n := 0
 	if len(dims) == 1 {
+		if dims[0].Length < 0 {
+			return fmt.Errorf("pgxexec: invalid negative array length %d", dims[0].Length)
+		}
 		n = int(dims[0].Length)
 	}
 	g.rv.Set(reflect.MakeSlice(g.rv.Type(), n, n))

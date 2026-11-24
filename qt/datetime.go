@@ -238,14 +238,21 @@ func ParseTimeOfDay(s string) (TimeOfDay, error) {
 	return v, nil
 }
 
+func parseTwoDigits(p string) (int, bool) {
+	if len(p) != 2 || p[0] < '0' || p[0] > '9' || p[1] < '0' || p[1] > '9' {
+		return 0, false
+	}
+	return int(p[0]-'0')*10 + int(p[1]-'0'), true
+}
+
 func parseClockOfDay(s string) (TimeOfDay, string, error) {
 	bad := fmt.Errorf("qt: invalid time %q", s)
 	if len(s) < 5 || s[2] != ':' {
 		return 0, "", bad
 	}
-	h, err1 := strconv.Atoi(s[0:2])
-	m, err2 := strconv.Atoi(s[3:5])
-	if err1 != nil || err2 != nil || m > 59 {
+	h, ok1 := parseTwoDigits(s[0:2])
+	m, ok2 := parseTwoDigits(s[3:5])
+	if !ok1 || !ok2 || m > 59 {
 		return 0, "", bad
 	}
 	rest := s[5:]
@@ -254,8 +261,8 @@ func parseClockOfDay(s string) (TimeOfDay, string, error) {
 		if len(rest) < 3 {
 			return 0, "", bad
 		}
-		var err error
-		if sec, err = strconv.Atoi(rest[1:3]); err != nil || sec > 60 {
+		var ok3 bool
+		if sec, ok3 = parseTwoDigits(rest[1:3]); !ok3 || sec > 60 {
 			return 0, "", bad
 		}
 		rest = rest[3:]
@@ -266,9 +273,10 @@ func parseClockOfDay(s string) (TimeOfDay, string, error) {
 			}
 			frac := rest[1:i]
 			if frac == "" || len(frac) > 6 {
-				frac = (frac + "000000")[:6]
+				return 0, "", bad
 			}
 			frac = (frac + "000000")[:6]
+			var err error
 			if us, err = strconv.Atoi(frac); err != nil {
 				return 0, "", bad
 			}
@@ -377,8 +385,16 @@ func ParseTimeTZ(s string) (TimeTZ, error) {
 	var secs int64
 	mult := []int64{3600, 60, 1}
 	for i, p := range parts {
+		if p == "" {
+			return TimeTZ{}, bad
+		}
+		for j := 0; j < len(p); j++ {
+			if p[j] < '0' || p[j] > '9' {
+				return TimeTZ{}, bad
+			}
+		}
 		n, err := strconv.ParseInt(p, 10, 64)
-		if err != nil || n < 0 || n > 59 && i > 0 || i == 0 && n > math.MaxInt32/3600 {
+		if err != nil || n < 0 || (i == 0 && n > 15) || (i > 0 && n > 59) {
 			return TimeTZ{}, bad
 		}
 		secs += n * mult[i]

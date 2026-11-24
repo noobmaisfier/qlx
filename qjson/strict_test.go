@@ -181,3 +181,28 @@ func TestStrictNullOfStruct(t *testing.T) {
 		t.Fatalf("valid Null value refused: %v", err)
 	}
 }
+
+func TestStrictRangeBounds(t *testing.T) {
+	type body struct {
+		R  qt.Range[settings]      `json:"r"`
+		MR qt.Multirange[settings] `json:"mr"`
+	}
+	for _, tc := range []struct {
+		json string
+		path string
+	}{
+		{`{"r":{"bogus":1}}`, "r.bogus"},
+		{`{"r":{"lower":{"theme":"a","typo":1}}}`, "r.lower.typo"},
+		{`{"r":{"upper":{"theme":"a","typo":1}}}`, "r.upper.typo"},
+		{`{"mr":[{"lower":{"theme":"a","typo":1}}]}`, "mr[0].lower.typo"},
+	} {
+		_, err := qjson.Decode[body](strings.NewReader(tc.json))
+		var e *qjson.Error
+		if !errors.As(err, &e) || e.Code != qjson.CodeUnknownField || e.Field != tc.path {
+			t.Fatalf("%s: want unknown_field at %s, got %v", tc.json, tc.path, err)
+		}
+	}
+	if _, err := qjson.Decode[body](strings.NewReader(`{"r":{"lower":{"theme":"a"},"upper":{"theme":"b"}},"mr":[{"lower":{"theme":"c"}}]}`)); err != nil {
+		t.Fatalf("valid range/multirange refused: %v", err)
+	}
+}

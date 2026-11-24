@@ -33,3 +33,21 @@ func TestWinCallOutsideWindowContextIsAnError(t *testing.T) {
 		t.Errorf("a window function in WHERE rendered: %v", err)
 	}
 }
+
+func TestAggAndWinCallQuoteUnqualifiedName(t *testing.T) {
+	malicious := "foo) FROM bar --"
+	stAgg, err := q.Render(q.Dialect{Version: q.PG18}, q.Select(q.AggCall[int64](0, 0, "", malicious)).From(Users))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(stAgg.SQL, `"foo) FROM bar --"()`) {
+		t.Errorf("AggCall did not quote unqualified name: %s", stAgg.SQL)
+	}
+	stWin, err := q.Render(q.Dialect{Version: q.PG18}, q.Select(q.WinCall[int64](0, 0, "", malicious).Over(q.Window())).From(Users))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(stWin.SQL, `"foo) FROM bar --"() OVER ()`) {
+		t.Errorf("WinCall did not quote unqualified name: %s", stWin.SQL)
+	}
+}

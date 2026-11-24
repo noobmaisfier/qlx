@@ -3,6 +3,7 @@ package miniyaml
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -76,5 +77,20 @@ func TestRejectsWhatItDoesNotUnderstand(t *testing.T) {
 		if _, err := Parse([]byte(src)); err == nil {
 			t.Errorf("%s: want an error", name)
 		}
+	}
+}
+
+func TestNestedAndDeepInlineLists(t *testing.T) {
+	got, err := Parse([]byte("a: [[1, 2], [3, 4]]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]any{"a": []any{[]any{int64(1), int64(2)}, []any{int64(3), int64(4)}}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %#v, want %#v", got, want)
+	}
+	deep := "a: " + strings.Repeat("[", 40000) + strings.Repeat("]", 40000) + "\n"
+	if _, err := Parse([]byte(deep)); err == nil {
+		t.Fatal("expected error for deeply nested inline list")
 	}
 }

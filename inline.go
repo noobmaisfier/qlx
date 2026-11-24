@@ -37,10 +37,11 @@ func inlineLiteral(v any) (string, error) {
 		return "NULL", nil
 	}
 	if x, ok := v.(time.Time); ok {
+		x = x.UTC()
 		if x.Year() < 1 { // Go counts a year 0 and negative years; PostgreSQL writes BC dates differently
 			return "", fmt.Errorf("%w: a time before year 1 cannot be written as a literal", ErrParams)
 		}
-		return "'" + x.UTC().Format("2006-01-02T15:04:05.999999999Z") + "'::timestamptz", nil
+		return "'" + x.Format("2006-01-02T15:04:05.999999999Z") + "'::timestamptz", nil
 	}
 	rv := reflect.ValueOf(v)
 	if rv.Kind() == reflect.Array && rv.Len() == 16 && rv.Type().Elem().Kind() == reflect.Uint8 {

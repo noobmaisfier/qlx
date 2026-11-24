@@ -162,6 +162,14 @@ func (r Range[T]) MarshalJSON() ([]byte, error) {
 	}{r.Lower, r.Upper, r.LowerInc, r.UpperInc})
 }
 
+type rangeJSON[T any] struct {
+	Lower    *T   `json:"lower"`
+	Upper    *T   `json:"upper"`
+	LowerInc bool `json:"lower_inc"`
+	UpperInc bool `json:"upper_inc"`
+	Empty    bool `json:"empty"`
+}
+
 // UnmarshalJSON reads the form MarshalJSON writes. An inclusive bound on an
 // unbounded side is rejected: it cannot mean anything, and PostgreSQL prints
 // it as exclusive.
@@ -170,13 +178,7 @@ func (r *Range[T]) UnmarshalJSON(b []byte) error {
 		*r = Range[T]{Null: true}
 		return nil
 	}
-	var v struct {
-		Lower    *T   `json:"lower"`
-		Upper    *T   `json:"upper"`
-		LowerInc bool `json:"lower_inc"`
-		UpperInc bool `json:"upper_inc"`
-		Empty    bool `json:"empty"`
-	}
+	var v rangeJSON[T]
 	if err := json.Unmarshal(b, &v); err != nil {
 		return err
 	}
@@ -238,6 +240,10 @@ func (JSONB[T]) JSONInner() reflect.Type { return reflect.TypeFor[T]() }
 func (Range[T]) JSONKeys() []string {
 	return []string{"lower", "upper", "lower_inc", "upper_inc", "empty"}
 }
+
+// JSONInner is the object shape of a Range so strict decoding also checks its
+// lower and upper bounds.
+func (Range[T]) JSONInner() reflect.Type { return reflect.TypeFor[rangeJSON[T]]() }
 
 // JSONInner is the type of the JSON value a Multirange holds: an array of
 // ranges.

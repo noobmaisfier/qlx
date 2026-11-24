@@ -66,9 +66,25 @@ func TestIntervalParse(t *testing.T) {
 		"P2147483648M",
 		"P2147483648D",
 		"P999999999999999999999999999999Y",
+		"12:-1:00",
+		"12:60:00",
+		"12:00:-1",
+		"12:00:60",
+		"12:+1:00",
+		"--1:00:00",
+		"9223372036854775807:00:00",
+		"0:0:1e300",
+		"0:0:NaN",
+		"0:0:Inf",
+		"P1",
+		"P1Y2",
+		"P1T2H",
+		"PT1T2H",
+		"P",
+		"PT",
 	} {
 		if _, err := qt.ParseInterval(in); err == nil {
-			t.Errorf("%q: overflowing interval accepted", in)
+			t.Errorf("%q: invalid or overflowing interval accepted", in)
 		}
 	}
 }

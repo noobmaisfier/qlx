@@ -3,6 +3,18 @@
 Entries list user-visible changes. A **Breaking** line is a change that can make
 code that compiled, or produced a value, before behave differently.
 
+## v1.3.1 - 2026-11-24
+
+### Fixed
+
+- `qlx.AggCall` / `qlx.WinCall`: always quote the function name as an identifier even when `schema` is empty, preventing SQL injection from untrusted names.
+- `pgxexec`: guard against negative array dimension lengths in binary decoding (`sliceArrayGuard.SetDimensions`), and close `pgx.Rows` with `defer` on all paths in `LoadTypes`, `VerifySchema`, and `checkNullability`.
+- `qjson` / `qt.Range`: implement `JSONInner()` on `Range[T]` so strict JSON decoding validates keys inside `lower` and `upper` bounds (including `Multirange[T]`).
+- `qpage`: prevent `int64` `Limit` overflow on `math.MaxInt` page sizes and reject oversized cursors (> 16 KiB) before base64 decoding.
+- `qt`: reject negative/overflowing/out-of-range components in `ParseInterval`, `ParseTimeOfDay`, and `ParseTimeTZ` (including empty or >6-digit fractions, trailing ISO digits, and `TimeTZ` offsets beyond `±15:59:59`).
+- `qlx.InlineArgs`: convert `time.Time` to UTC before checking `Year() < 1`.
+- `internal/miniyaml`: parse inline lists in $O(n)$ with a nesting depth limit.
+
 ## v1.3.0 - 2026-11-22
 
 ### Added

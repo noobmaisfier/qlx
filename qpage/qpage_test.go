@@ -3,6 +3,7 @@ package qpage
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -472,5 +473,26 @@ func TestTiebreakAlreadyAKeyIsKept(t *testing.T) {
 	}
 	if !strings.Contains(st.SQL, `ORDER BY "users"."id" DESC LIMIT`) {
 		t.Errorf("the sort's own key must win over the tiebreak: %s", st.SQL)
+	}
+}
+
+func TestMaxIntPageSizeDoesNotOverflowLimit(t *testing.T) {
+	setup(t)
+	s := Sorts[row](Sort("id", Asc(Users.ID)), Sizes(math.MaxInt, math.MaxInt))
+	w, err := s.Window(Request{Size: math.MaxInt})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w.Limit <= 0 {
+		t.Fatalf("Limit overflowed to %d", w.Limit)
+	}
+}
+
+func TestOversizedCursorRejected(t *testing.T) {
+	setup(t)
+	s := Sorts[row](Sort("id", Asc(Users.ID)))
+	_, err := s.Window(Request{Cursor: strings.Repeat("A", maxCursorLen+1)})
+	if !errors.Is(err, ErrCursor) {
+		t.Fatalf("expected ErrCursor for oversized cursor, got %v", err)
 	}
 }

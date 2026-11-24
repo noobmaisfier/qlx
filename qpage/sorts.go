@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 
@@ -135,6 +136,9 @@ func newSorts[R any](opts []Option) (*SortSet[R], error) {
 	if d.max <= 0 {
 		d.max = DefaultMax
 	}
+	if int64(d.max) >= math.MaxInt64 {
+		d.max = math.MaxInt - 1
+	}
 	if d.def > d.max {
 		d.def = d.max
 	}
@@ -263,7 +267,11 @@ func (s *SortSet[R]) Window(req Request) (Window, error) {
 	for i, k := range sd.keys {
 		defs[i] = k.def
 	}
-	w := Window{Order: q.KeyOrder(defs...), Limit: int64(size) + 1, size: size, sort: sd}
+	limit := int64(size) + 1
+	if limit <= 0 {
+		limit = math.MaxInt64
+	}
+	w := Window{Order: q.KeyOrder(defs...), Limit: limit, size: size, sort: sd}
 	if req.Cursor == "" {
 		return w, nil
 	}
@@ -354,7 +362,14 @@ func sealCursor(sortName string, vals []json.RawMessage) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(append(out, tag...)), nil
 }
 
+// maxCursorLen bounds the encoded cursor length to prevent unbounded memory
+// allocation on untrusted requests.
+const maxCursorLen = 16384
+
 func openCursor(s, sortName string) ([]json.RawMessage, error) {
+	if len(s) > maxCursorLen {
+		return nil, ErrCursor
+	}
 	raw, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil || len(raw) < 1+macLen || raw[0] != version {
 		return nil, ErrCursor

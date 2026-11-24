@@ -164,6 +164,7 @@ func checkNullability(ctx context.Context, db Describer, sd *pgconn.StatementDes
 	if err != nil {
 		return nil // no catalog access: the check is best effort
 	}
+	defer rows.Close()
 	type key struct {
 		rel uint32
 		att uint16

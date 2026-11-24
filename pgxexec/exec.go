@@ -359,6 +359,7 @@ func VerifySchema(ctx context.Context, db Querier, spec qlx.SchemaSpec, tables .
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	live := map[string]string{}
 	for rows.Next() {
 		var tbl, fp string

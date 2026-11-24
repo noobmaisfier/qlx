@@ -133,6 +133,7 @@ func LoadTypes(ctx context.Context, c *pgx.Conn) error {
 	if err != nil {
 		return fmt.Errorf("pgxexec: loading types: %w", err)
 	}
+	defer rows.Close()
 	type row struct {
 		oid        uint32
 		name, kind string

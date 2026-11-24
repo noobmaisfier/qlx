@@ -3,8 +3,10 @@ package pgxexec
 import (
 	"context"
 	"os"
+	"reflect"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	q "github.com/noobmaisfier/qlx"
@@ -68,5 +70,13 @@ func TestShapeCacheThroughExecutor(t *testing.T) {
 	// two shapes (insert, select by email); the select ran 4 times, the insert 3
 	if st.Size != 2 || st.Misses != 2 || st.Hits != 5 {
 		t.Fatalf("stats %+v", st)
+	}
+}
+
+func TestSliceArrayGuardNegativeLength(t *testing.T) {
+	var s []int32
+	g := sliceArrayGuard{rv: reflect.ValueOf(&s).Elem()}
+	if err := g.SetDimensions([]pgtype.ArrayDimension{{Length: -5, LowerBound: 1}}); err == nil {
+		t.Fatal("expected error for negative array length, got nil")
 	}
 }

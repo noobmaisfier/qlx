@@ -28,4 +28,8 @@ func TestInlineLiteralEdges(t *testing.T) {
 	if _, err := inlineLiteral(time.Date(-5, 1, 1, 0, 0, 0, 0, time.UTC)); !errors.Is(err, ErrParams) {
 		t.Errorf("BC time: %v", err)
 	}
+	plus14 := time.FixedZone("UTC+14", 14*3600)
+	if _, err := inlineLiteral(time.Date(1, 1, 1, 5, 0, 0, 0, plus14)); !errors.Is(err, ErrParams) {
+		t.Errorf("year 1 +14h (year 0 in UTC): %v", err)
+	}
 }

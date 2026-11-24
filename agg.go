@@ -22,6 +22,7 @@ type aggNode struct {
 	// Set by generated catalog wrappers (AggCall): the owning schema, which
 	// is then quoted, and the majors the aggregate exists in.
 	schema     string
+	quoted     bool
 	min, until int
 }
 
@@ -43,6 +44,8 @@ func (n aggNode) render(b *builder) {
 	if n.schema != "" {
 		b.ident(n.schema)
 		b.write(".")
+		b.ident(n.name)
+	} else if n.quoted {
 		b.ident(n.name)
 	} else {
 		b.write(n.name)
@@ -586,7 +589,7 @@ func NthValueN[T any](o Operand[qt.Null[T]], n int32) NullsWinFn[qt.Null[T]] {
 // Filter, Distinct, OrderBy and Over like the hand-written ones. min and
 // until bound the PostgreSQL majors it exists in (0: no bound).
 func AggCall[T any](min, until int, schema, name string, args ...Value) AggExpr[T] {
-	return AggExpr[T]{aggNode{name: name, schema: schema, args: nodesOf(args), min: min, until: until}}
+	return AggExpr[T]{aggNode{name: name, schema: schema, quoted: true, args: nodesOf(args), min: min, until: until}}
 }
 
 // WinCall is a generated catalog window function of an extension (PostGIS
@@ -596,5 +599,5 @@ func AggCall[T any](min, until int, schema, name string, args ...Value) AggExpr[
 // is reported at render time and by the analyzer. min and until bound the
 // PostgreSQL majors it exists in (0: no bound).
 func WinCall[T any](min, until int, schema, name string, args ...Value) WinFn[T] {
-	return WinFn[T]{aggNode{name: name, schema: schema, args: nodesOf(args), min: min, until: until}}
+	return WinFn[T]{aggNode{name: name, schema: schema, quoted: true, args: nodesOf(args), min: min, until: until}}
 }

@@ -213,6 +213,10 @@ func ParseInterval(s string) (Interval, error) {
 }
 
 func parseClock(f string) (int64, error) {
+	if f == "" {
+		return 0, fmt.Errorf("qt: bad interval time %q", f)
+	}
+	orig := f
 	sign := int64(1)
 	switch f[0] {
 	case '-':
@@ -222,26 +226,63 @@ func parseClock(f string) (int64, error) {
 	}
 	parts := strings.Split(f, ":")
 	if len(parts) != 3 {
-		return 0, fmt.Errorf("qt: bad interval time %q", f)
+		return 0, fmt.Errorf("qt: bad interval time %q", orig)
+	}
+	if !isUnsignedDigits(parts[0]) || !isUnsignedDigits(parts[1]) || parts[2] == "" || parts[2][0] < '0' || parts[2][0] > '9' {
+		return 0, fmt.Errorf("qt: bad interval time %q", orig)
 	}
 	h, err1 := strconv.ParseInt(parts[0], 10, 64)
 	m, err2 := strconv.ParseInt(parts[1], 10, 64)
 	sec, err3 := strconv.ParseFloat(parts[2], 64)
-	if err1 != nil || err2 != nil || err3 != nil {
-		return 0, fmt.Errorf("qt: bad interval time %q", f)
+	if err1 != nil || err2 != nil || err3 != nil || m > 59 || math.IsNaN(sec) || math.IsInf(sec, 0) || sec < 0 || sec >= 60 {
+		return 0, fmt.Errorf("qt: bad interval time %q", orig)
 	}
-	us := h*3600_000_000 + m*60_000_000 + int64(sec*1e6+0.5)
+	hus, err := scaleInt64(h, 3600_000_000)
+	if err != nil {
+		return 0, fmt.Errorf("%w in %q", errIntervalRange, orig)
+	}
+	mus, err := scaleInt64(m, 60_000_000)
+	if err != nil {
+		return 0, fmt.Errorf("%w in %q", errIntervalRange, orig)
+	}
+	sus, err := intervalFloat(sec, 1e6, true)
+	if err != nil {
+		return 0, fmt.Errorf("%w in %q", errIntervalRange, orig)
+	}
+	us, err := addInt64(hus, mus)
+	if err == nil {
+		us, err = addInt64(us, sus)
+	}
+	if err != nil {
+		return 0, fmt.Errorf("%w in %q", errIntervalRange, orig)
+	}
 	return sign * us, nil
+}
+
+func isUnsignedDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 func parseISOInterval(s string) (Interval, error) {
 	var out Interval
 	var months, days int64
 	inTime := false
+	hadUnit := false
 	num := ""
 	for _, r := range s[1:] {
 		switch {
 		case r == 'T':
+			if inTime || num != "" {
+				return Interval{}, fmt.Errorf("qt: bad ISO interval %q", s)
+			}
 			inTime = true
 		case r >= '0' && r <= '9' || r == '.' || r == '-':
 			num += string(r)
@@ -251,6 +292,7 @@ func parseISOInterval(s string) (Interval, error) {
 				return Interval{}, fmt.Errorf("qt: bad ISO interval %q", s)
 			}
 			num = ""
+			hadUnit = true
 			var add int64
 			switch {
 			case r == 'Y' && !inTime:
@@ -295,6 +337,9 @@ func parseISOInterval(s string) (Interval, error) {
 				return Interval{}, fmt.Errorf("%w in %q", errIntervalRange, s)
 			}
 		}
+	}
+	if !hadUnit || num != "" {
+		return Interval{}, fmt.Errorf("qt: bad ISO interval %q", s)
 	}
 	var err error
 	if out.Months, err = intervalInt32(months); err != nil {

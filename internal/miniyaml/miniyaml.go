@@ -225,20 +225,16 @@ func scalar(s string, no int) (any, error) {
 	case strings.HasPrefix(s, "{"):
 		return nil, fmt.Errorf("line %d: flow mappings are not supported; use an indented mapping", no)
 	case strings.HasPrefix(s, "["):
-		if !strings.HasSuffix(s, "]") {
-			return nil, fmt.Errorf("line %d: unterminated inline list", no)
+		pos := 0
+		out, err := parseInlineList(s, &pos, no, 0)
+		if err != nil {
+			return nil, err
 		}
-		inner := strings.TrimSpace(s[1 : len(s)-1])
-		out := []any{}
-		if inner == "" {
-			return out, nil
+		for pos < len(s) && (s[pos] == ' ' || s[pos] == '\t') {
+			pos++
 		}
-		for _, part := range splitTop(inner) {
-			v, err := scalar(strings.TrimSpace(part), no)
-			if err != nil {
-				return nil, err
-			}
-			out = append(out, v)
+		if pos != len(s) {
+			return nil, fmt.Errorf("line %d: unexpected trailing content after inline list", no)
 		}
 		return out, nil
 	}
@@ -262,26 +258,85 @@ func scalar(s string, no int) (any, error) {
 	return s, nil
 }
 
-// splitTop splits on commas outside quotes.
-func splitTop(s string) []string {
-	var parts []string
-	start, inS, inD := 0, false, false
-	for i := 0; i < len(s); i++ {
-		switch s[i] {
-		case '\'':
-			if !inD {
-				inS = !inS
-			}
-		case '"':
-			if !inS {
-				inD = !inD
-			}
-		case ',':
-			if !inS && !inD {
-				parts = append(parts, s[start:i])
-				start = i + 1
-			}
-		}
+const maxInlineListDepth = 64
+
+func parseInlineList(s string, pos *int, no, depth int) ([]any, error) {
+	if depth > maxInlineListDepth {
+		return nil, fmt.Errorf("line %d: inline list nesting too deep", no)
 	}
-	return append(parts, s[start:])
+	*pos++ // skip '['
+	skipInlineWS(s, pos)
+	out := []any{}
+	if *pos < len(s) && s[*pos] == ']' {
+		*pos++
+		return out, nil
+	}
+	for {
+		skipInlineWS(s, pos)
+		if *pos >= len(s) {
+			return nil, fmt.Errorf("line %d: unterminated inline list", no)
+		}
+		var v any
+		var err error
+		if s[*pos] == '[' {
+			v, err = parseInlineList(s, pos, no, depth+1)
+		} else {
+			start := *pos
+			switch s[*pos] {
+			case '\'':
+				*pos++
+				for *pos < len(s) {
+					if s[*pos] == '\'' {
+						*pos++
+						if *pos < len(s) && s[*pos] == '\'' {
+							*pos++
+							continue
+						}
+						break
+					}
+					*pos++
+				}
+			case '"':
+				*pos++
+				for *pos < len(s) {
+					if s[*pos] == '\\' && *pos+1 < len(s) {
+						*pos += 2
+						continue
+					}
+					if s[*pos] == '"' {
+						*pos++
+						break
+					}
+					*pos++
+				}
+			}
+			for *pos < len(s) && s[*pos] != ',' && s[*pos] != ']' {
+				*pos++
+			}
+			v, err = scalar(strings.TrimSpace(s[start:*pos]), no)
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+		skipInlineWS(s, pos)
+		if *pos >= len(s) {
+			return nil, fmt.Errorf("line %d: unterminated inline list", no)
+		}
+		if s[*pos] == ',' {
+			*pos++
+			continue
+		}
+		if s[*pos] == ']' {
+			*pos++
+			return out, nil
+		}
+		return nil, fmt.Errorf("line %d: unexpected %q in inline list", no, s[*pos])
+	}
+}
+
+func skipInlineWS(s string, pos *int) {
+	for *pos < len(s) && (s[*pos] == ' ' || s[*pos] == '\t') {
+		*pos++
+	}
 }
