@@ -478,6 +478,7 @@ func TestTiebreakAlreadyAKeyIsKept(t *testing.T) {
 
 func TestMaxIntPageSizeDoesNotOverflowLimit(t *testing.T) {
 	setup(t)
+	//qlx:ignore test without tiebreak
 	s := Sorts[row](Sort("id", Asc(Users.ID)), Sizes(math.MaxInt, math.MaxInt))
 	w, err := s.Window(Request{Size: math.MaxInt})
 	if err != nil {
@@ -490,6 +491,7 @@ func TestMaxIntPageSizeDoesNotOverflowLimit(t *testing.T) {
 
 func TestOversizedCursorRejected(t *testing.T) {
 	setup(t)
+	//qlx:ignore test without tiebreak
 	s := Sorts[row](Sort("id", Asc(Users.ID)))
 	_, err := s.Window(Request{Cursor: strings.Repeat("A", maxCursorLen+1)})
 	if !errors.Is(err, ErrCursor) {
