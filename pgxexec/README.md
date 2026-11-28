@@ -243,7 +243,7 @@ QLX_TEST_DSN="postgres://..." go test ./...
 The integration suite is run against PostgreSQL 16–19 by the project's CI.
 
 Limits: `pgxexec` does not build SQL and does not replace the analyzer. Read
-[the mapping guide](../docs/mapping.md) for how `R` is chosen, and
+[the mapping section in the README](../README.md#mapping-rows-to-go-values) for how `R` is chosen, and
 [the limits](../docs/limits.md) for what only a real server can check.
 
 Back to the [project README](../README.md).

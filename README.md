@@ -63,7 +63,7 @@ while you type.
 With multiple schemas (`schemas: [public, billing]` or `['*']`), the first
 schema is the principal schema and keeps plain Go names (`Users`); every other
 schema is always prefixed (`BillingUsers`), so names never change when a schema
-is added (see [Configuration](docs/configuration.md#16-several-schemas)).
+is added (see [llms-full.txt](llms-full.txt#22-qlxyaml-reference-qlxyaml-qlxyml-or-qlxjson)).
 
 A first query, scanned into a row type:
 
@@ -108,8 +108,8 @@ after adding or changing it (see [Mapping rows](#mapping-rows-to-go-values)).
 
 `client` is the connection from the Quick start. All queries return typed Go
 values; a `pgx.Tx`, `*pgx.Conn` or `*pgxpool.Pool` works with the package-level
-`pgxexec.One`/`All`/`Exec` too. See the [user guide](docs/GUIDE.en.md) for the
-full tour.
+`pgxexec.One`/`All`/`Exec` too. See [llms-full.txt](llms-full.txt) for the full
+self-contained reference.
 
 ### SELECT, filters, ordering, pagination
 
@@ -178,7 +178,7 @@ When all keys go the same way, `After` renders one row comparison
 `(a, b) > ($1, $2)`; mixed directions render the equivalent expansion. With no
 key the predicate is absent, so the first page needs no special case.
 
-For a REST list, `qpage` declares the sortable fields and `client.Page[Row](ctx, base, sorts, req)` returns the items and the next cursor string: signed cursor, page size bound, client-chosen sort from an allowlist (see the cookbook).
+For a REST list, `qpage` declares the sortable fields and `client.Page[Row](ctx, base, sorts, req)` returns the items and the next cursor string: signed cursor, page size bound, client-chosen sort from an allowlist (see [llms-full.txt](llms-full.txt#94-keyset-pagination--service-layer-cursor-paging-qpage)).
 
 A sort string from a URL must never reach the SQL. `NewSorts` maps names to
 columns and rejects anything else with `ErrSort`:
@@ -419,7 +419,7 @@ articles, err := client.All[ArticleRow](ctx,
   `HasKey`, `Contains` and `Merge` map to `exist`, `@>` and `||` (`b` wins on a
   duplicate key).
 
-See [docs/qext.md](docs/qext.md) for the full notes and index guidance.
+See [llms-full.txt](llms-full.txt#11-extensions-qext) for the full extension helper reference.
 
 ### INSERT, upsert, RETURNING
 
@@ -503,7 +503,7 @@ WHERE "orders"."status" = 'paid') TO STDOUT (FORMAT csv)
 Only plain values are accepted (integers, bools, floats, times, uuids, bytes,
 NULL and printable-ASCII strings without quote or backslash); anything else,
 including a string like `x' OR '1'='1`, is refused with `ErrParams` instead of
-escaped. See [docs/GUIDE.en.md](docs/GUIDE.en.md) §9.3.
+escaped.
 
 ### UPDATE and DELETE
 
@@ -693,7 +693,7 @@ For `//qlx:row`, the rules that matter:
 tags. `qlx:"-"` excludes a field from `ScanTargets`; `client.Each` streams rows.
 Every path is reflection-free after the first scan plan.
 
-Full rules, aliases, outer joins and JSON aggregation: [docs/mapping.md](docs/mapping.md).
+Full rules, aliases, outer joins and JSON aggregation: [llms-full.txt](llms-full.txt#7-row-mapping-scanning--testing-qlxrow-qtest).
 
 ### Errors
 
@@ -773,8 +773,8 @@ regression case.
 | --- | --- | --- |
 | `github.com/noobmaisfier/qlx` | core builders, renderer, shape cache, `qt`, generated catalog and extension wrappers; no dependencies | this file |
 | `github.com/noobmaisfier/qlx/pgxexec` | execution on pgx v5: scanning, transactions, batching, tracing, `VerifyRow` | [pgxexec](pgxexec/README.md) |
-| `github.com/noobmaisfier/qlx/qjson` | strict JSON body decoding for HTTP handlers; part of the root module, standard library only | [DTOs](docs/dtos.md) |
-| `github.com/noobmaisfier/qlx/qjson/validator` | `go-playground/validator` adapter: JSON field names, `Opt` unwrapping, `provided`/`notnull`/`nonzero` | [DTOs](docs/dtos.md) |
+| `github.com/noobmaisfier/qlx/qjson` | strict JSON body decoding for HTTP handlers; part of the root module, standard library only | [qjson](llms-full.txt#6-strict-json--query-decoding--validation-qjson-qjsonvalidator) |
+| `github.com/noobmaisfier/qlx/qjson/validator` | `go-playground/validator` adapter: JSON field names, `Opt` unwrapping, `provided`/`notnull`/`nonzero` | [qvalidator](llms-full.txt#63-dto-validation-qjsonvalidator) |
 | `github.com/noobmaisfier/qlx/analyzer` | `qlxvet`, the `go/analysis` pass and its CLI | [analyzer](analyzer/README.md) |
 | `github.com/noobmaisfier/qlx/otelqlx` | OpenTelemetry spans and metrics | [otelqlx](otelqlx/README.md) |
 | `github.com/noobmaisfier/qlx/bench` | comparisons and allocation budgets | [bench](bench/README.md) |
@@ -849,7 +849,7 @@ For the result type itself:
 - a single column uses a scalar: `int64`, `string`, `qt.Null[T]`, ...
 - `sql.Scanner` or a type with pgx `Scan`/`Value` methods also works as a
   field when you wrap a PostgreSQL type yourself;
-- custom types mapped via `overrides:` whose Go type is a slice or map (`[]T`, `map[...]`) use `nil` for NULL and stay unwrapped, exactly like built-in arrays (`[]T`) and `bytea` (`[]byte`). Other custom overrides are wrapped in `qt.Null[T]` when nullable. See [Configuration](docs/configuration.md#13-overrides-and-json-columns).
+- custom types mapped via `overrides:` whose Go type is a slice or map (`[]T`, `map[...]`) use `nil` for NULL and stay unwrapped, exactly like built-in arrays (`[]T`) and `bytea` (`[]byte`). Other custom overrides are wrapped in `qt.Null[T]` when nullable. See [llms-full.txt](llms-full.txt#22-qlxyaml-reference-qlxyaml-qlxyml-or-qlxjson).
 
 Every `qt` scalar type is usable as a field when your column has that type; run
 `go doc github.com/noobmaisfier/qlx/qt` for the complete list. Generated code
@@ -925,7 +925,7 @@ Details that cause real bugs:
   one wins. `qjson` does not reject duplicate keys.
 - **`null` versus absent.** `qt.Null[T]` cannot tell them apart (both are
   NULL). `qt.Opt[T]` can, and `qt.Opt[qt.Null[T]]` carries the three states.
-  See [DTOs](docs/dtos.md), section 5.
+  See [llms-full.txt](llms-full.txt#58-web-ready-json-serialization-contract).
 
 `json` is not the only tag on a generated or hand-written struct:
 
@@ -1084,7 +1084,7 @@ compiler: a field can be valid and still target a column that does not exist.
 
 ## Opaque IDs (opt-in)
 
-Integer keys stay `int64` by default. Set `ids: string` in `qlx.yaml` (see [Configuration](docs/configuration.md)) to turn
+Integer keys stay `int64` by default. Set `ids: string` in `qlx.yaml` (see [llms-full.txt](llms-full.txt#22-qlxyaml-reference-qlxyaml-qlxyml-or-qlxjson)) to turn
 ID obfuscation on:
 
 ```yaml
@@ -1183,24 +1183,19 @@ your `-targets` is caught by V009 and by the renderer.
 | Executor | integration suite green on all four majors |
 
 GitHub Actions is green on the same PostgreSQL 16–19 matrix, including the
-v1.3.1 release. PostgreSQL 19 is verified on a release candidate;
-re-pinning on GA is tracked in [docs/watchlist.md](docs/watchlist.md).
+v1.3.1 release. PostgreSQL 19 is verified on a release candidate.
 
 ## Documentation
 
-- [User guide](docs/GUIDE.en.md) ([français](docs/GUIDE.md)): from zero to an application.
-- [Configuration](docs/configuration.md): full reference for `qlx.yaml`, runtime options, and flags.
-- [Cookbook](docs/cookbook.md): pagination, queues, soft delete, tenancy.
-- [SQL to Go](docs/sql-to-go.md): the SQL you know, written in QLX.
-- [Mapping rows](docs/mapping.md): structs, tuples, joins, nested data.
-- [Extension helpers](docs/qext.md): full-text search, pgvector, pg_trgm, PostGIS, ltree, hstore.
+- [AI Context Index (`llms.txt`)](llms.txt) and [Complete Reference (`llms-full.txt`)](llms-full.txt): self-contained reference covering CLI, `qlx.yaml`, `qt` types, query DSL, `pgxexec`, `qjson`/`qvalidator`, `qpage`, `otelqlx`, `qtest`, `qext/*`, and `qlxvet`.
+- [SQL to Go](docs/sql-to-go.md): generated grammar mapping from PostgreSQL to QLX.
+- [Generated function reference](docs/pgcat/README.md): full catalog reference for `pg` and `pgcat/*`.
 - [Limits](docs/limits.md): what each tier can and cannot catch.
-- [Migrating](docs/migration.md): from squirrel, goqu, bun, jet and raw pgx.
-- [Decisions](docs/decisions.md) and [watch list](docs/watchlist.md).
+- [Decisions](docs/decisions.md): architecture and implementation decision log.
 - [Releasing](docs/release.md): the maintainer procedure for a versioned release.
-- [Stability](STABILITY.md): Semantic versioning promises, generated code ABI, and duck-typed interfaces.
-- [Changelog](CHANGELOG.md): User-visible changes and breaking changes between releases.
-- [Generated function reference](docs/pgcat/README.md).
+- [Contributing](CONTRIBUTING.md): repository map, tests, ledgers, and analyzer rules.
+- [Stability](STABILITY.md): semantic versioning promises, generated code ABI, and duck-typed interfaces.
+- [Changelog](CHANGELOG.md): user-visible changes and breaking changes between releases.
 
 ## Known limits
 

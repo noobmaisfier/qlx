@@ -4,14 +4,13 @@
 
 ## Self-Contained AI Specification
 
-- [Full Autonomous AI Context](llms-full.txt): Complete, 100% self-contained reference and grammar rules for AI coding agents. Contains all types (`qt`, PostgreSQL ENUMs, JSON contracts), query patterns, mutation rules, extension helpers, and anti-hallucination checklists without referencing any external files.
+- [Full Autonomous AI Context](llms-full.txt): Complete, 100% self-contained reference and grammar rules for AI coding agents. Contains CLI/configuration (`qlx.yaml`), all `qt` types, PostgreSQL ENUMs, `qjson`/`qvalidator`, `qpage`, `pgxexec`, `otelqlx`, `qtest`, query patterns, mutation rules, all `qext/*` extension helpers, `qlxvet` analyzer rules, and anti-hallucination checklists.
 
-## Human Documentation
+## Reference & Project Documentation
 
-- [User Guide (English)](docs/GUIDE.en.md): Full tour of the library from setup to production.
+- [Project README](README.md): Quick start, examples, row mapping, validation, and module overview.
 - [SQL to Go Grammar Mapping](docs/sql-to-go.md): Complete correspondence table between PostgreSQL grammar and QLX functions.
-- [Row Mapping & Scan](docs/mapping.md): Rules for position vs name scanning, `//qlx:row`, and zero-reflection DTOs.
-- [Configuration](docs/configuration.md): `qlx.yaml` reference, multi-schema setups, and migrations.
-- [Extension Helpers](docs/qext.md): High-level typed helpers for pgvector, PostGIS, text search, and trgm.
+- [Generated Function Reference](docs/pgcat/README.md): Full catalog reference for `pg` / `pgcat/*` built-in functions and operators.
+- [Limits](docs/limits.md): What the compiler, analyzer, renderer, and server catch — and what they cannot.
 - [Stability Guarantees](STABILITY.md): Semantic versioning promises, generated ABI, and frozen interfaces.
-- [Changelog](CHANGELOG.md): Breaking changes and evolution towards 1.0.
+- [Changelog](CHANGELOG.md): Breaking changes and evolution towards and beyond 1.0.
