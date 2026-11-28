@@ -8,35 +8,77 @@
 
 ## 1. Core Architecture & Invariants
 
-1. **Schema-First**: Your database schema (`migrations/*.sql`) is the source of truth. Running `qlx gen` inspects your database schema and generates typed Go structs representing tables, columns, foreign keys, patches, and scalar functions/procedures (e.g. `db.Users`, `db.Orders`, `db.ComputeDiscount`). Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`). Simple views (or views with `INSTEAD OF` triggers) that PostgreSQL reports as updatable (`pg_relation_is_updatable`) also gain typed `Insert` and `Patch` builders for writable columns (`pg_column_is_updatable`).
+1. **Schema-First**: Your database schema (`migrations/*.sql` or a live `database_url`) is the source of truth. Running `qlx gen` inspects your schema and generates typed Go structs representing tables, columns, foreign keys, inserts, patches, enums, and scalar/set-returning functions and procedures (e.g. `db.Users`, `db.Orders`, `db.ComputeDiscount`). Views and materialized views automatically infer `NOT NULL` for columns proven non-null by their query tree (or via manual `not_null: [view.col]` in `qlx.yaml`). Simple views (or views with `INSTEAD OF` triggers) that PostgreSQL reports as updatable (`pg_relation_is_updatable`) also gain typed `Insert` and `Patch` builders for writable columns (`pg_column_is_updatable`).
 2. **Zero String Construction**: SQL queries are NEVER assembled using string concatenation or raw SQL fragments (`Where("id = ?", 1)` does NOT exist). Everything is a typed Go function or method.
 3. **Values vs. Expressions (`X` Suffix Rule)**:
    - Methods without `X` bind Go parameters (`$1`, `$2`): `.Eq(v)`, `.Ne(v)`, `.Gt(v)`, `.To(v)`.
    - Methods with `X` accept columns or SQL expressions: `.EqX(col)`, `.NeX(col)`, `.GtX(expr)`, `.ToX(expr)`.
-4. **Compile-Time & Analyzer Safety**:
+4. **Immutable Builders**: Every builder method (`Where`, `OrderBy`, `Set`, `Row`, etc.) returns a new value without mutating the receiver. Always assign or chain the returned value (enforced by `qlxvet` V001).
+5. **Compile-Time & Analyzer Safety**:
    - Columns are strictly typed; an integer column cannot accept a string.
-   - `qlxvet` analyzer catches logical errors at build time (V001–V033): `Update` or `DeleteFrom` without `.Where(...)` or `.All()` fails compilation/linting; setting `ToNull()` on a non-nullable column fails (V030); struct fields of type `qt.Opt[qt.Null[T]]` without `omitzero` in their `json` tag fail (V031: prevents unset fields from marshaling as explicit `null`); `OrderBy`/`Limit` on `Page` queries fails (V032); `Sorts` without `Tiebreak` warns (V033).
-5. **Zero-Reflection Row Scanning**:
+   - `qlxvet` analyzer catches logical errors at build time (`V001`–`V033`, with `V027` retired): e.g. `Update` or `DeleteFrom` without `.Where(...)` or `.All()` (`V002`); `ToNull()` on a non-nullable column (`V030`); `qt.Opt[qt.Null[T]]` struct fields without `omitzero` in their `json` tag (`V031`); `OrderBy`/`Limit` on `Page` queries (`V032`); `qpage.Sorts` without `Tiebreak` (`V033`); result mapping mismatches (`V018`).
+6. **Zero-Reflection Row Scanning**:
    - Use `//qlx:row` above custom result structs and run `qlx rows ./...`.
    - Generates a `ScanTargets()` method for positional scanning directly into memory pointers with zero reflection overhead.
 
 ---
 
-## 2. CLI Workflow
+## 2. CLI Workflow & Configuration (`qlx.yaml`)
+
+### 2.1 CLI Commands
 
 ```bash
-# 1. Initialize project (creates qlx.yaml and migrations/001_init.sql)
-qlx init
-
-# 2. Generate typed Go code and schema.lock from migrations or live database
-qlx gen
-
-# 3. Verify in CI (fails if generated code or schema.lock is out of sync)
-qlx check
-
-# 4. Generate reflection-free ScanTargets for all //qlx:row structs in package
-qlx rows ./...
+qlx init     # Write starter qlx.yaml and migrations/001_init.sql (flags: -package, -out, -dir)
+qlx gen      # Read schema, write schema.lock and generated Go package (flags: -config, -from-lock)
+qlx check    # CI check: fails if generated package or schema.lock is out of sync (flags: -config)
+qlx verify   # Fails if a live database ($DATABASE_URL or database_url) drifted from schema.lock
+qlx doctor   # Checks lock validity, config, and database_url or PostgreSQL server binaries
+qlx watch    # Watches migrations and config file, regenerating on every change
+qlx prepare  # Runs PREPARE on a live or throwaway server for queries dumped by qtest.Dump (-queries)
+qlx rows ./... # Generates ScanTargets() methods for all //qlx:row structs in the target package (-dir)
+qlx sql2go   # Converts SQL text to QLX Go code (-e "SQL", -q, -pkg; requires -tags sql2go build)
+qlx regress  # Maintainer tool: translates PostgreSQL regression SQL and tracks outcomes (-tags sql2go)
 ```
+> Note: `qlx vet` was removed (exits with code 2). Run `qlxvet` directly via `go vet -vettool=$(which qlxvet) ./...`.
+
+### 2.2 `qlx.yaml` Reference (`qlx.yaml`, `qlx.yml`, or `qlx.json`)
+
+Unknown keys are rejected as errors. Paths (`migrations`, `out`, `lock`) are resolved relative to the config file directory.
+
+```yaml
+package: db                      # Generated Go package name (default: db)
+out: internal/db                 # Output directory (default: package name)
+schemas: [public, billing]       # Schemas to generate (first = principal, unprefixed; others prefixed)
+                                 # Or ['*'] for all non-empty user schemas
+exclude_schemas: [audit]         # Only valid with schemas: ['*']
+lock: schema.lock                # Committed schema snapshot (default: schema.lock)
+migrations: migrations           # Directory of *.sql files applied to a throwaway postgres server
+# database_url: postgres://...   # Live database source (wins over migrations if both set)
+# pg_bin: /usr/lib/postgresql/18/bin # Directory containing postgres, initdb, pg_ctl (or $PGBIN)
+targets: [16, 17, 18, 19]        # Supported PostgreSQL major versions (default: [18, 19])
+exclude: [public.schema_migrations] # Tables to omit (table or schema.table)
+extensions:                      # Extension packs to enable typed support for:
+  - pgvector                     # Known: pgvector, postgis, pg_trgm, hstore, ltree, citext,
+  - pg_trgm                      #        pgcrypto, uuid-ossp, unaccent, fuzzystrmatch, btree_gist
+uuid: std                        # std (uuid.UUID) | bytes ([16]byte)
+date: qt                         # qt (qt.Date) | stdlib (time.Time)
+timestamptz: qt                  # qt (qt.Timestamptz, supports infinity) | stdlib (time.Time)
+array_nulls: false               # true types array elements as qt.Null[T] instead of T
+ids: string                      # int | string (types single-col int PKs & FKs as qt.ID[Space])
+nullable: null                   # Must be "null" (qt.Null[T])
+not_null:                        # View/matview columns guaranteed non-null when inference cannot prove it
+  - rich_accounts.id
+json_types:                      # Strongly typed JSON/JSONB columns (table.col or schema.table.col)
+  users.settings: example.com/app/model.Settings
+overrides:                       # Override PostgreSQL types globally or per schema.type
+  numeric:
+    type: github.com/shopspring/decimal.Decimal
+    family: num                  # num | text | time | col
+```
+
+* **Multi-schema naming**: The first schema in `schemas` (or `public` for `['*']`) keeps unprefixed names (`Users`, `User`). All other schemas always prefix every symbol (`BillingUsers`, `BillingUser`), even without collisions.
+* **Opaque IDs (`ids: string`)**: Call `qt.SetIDKey(secret)` (at least 16 bytes) once at program startup before encoding/decoding any `qt.ID`.
+* **Runtime environment variables**: `DATABASE_URL` (used by `qlx verify`, `qlx prepare`, overrides `database_url`), `PGBIN` (PostgreSQL binaries directory for throwaway server).
 
 ---
 
@@ -45,15 +87,22 @@ qlx rows ./...
 ```go
 import (
     q "github.com/noobmaisfier/qlx"                 // Core query builder DSL
-    "github.com/noobmaisfier/qlx/qt"                // Complete value types: Null, Opt, Date, ID, Numeric, etc.
-    "github.com/noobmaisfier/qlx/pgxexec"           // Connection, execution, bulk & transactions
+    "github.com/noobmaisfier/qlx/qt"                // Value types: Null, Opt, Date, ID, Numeric, JSONB, etc.
+    "github.com/noobmaisfier/qlx/pgxexec"           // Connection, execution, bulk, pipelines, transactions, LISTEN
     "github.com/noobmaisfier/qlx/qpage"             // Signed cursor pagination for service layers
-    "github.com/noobmaisfier/qlx/qjson"             // Strict JSON request decoding for HTTP APIs
-    "github.com/noobmaisfier/qlx/qjson/validator"   // DTO validator adapter for go-playground/validator
-    "github.com/noobmaisfier/qlx/pg"                // PostgreSQL built-in functions
-    "github.com/noobmaisfier/qlx/qext/textsearch"   // High-level Full-Text Search
-    "github.com/noobmaisfier/qlx/qext/pgvector"     // High-level Vector Search (pgvector)
-    "github.com/noobmaisfier/qlx/qext/trgm"         // High-level Trigram Search (pg_trgm)
+    "github.com/noobmaisfier/qlx/qjson"             // Strict JSON & query-string decoding for HTTP APIs
+    qvalidator "github.com/noobmaisfier/qlx/qjson/validator" // Package name is qvalidator!
+    "github.com/noobmaisfier/qlx/pg"                // Flat facade for PostgreSQL built-in functions
+    "github.com/noobmaisfier/qlx/pgcat/..."         // Domain packages: text, num, datetime, jsonb, network, ext/...
+    "github.com/noobmaisfier/qlx/qext/textsearch"   // Full-Text Search helpers
+    "github.com/noobmaisfier/qlx/qext/pgvector"     // Vector Search helpers (pgvector)
+    "github.com/noobmaisfier/qlx/qext/trgm"         // Trigram Search helpers (pg_trgm)
+    "github.com/noobmaisfier/qlx/qext/pgcrypto"     // Hashing, HMAC, random bytes, PGP encryption (pgcrypto)
+    "github.com/noobmaisfier/qlx/qext/postgis"      // Spatial geography helpers (PostGIS)
+    "github.com/noobmaisfier/qlx/qext/ltree"        // Hierarchical path helpers (ltree)
+    "github.com/noobmaisfier/qlx/qext/hstore"       // Key-value hstore helpers (hstore)
+    "github.com/noobmaisfier/qlx/otelqlx"           // Separate go.mod: OpenTelemetry tracer/metrics adapter
+    "github.com/noobmaisfier/qlx/qtest"             // Snapshot, Prepare verification, Dump, RunRegress
 
     "example.com/app/db"                            // Generated package containing table definitions
 )
@@ -61,42 +110,52 @@ import (
 
 ---
 
-## 4. Connection & Execution API
+## 4. Connection, Execution & Observability (`pgxexec`, `otelqlx`)
 
-### 4.1 Connecting
+### 4.1 Connecting & Pool Modes
 ```go
 client, err := pgxexec.Connect(ctx, os.Getenv("DATABASE_URL"), pgxexec.ConnectOptions{
-    Spec:      &db.Spec, // Target PostgreSQL version and table fingerprints
-    MinServer: 16,       // Minimum supported PostgreSQL version
+    Mode:         pgxexec.CacheStatements, // Default; use CacheDescribe for PgBouncer transaction mode, or Simple
+    Spec:         &db.Spec,                // Target PostgreSQL versions and table fingerprints
+    MinServer:    16,                      // Minimum supported PostgreSQL major version
+    AfterConnect: db.RegisterTypes,        // Optional additional per-connection registration
+    Tracer:       tracer,                  // Optional pgxexec.Tracer (or pgxexec.Tracers{...})
+    Shapes:       qlx.DefaultShapes,       // Optional custom *qlx.ShapeCache
+    OnAhead:      func(serverMajor int, targets []int) { /* server newer than Spec.Targets */ },
 })
 if err != nil {
     log.Fatal(err)
 }
 defer client.Close()
 ```
+* **Dialect versions**: `qlx.Dialect{Version: qlx.PG16}` .. `qlx.PG19` (zero value defaults to newest, `PG19`). `pgxexec.Connect` auto-detects `server_version_num` and fails with `qlx.ErrUnsupportedByServer` before any network call if a query uses a feature newer than the server.
+* **Schema verification at startup**:
+  - `pgxexec.VerifySchema(ctx, client.DB(), db.Spec, "users", "orders")`: Checks live database tables/columns against `db.Spec` (pass table names to limit scope).
+  - `pgxexec.VerifyRow[R](ctx, client.Pool, stmt, opts...)`: Asks PostgreSQL to describe a query without executing it and verifies `R` matches column count, types, and nullability (`pgxexec.AllowNullable()` option available).
 
 ### 4.2 Methods on `*pgxexec.Client`
-* `client.All[R](ctx, stmt)`: Returns `([]R, error)`. Returns empty slice if no rows match.
-* `client.One[R](ctx, stmt)`: Returns `(R, error)`. Returns `pgx.ErrNoRows` if no row matches; returns error if >1 row.
-* `client.Maybe[R](ctx, stmt)`: Returns `(qt.Opt[R], error)`. If no row matches, returns `qt.Opt[R]{Set: false}` and `nil` error!
-* `client.Each[R](ctx, stmt)`: Returns Go 1.23 standard iterator `iter.Seq2[R, error]` for streaming without buffering.
-* `client.Page[R](ctx, base, sorts, req, binds...)`: Runs cursor pagination via `qpage.SortSet[R]` and returns `(qpage.Page[R], error)`.
-* `client.Exec(ctx, stmt)`: Executes non-query statements. Returns `(pgconn.CommandTag, error)`.
+* `client.All[R](ctx, stmt, binds...)`: Returns `([]R, error)`. Returns empty slice if no rows match.
+* `client.One[R](ctx, stmt, binds...)`: Returns `(R, error)`. Returns `pgx.ErrNoRows` if no row matches; returns error if >1 row.
+* `client.Maybe[R](ctx, stmt, binds...)`: Returns `(qt.Opt[R], error)`. If no row matches, returns `qt.Opt[R]{Set: false}` and `nil` error.
+* `client.Each[R](ctx, stmt, binds...)`: Returns Go 1.23+ iterator `iter.Seq2[R, error]` for streaming without buffering.
+* `client.Page[R](ctx, base, sorts, req, binds...)`: Runs cursor pagination via `*qpage.SortSet[R]` and returns `(qpage.Page[R], error)`.
+* `client.Exec(ctx, stmt, binds...)`: Executes non-query statements. Returns `(pgconn.CommandTag, error)`.
 * `client.InsertMany(ctx, base, rows, opt)`: Bulk inserts multiple rows chunked under 65,535 parameters in one transaction.
 * `client.InsertManyReturning[R](ctx, base, rows, opt)`: Bulk insert collecting RETURNING columns into `[]R`.
-* `client.InTx(ctx, opts, retry, func(ctx, tx *pgxexec.Tx) error)`: Runs closure in a managed transaction with automatic retry on deadlocks/serialization failures (40001, 40P01).
-* `client.CopyIn(ctx, st, rows)`: High-speed binary COPY (`st` is `qlx.CopyIn(Table, cols...)`, `rows` is `pgx.CopyFromSource` such as `pgxexec.CopyRows(...)`).
-* `client.Render(stmt)`: Renders SQL string and args slice without executing.
-* `client.DB()`: Returns underlying `Querier` (wrapped with tracer if configured).
+* `client.InTx(ctx, opts, retry, func(ctx, tx *pgxexec.Tx) error)`: Runs closure in a managed transaction with automatic retry on deadlocks/serialization failures (`40001`, `40P01`).
+* `client.CopyIn(ctx, st, rows)`: High-speed binary COPY (`st` is `q.CopyIn(Table, cols...)`, `rows` is `pgx.CopyFromSource` such as `pgxexec.CopyRows(...)`).
+* `client.RunPipeline(ctx, &p)`: Sends a `*pgxexec.Pipeline` in one round trip.
+* `client.Render(stmt)`: Renders `stmt` for `client.Dialect`, returning `(qlx.Stmt, error)`. (Use `qlx.SQL(dialect, stmt)` for `(string, []any, error)` directly.)
+* `client.DB()`: Returns underlying `pgxexec.Querier` (wrapped with tracer if configured).
 * `client.Close()`: Closes the connection pool.
 
 ### 4.3 Transactions (`*pgxexec.Tx`)
-Transactions started with `client.InTx` receive a `*pgxexec.Tx` wrapper carrying the client's dialect, shape cache, and tracer. All queries inside run directly on `tx`:
+Transactions started with `client.InTx` receive a `*pgxexec.Tx` wrapper carrying the client's dialect, shape cache, and tracer:
 * `tx.Exec(ctx, stmt, binds...)`
 * `tx.All[R](ctx, stmt, binds...)`
 * `tx.One[R](ctx, stmt, binds...)`
 * `tx.Maybe[R](ctx, stmt, binds...)`
-* `tx.Each[R](ctx, stmt, binds...)`
+* `tx.Each[R](ctx, stmt, binds...)` (note: connection is busy until loop ends; do not run another query on `tx` inside the loop)
 * `tx.Page[R](ctx, base, sorts, req, binds...)`
 * `tx.InsertMany(ctx, base, rows, opt)`
 * `tx.InsertManyReturning[R](ctx, base, rows, opt)`
@@ -104,7 +163,23 @@ Transactions started with `client.InTx` receive a `*pgxexec.Tx` wrapper carrying
 * `tx.Savepoint(ctx, name, func(ctx) error)`: Partial rollback savepoint.
 * `tx.Pgx()`: Underlying `pgx.Tx` for raw pgx operations if needed.
 
-### 4.4 Bulk Operations (`InsertMany`, `CopyIn`, `Pipeline`, `Batch`)
+### 4.4 Pre-Rendered Static Hot-Path Handles (`NewStatic0`..`NewStatic4`)
+For hot paths that avoid per-call shape cache hashing and parameter binding mistakes:
+
+```go
+idParam := q.NewParam[int64]()
+var getUser = pgxexec.NewStatic1[UserSummary](
+    q.Dialect{Version: q.PG18},
+    q.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.EqX(idParam)),
+    idParam,
+)
+
+// Execution (methods: All, One, Maybe, Each, Exec, Stmt):
+user, err := getUser.One(ctx, client.DB(), 42)
+```
+Available constructors: `NewStatic0[R]`, `NewStatic1[R, A]`, `NewStatic2[R, A, B]`, `NewStatic3[R, A, B, C]`, `NewStatic4[R, A, B, C, D]` (argument types `A..D` are inferred from the `qlx.Param` arguments).
+
+### 4.5 Bulk Operations (`InsertMany`, `CopyIn`, `Pipeline`, `Batch`)
 
 #### Bulk INSERT & Upsert (`InsertMany` / `InsertManyReturning`)
 `InsertMany` and `InsertManyReturning` take `[]qlx.RowAssigner` (implemented by generated `*Insert` structs like `db.UserInsert` via `Assignments()`). They automatically split large slices under PostgreSQL's 65,535-parameter limit (`qlx.MaxBindParams`) and run all chunks in one transaction when called on a pool/connection (or join the existing `tx`):
@@ -148,17 +223,23 @@ n, err := client.CopyIn(ctx, st, pgxexec.CopyRows([][]any{
     {"b@example.com", "free"},
 }))
 ```
-(`q.CopyIn(...).Where(...).InlineArgs()` is also available; arguments in `Where` must be inlineable because `COPY` does not accept bound parameters.)
+- `q.CopyIn(...).Where(...).InlineArgs()` is also available; arguments in `Where` must be inlineable because `COPY` does not accept bound parameters.
+- For SQL `COPY` with options (e.g. `CopyTableOut` / `CopyQueryOut` / `CopyIn`), options include `q.WithFormat(...)`, `q.WithDelimiter(...)`, `q.WithQuote(...)`, `q.WithNull(...)`, `q.WithHeader(...)`, `q.WithOnError(...)`, `q.WithRejectLimit(...)`, `q.WithLogVerbosity(...)`, `q.WithForceQuote(...)`, `q.WithForceNotNull(...)`, `q.WithForceNull(...)`.
 
 #### Pipelines & Batches (One Round Trip)
 Send multiple independent statements in a single network round trip:
 
 ```go
 // Typed Pipeline (recommended): futures are populated on Run()
+// Note: PipeOne/PipeAll require *R to implement pgxexec.Scannable[R] (ScanTargets: generated rows, //qlx:row, or q.TupleN)
 var p pgxexec.Pipeline
-userFut := pgxexec.PipeOne[db.User](&p, mustRender(q.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.Eq(1))))
-tagFut  := pgxexec.PipeExec(&p, mustRender(q.Update(Users).Set(Users.Tier.To("pro")).Where(Users.ID.Eq(1))))
-if err := p.Run(ctx, client.Pool); err != nil {
+idParam := q.NewParam[int64]()
+getUser, _ := client.Render(q.Select(Users.ID, Users.Email).From(Users).Where(Users.ID.EqX(idParam)))
+updUser, _ := client.Render(q.Update(Users).Set(Users.Tier.To("pro")).Where(Users.ID.EqX(idParam)))
+
+userFut := pgxexec.PipeOne[db.User](&p, getUser, idParam.Bind(1))
+tagFut  := pgxexec.PipeExec(&p, updUser, idParam.Bind(1))
+if err := client.RunPipeline(ctx, &p); err != nil {
     return err
 }
 user, err := userFut.Get()
@@ -171,20 +252,54 @@ br, err := b.Send(ctx, client.Pool)
 defer br.Close()
 rows1, err := pgxexec.BatchAll[db.User](br)
 one2, err  := pgxexec.BatchOne[int64](br)
+// Positional scanning variants: BatchAllScan[T] / BatchOneScan[T]
 ```
+
+### 4.6 `LISTEN` / `NOTIFY` (`ListenChan`)
+```go
+ch, err := pgxexec.NewChannel("orders_events") // validates identifier at startup
+if err != nil { log.Fatal(err) }
+
+for n := range pgxexec.ListenChan(ctx, client.Pool, pgxexec.ListenOptions{
+    Buffer:      64,
+    BackoffBase: 100 * time.Millisecond,
+    BackoffMax:  30 * time.Second,
+    OnReconnect: func(attempt int) { /* resync missed events */ },
+    OnError:     func(err error) { log.Println("listen lost:", err) },
+}, ch) {
+    fmt.Println(n.Channel, n.Payload, n.PID)
+}
+```
+For a single dedicated `*pgx.Conn`, `pgxexec.Listen(ctx, conn, handler, channels...)` is also available.
+
+### 4.7 Shape Caching & OpenTelemetry (`otelqlx`)
+* **Shape Cache**: `qlx.DefaultShapes` (32,768 shapes per process) is used automatically by `Client` and `Tx`. Use `qlx.NewShapeCache(max)` for isolated caches, inspect with `.Stats()` (`Hits`, `Misses`, `Evictions`, `Size`, `Oversize`), and monitor cache thrashing via `.OnThrash(fn)`. Queries > 16 KiB are counted as `Oversize` and not cached.
+* **OpenTelemetry (`otelqlx`, separate Go module)**:
+```go
+import "github.com/noobmaisfier/qlx/otelqlx"
+
+obs, err := otelqlx.New(
+    otelqlx.WithTracerProvider(tp),
+    otelqlx.WithMeterProvider(mp),
+    otelqlx.WithQueryText(true),     // puts parameterized SQL (never values) on db.query.text
+    otelqlx.WithRecordErrors(false), // off by default: PG error messages can leak row values
+)
+observedDB := pgxexec.Observed(pool, obs.Observe)
+```
+Emits spans and `db.client.operation.duration` histograms labeled by `qlx.Tagged` name (or SQL verb), `db.system.name`, `db.operation.name`, `db.query.summary`, `db.response.status_code` (SQLSTATE), and `error.type`.
 
 ---
 
 ## 5. Complete Types Catalog (`qt` Package)
 
-QLX provides first-class Go representations for every PostgreSQL data type. Never use raw `*string` or `*int` pointers for database nullability.
+QLX provides first-class Go representations for PostgreSQL data types. Never use raw `*string` or `*int` pointers for database nullability.
 
 ### 5.1 Nullability & Dynamic Arguments
 - `qt.Null[T]`: Models SQL NULL.
   - `qt.Some(v)`: Non-NULL value.
   - `qt.None[T]()`: SQL NULL.
   - Methods: `.IsNull()`, `.Valid`, `.V`, `.Ptr()`, `qt.FromPtr(p)`, `.String()` (implements `fmt.Stringer`: `%v` prints `"NULL"` or formatted value; `%#v` shows struct fields).
-- `qt.Opt[T]`: Models dynamic filter / PATCH argument presence or absence.
+- `qt.Opt[T]`: Models dynamic filter / PATCH argument presence or absence. Implements `encoding.TextUnmarshaler` (except `Opt[Null[T]]`).
   - `qt.Of(v)`: Field provided.
   - `qt.Unset[T]()`: Field omitted.
   - Methods: `.Set`, `.V`, `.IsSet()`, `.IsZero()`, `.String()` (implements `fmt.Stringer`: `%v` prints `"unset"` or formatted value).
@@ -198,15 +313,20 @@ QLX provides first-class Go representations for every PostgreSQL data type. Neve
   - Constructors: `qt.DateOf(year, month, day)`, `qt.DateFromTime(t)`, `qt.Today(loc)`, `qt.ParseDate("2026-03-30")`.
 - `qt.TimeOfDay`: PostgreSQL `time without time zone` (microsecond resolution since midnight). JSON `"15:04:05.999999"`.
   - Constructors: `qt.TimeOfDayOf(hour, min, sec, micro)`, `qt.TimeOfDayFromTime(t)`, `qt.ParseTimeOfDay("15:04:05")`.
-- `qt.TimeTZ`: PostgreSQL `time with time zone` (`qt.ParseTimeTZ(...)`).
-- `qt.Timestamptz`: PostgreSQL `timestamptz` (stored as microsecond UTC timestamp). Formats to ISO 8601 UTC.
-- `qt.LocalTime`: PostgreSQL `timestamp without time zone` (distinct from `time.Time` to prevent timezone confusion).
-- `qt.Interval`: PostgreSQL `interval` (Months, Days, Microseconds; `qt.ParseInterval(...)`).
+- `qt.TimeTZ`: PostgreSQL `time with time zone` (`qt.ParseTimeTZ(...)`). Rejects offsets beyond `±15:59:59`.
+- `qt.Timestamptz`: PostgreSQL `timestamptz` (stored as microsecond UTC timestamp, supports `infinity` / `-infinity`). Formats to ISO 8601 UTC.
+- `qt.LocalTime`: PostgreSQL `timestamp without time zone` (distinct from `time.Time` to prevent timezone confusion; `LocalTimeInfinity`, `LocalTimeNegInfinity`, `.Time()`, `.IsInfinite()`, `.Sign()`).
+- `qt.Interval`: PostgreSQL `interval` (`Months`, `Days`, `Micros`; helpers `qt.Days(n)`, `qt.Months(n)`, `qt.Duration(d)`, `qt.ParseInterval(...)`).
 
 ### 5.3 Typed Obfuscated Entity IDs (`qt.ID[Space]`)
-Protects internal auto-increment integer IDs from enumeration by formatting them as prefixed, typed, scrambled strings (e.g. `usr_8v92kf9`):
+With `ids: string` in `qlx.yaml`, integer PKs and FKs stay `bigint`/`int` in the DB and serialize as 11-character base58 strings (`"7mQp3VxK9cE"`) in JSON/URLs:
 
 ```go
+// Set once at startup (at least 16 bytes):
+if err := qt.SetIDKey(secret); err != nil {
+    log.Fatal(err)
+}
+
 type UserSpace struct{}
 func (UserSpace) IDSpace() string { return "usr" }
 
@@ -214,75 +334,72 @@ type UserID = qt.ID[UserSpace]
 
 // Usage:
 id := qt.IDOf[UserSpace](42)
-encoded := id.String() // "usr_..."
+encoded := id.String() // 11-char base58 string, e.g. "7mQp3VxK9cE"
 parsed, err := qt.ParseID[UserSpace](encoded)
 rawInt := parsed.Int64()
 ```
 
 ### 5.4 Numeric & Decimals
 - `qt.Numeric`: Arbitrary precision decimal for PostgreSQL `NUMERIC` / `DECIMAL` (`type Numeric string`). Avoids float rounding bugs.
-  - `qt.Numeric("12345.6789")`
+  - Construct directly: `qt.Numeric("12345.6789")` (there is no `NewNumeric` function).
 
 ### 5.5 JSON Columns
-- `qt.JSONB[T]`: Strongly typed JSONB column. Automatically marshals/unmarshals `T` on read and write. Implements `fmt.Stringer` (`.String()` returns compact JSON representation).
-- `qt.RawJSON`: Shortcut for `qt.JSONB[json.RawMessage]`.
-- `qt.JSON[T]`: Alias for `qt.JSONB[T]`.
+- `qt.JSONB[T]`: Strongly typed JSONB column. Automatically marshals/unmarshals `T` on read and write. Implements `fmt.Stringer` (`.String()` returns compact JSON representation). Constructors: `qt.JSONOf(v)`, `qt.Raw(b)`.
+- `qt.RawJSON`: Alias for `qt.JSONB[json.RawMessage]`.
+- `qt.JSON[T]`: Deprecated alias for `qt.JSONB[T]`.
 
 ### 5.6 Ranges & Multiranges (PostgreSQL 14+)
 - `qt.Range[T]`: PostgreSQL range (`int4range`, `numrange`, `tstzrange`, `daterange`).
-  - Accessors: `.Lower()`, `.Upper()`, `.LowerInclusive()`, `.UpperInclusive()`, `.IsEmpty()`.
+  - Fields/Accessors: `.Lower`, `.Upper`, `.LowerInc`, `.UpperInc`, `.Empty`, `.Null` (and `.Lower()`, `.Upper()`, `.LowerInclusive()`, `.UpperInclusive()`, `.IsEmpty()` / `RangeReader` / `RangeWriter`).
+  - Note: A nullable range column is `qt.Range[T]` with `.Null = true` rather than `qt.Null[qt.Range[T]]` so the pgx codec fills it directly.
   - Implements `fmt.Stringer` (`.String()` returns e.g. `[1,5)` or `empty`).
-- `qt.Multirange[T]`: Slice of `qt.Range[T]`. Implements `fmt.Stringer` (`.String()` returns e.g. `{[1,3),empty}`).
+- `qt.Multirange[T]`: Slice `[]Range[T]`. Implements `fmt.Stringer` (`.String()` returns e.g. `{[1,3),empty}`).
 
-### 5.7 Extension & System Types
-- `qt.Vector`: `[]float32` for `pgvector` embeddings.
-- `qt.HalfVector`: FP16 vector (`halfvec`).
-- `qt.SparseVector`: String representation for sparse vectors.
-- `qt.Geometry` & `qt.Geography`: PostGIS spatial types.
-- `qt.LTree`, `qt.LQuery`, `qt.LTxtQuery`: Hierarchical tree labels for `ltree`.
-- `qt.Hstore`: Key-value pairs (`map[string]qt.Null[string]`).
-- `qt.Char`: PostgreSQL internal 1-byte `"char"` type (`type Char byte`).
-- `qt.Void`: PostgreSQL `void` return type for functions/procedures (`type Void struct{}`).
-- `qt.MacAddr` & `qt.MacAddr8`: MAC network hardware addresses.
-- `qt.Char`: PostgreSQL internal 1-byte `"char"` type.
+### 5.7 Extension & PostgreSQL Text-Form Types
+- **Extensions**:
+  - `qt.Vector` (`[]float32`), `qt.HalfVector` (`[]float32`), `qt.SparseVector` (`string`) for `pgvector`.
+  - `qt.Geometry` (`string`), `qt.Geography` (`string`) for PostGIS.
+  - `qt.LTree` (`string`), `qt.LQuery` (`string`), `qt.LTxtQuery` (`string`) for `ltree`.
+  - `qt.Hstore` (`map[string]qt.Null[string]`) for `hstore`.
+- **PostgreSQL Text-Form & System Types** (named `string` types preventing cross-type mixups):
+  - `qt.TSVector`, `qt.TSQuery`, `qt.Bit` (`bit`/`varbit`), `qt.Money`, `qt.XML`, `qt.JSONPath`
+  - Geometry: `qt.Point`, `qt.Line`, `qt.Lseg`, `qt.Box`, `qt.Path`, `qt.Polygon`, `qt.Circle`
+  - Network: `qt.MacAddr`, `qt.MacAddr8` (IP addresses `inet`/`cidr` map to `netip.Addr`/`netip.Prefix`)
+  - Catalog / Internal: `qt.Char` (`byte`, PostgreSQL 1-byte `"char"`), `qt.Void` (`struct{}`, `RETURNS void`), `qt.LSN`, `qt.RegClass`, `qt.RegType`, `qt.RegProc`, `qt.RegProcedure`, `qt.RegOper`, `qt.RegOperator`, `qt.RegNamespace`, `qt.RegRole`, `qt.RegConfig`, `qt.RegDict`, `qt.RegCollation`, `qt.RegDatabase` (PG 19), `qt.Xid`, `qt.Xid8`, `qt.Cid`, `qt.Tid`, `qt.ACLItem`, `qt.OIDVector`, `qt.Int2Vector`, `qt.Oid8` (PG 19), `qt.Snapshot`, `qt.NodeTree`, `qt.RefCursor`, `qt.NDistinct`, `qt.Dependencies`, `qt.MCVList`.
 
 ### 5.8 Web-Ready JSON Serialization Contract
-Unlike standard Go database types (`sql.NullString` which serializes to `{"String":"...","Valid":true}`), all `qt` types implement `json.Marshaler` and `json.Unmarshaler` with clean, standardized, web-ready formats. They are safe to embed directly in public HTTP request/response DTOs:
+All `qt` types implement `json.Marshaler` and `json.Unmarshaler` (or `encoding.TextMarshaler`/`TextUnmarshaler`) cleanly without wrapper objects like `sql.NullString`:
 
 | Type | JSON Output / Input | Benefit / Format |
 |---|---|---|
 | `qt.Null[T]` | `"val"` or `null` | **Zero wrapper**: unwraps directly to primitive value or `null` |
 | `qt.Opt[T]` | `"val"` or omitted | Disappears completely from JSON when unset using `json:",omitzero"` |
-| `qt.Opt[qt.Null[T]]` | `"val"`, `null`, or omitted | Solves HTTP PATCH: absent = keep, `null` = SQL NULL, `"val"` = update. Must tag with `json:",omitzero"` (enforced by `qlxvet` V031, otherwise `qt.ErrUnsetOptNull`) |
-| `qt.Date` | `"YYYY-MM-DD"` | Pure ISO date string (`"2026-03-30"`), no artificial midnight timestamps |
-| `qt.TimeOfDay` | `"HH:MM:SS"` | Microsecond resolution time (`"14:30:00.000000"`) |
-| `qt.Timestamptz` | ISO 8601 UTC / `"infinity"` | `"2026-03-30T14:30:00Z"`; safely supports `"infinity"` and `"-infinity"` |
-| `qt.Interval` | ISO 8601 Duration | `"P1Y2M3DT1H"` (standard duration: 1 year, 2 months, 3 days, 1 hour) |
+| `qt.Opt[qt.Null[T]]` | `"val"`, `null`, or omitted | HTTP PATCH: absent = keep, `null` = SQL NULL, `"val"` = update. Requires `json:",omitzero"` (enforced by `qlxvet` V031, else `qt.ErrUnsetOptNull`) |
+| `qt.Date` | `"YYYY-MM-DD"` | Pure ISO date string (`"2026-03-30"`) |
+| `qt.TimeOfDay` | `"HH:MM:SS.ffffff"` | Microsecond resolution time (`"14:30:00.000000"`) |
+| `qt.Timestamptz` | ISO 8601 UTC / `"infinity"` | `"2026-03-30T14:30:00Z"`; supports `"infinity"` and `"-infinity"` |
+| `qt.LocalTime` | ISO 8601 without zone | `"2024-02-29T01:02:03.123456"` or `"infinity"`/`"-infinity"` |
+| `qt.Interval` | ISO 8601 Duration | `"P1Y2M3DT1H"` |
 | `qt.Range[T]` | Explicit JSON object | `{"lower": 1, "upper": 5, "lower_inc": true, "upper_inc": false}` |
-| `qt.Numeric` | Decimal string | `"123.45"` (avoids IEEE 754 float rounding inaccuracies like `19.98999999`) |
-| `qt.ID[Space]` | Scrambled prefixed string | `"usr_8v92kf9"` (DB stores `int64(42)`, public JSON gets opaque typed ID) |
-| `qt.Vector` | Array of numbers | `[0.1, 0.45, 0.89]` (clean array for LLM / vector embeddings) |
+| `qt.Numeric` | Decimal string | `"123.45"` |
+| `qt.ID[Space]` | 11-char base58 string | `"7mQp3VxK9cE"` (DB stores integer, public JSON gets opaque typed ID) |
+| `qt.Vector` | Array of numbers | `[0.1, 0.45, 0.89]` |
 
 ### 5.9 PostgreSQL ENUMs
 PostgreSQL `CREATE TYPE ... AS ENUM ('free', 'pro', 'enterprise')` types are generated into `db/enums.go`:
 - **Strongly Typed Go Type**: `type UserTier string`
 - **Typed Constants**: `const (UserTierFree UserTier = "free", UserTierPro UserTier = "pro", ...)`
 - **Ordered Labels Slice**: `var UserTierValues = []UserTier{UserTierFree, UserTierPro, ...}` preserving PostgreSQL `enumsortorder`.
-- **Validation**: `func (v UserTier) Valid() bool` reports whether a string matches any valid enum label.
-- **SQL Cast Symbol**: `var UserTierType = qlx.NewPgType[UserTier]("public", "user_tier")` for SQL casts.
-- **Usage in Queries**:
-  - Direct type checking: `Where(Users.Tier.Eq(db.UserTierPro))` (rejects wrong types at compile time).
-  - If column is nullable: typed as `qt.Null[db.UserTier]` (`qt.Some(db.UserTierPro)` or `qt.None[db.UserTier]()`).
-  - Native JSON and `pgx` compatibility (serializes directly as `"pro"`).
+- **Validation**: `func (v UserTier) Valid() bool`
+- **SQL Cast Symbol**: `var UserTierType = qlx.NewPgType[UserTier]("public", "user_tier")`
+- **Usage in Queries**: `Where(Users.Tier.Eq(db.UserTierPro))`; nullable columns use `qt.Null[db.UserTier]`.
 
 ---
 
-## 6. Strict JSON Request Decoding & Validation (`qjson`)
-
-QLX provides a dedicated HTTP DTO layer to prevent mass-assignment vulnerabilities, enforce body size limits, and cleanly map validation errors directly to JSON field names.
+## 6. Strict JSON & Query Decoding + Validation (`qjson`, `qjson/validator`)
 
 ### 6.1 Strict JSON Decoding (`qjson.Decode`)
-Refuses unknown fields by default at the root level and inside nested wrapper types (`qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`, `qt.Multirange`). Nested type inspection uses duck typing (`JSONInner() reflect.Type` and `JSONKeys() []string`), so custom wrappers can participate without importing `qjson`.
+Refuses unknown fields by default at the root level and inside nested wrapper types (`qt.JSONB`, `qt.Opt`, `qt.Null`, `qt.Range`, `qt.Multirange`), enforces body size limits, and returns structured `*qjson.Error` with JSON field paths (`{"code":"...","field":"...","msg":"..."}`).
 
 ```go
 import "github.com/noobmaisfier/qlx/qjson"
@@ -295,21 +412,21 @@ type CreateUserRequest struct {
 
 func HandleCreate(w http.ResponseWriter, r *http.Request) {
     req, err := qjson.Decode[CreateUserRequest](r)
-// 1. Direct response: qjson.Error serializes cleanly to {"code":"...","field":"...","msg":"..."}
-if err != nil {
-    var jerr *qjson.Error
-    if errors.As(err, &jerr) {
-        // Safe to serialize directly: c.JSON(http.StatusBadRequest, jerr)
-        http.Error(w, fmt.Sprintf("field %s: %s", jerr.Field, jerr.Code), http.StatusBadRequest)
-        return
+    if err != nil {
+        var jerr *qjson.Error
+        if errors.As(err, &jerr) {
+            // Safe to serialize directly: {"code":"...","field":"...","msg":"..."}
+            http.Error(w, fmt.Sprintf("field %s: %s", jerr.Field, jerr.Code), http.StatusBadRequest)
+            return
+        }
     }
-}
+    _ = req
 }
 ```
+(`qjson.DecodeInto` is also available when decoding into an existing struct value.)
 
-### 6.1b Strict URL Query String Decoding (`qjson.DecodeQuery`)
-Decodes `r.URL.Query()` into typed structs with the same strict security guarantees as JSON decoding.
-Refuses unknown parameters by default (`unknown_param`), rejects non-slice parameters passed multiple times (`invalid_param`), treats empty parameters (`?q=`) as absent by default unless `qjson.KeepEmptyParams()` is passed, and supports `qt.Opt[T]` (via `encoding.TextUnmarshaler`). Tag priority: `query` -> `form` -> `json` -> field name.
+### 6.2 Strict URL Query String Decoding (`qjson.DecodeQuery`)
+Decodes `r.URL.Query()` with the same strictness (`unknown_param`, `invalid_param`, `invalid_query`). Treats empty parameters (`?q=`) as absent unless `qjson.KeepEmptyParams()` is passed. Tag priority: `query` -> `form` -> `json` -> field name. (`qjson.DecodeQueryInto` and `qjson.QueryName` are also available.)
 
 ```go
 type ListUsersQuery struct {
@@ -319,155 +436,130 @@ type ListUsersQuery struct {
 }
 
 query, err := qjson.DecodeQuery[ListUsersQuery](r) // ?tier=gold&limit=50
-if err != nil {
-    var jerr *qjson.Error
-    if errors.As(err, &jerr) {
-        // jerr.Code can be "unknown_param", "invalid_param", "invalid_query"
-        http.Error(w, fmt.Sprintf("param %s: %s", jerr.Field, jerr.Code), http.StatusBadRequest)
-        return
-    }
-}
 ```
 
-### 6.2 DTO Validation (`qjson/validator`)
-Adapts `github.com/go-playground/validator/v10` specifically for QLX types and unwraps `qt.Opt` and `qt.Null`:
+### 6.3 DTO Validation (`qjson/validator`)
+Note: The import path ends in `validator`, and its Go package name is **`qvalidator`**:
 
 ```go
-import "github.com/noobmaisfier/qlx/qjson/validator"
+import qvalidator "github.com/noobmaisfier/qlx/qjson/validator"
 
 type UpdateUserDTO struct {
-    Email    qt.Opt[string]          `json:"email" validate:"provided,email"`
-    BirthDate qt.Date                `json:"birth_date" validate:"nonzero"`
-    Nickname qt.Opt[qt.Null[string]] `json:"nickname" validate:"provided"`
+    Email     qt.Opt[string]          `json:"email" validate:"provided,email"`
+    BirthDate qt.Date                 `json:"birth_date" validate:"nonzero"`
+    Nickname  qt.Opt[qt.Null[string]] `json:"nickname,omitzero" validate:"provided,omitnil,max=50"`
 }
 
 v := qvalidator.New()
 if err := v.Validate(dto); err != nil {
     var fieldErrors qjson.Errors
     if errors.As(err, &fieldErrors) {
-        // Safe to serialize directly: c.JSON(http.StatusUnprocessableEntity, fieldErrors)
         // Produces: [{"field":"email","code":"required","msg":"is required"}, ...]
-        for _, fe := range fieldErrors {
-            fmt.Println(fe.Field, fe.Code)
-        }
     }
 }
 ```
 
-#### Special QLX Validation Rules:
+#### Special QLX Validation Rules & Tag Pitfalls
 - `provided`: Checks that an `Opt[T]` was explicitly present in the JSON body (even if set to `null`).
 - `notnull`: Checks that a `Null[T]` is not SQL NULL.
-- `nonzero`: Checks that types like `qt.Date`, `qt.ID`, `qt.Timestamptz`, or `qt.Range` are not their zero-value struct. (Standard `required` evaluates the struct header and falsely passes zero-value structs; always use `nonzero` on them!).
-- `omitnil` (built into `go-playground/validator/v10`): Unset `Opt[T]` and NULL `Null[T]` unwrap to a typed `nil` pointer, so `omitnil` skips absent/null values **without** skipping `""`, `0`, or `false` when the client sends them. Prefer `validate:"omitnil,min=1"` over `validate:"omitempty,min=1"` for PATCH fields.
-
-#### Tag Pitfalls:
-- **`validate:"omitempty,..."` on `qt.Opt[string]`**: `omitempty` skips `""` as well as `nil`, so `{"name": ""}` silently passes `min=1`. Use `omitnil` instead.
-- **`json:",omitempty"` on `qt` structs**: `omitempty` never omits structs (`qt.Opt`, `qt.Null`, `qt.Date`); always use `json:",omitzero"` (Go 1.24+). `qt.Opt[qt.Null[T]]` without `omitzero` returns `qt.ErrUnsetOptNull` on `json.Marshal`.
-- **`validate:"provided,max=5"` on `qt.Opt[qt.Null[T]]`**: an explicit `null` passes `provided` and unwraps to nil, causing a tag error on `max=5`; write `validate:"provided,omitnil,max=5"`.
+- `nonzero`: Checks that types like `qt.Date`, `qt.ID`, `qt.Timestamptz`, or `qt.Range` are not their zero-value struct. (Standard `required` evaluates the struct header and falsely passes zero-value structs!)
+- `omitnil` (built into `validator/v10`): Unset `Opt[T]` and NULL `Null[T]` unwrap to a typed `nil` pointer, so `omitnil` skips absent/null values **without** skipping `""`, `0`, or `false`.
+- **Never use `validate:"omitempty,..."` on `qt.Opt[string]`** when `""` should fail `min=1` — use `omitnil`.
+- **Never use `json:",omitempty"` on `qt` structs** — always use `json:",omitzero"` (Go 1.24+).
+- **For `qt.Opt[qt.Null[T]]` with length/range checks**, combine `provided,omitnil,...` so explicit `null` does not fail the inner rule.
 
 ---
 
-## 7. Row Mapping & Scanning Modes
+## 7. Row Mapping, Scanning & Testing (`//qlx:row`, `qtest`)
 
-### Mode 1: Positional Scanning (`//qlx:row`) — PREFERRED
-Zero reflection. Fastest execution. Fields match `SELECT` columns in exact order.
+### 7.1 Four Scanning Modes
+1. **Positional Scanning (`//qlx:row`) — PREFERRED**: Zero reflection. Fields match `SELECT` columns in exact order. Run `qlx rows ./...` after adding/modifying the struct:
+   ```go
+   //qlx:row
+   type UserSummary struct {
+       ID       int64
+       Email    string
+       OrderNum int64
+       Nickname qt.Null[string]
+       Ignored  string `qlx:"-"` // Omitted from SQL scanning
+   }
+   ```
+2. **By Name (`db:"..."` Tags)**: Used when a custom struct has no `ScanTargets()`. Uses cached reflection. Always provide explicit `db:"column_name"` tags (Go field names are not auto-converted to snake_case).
+3. **Scalar**: When `R` is a single scalar (`int64`, `string`, `bool`, `time.Time`, `qt.Null[T]`), the query must select **exactly one column**.
+4. **Tuples**: Inline queries returning 1 to 8 columns without declaring a struct (`q.Tuple1[A]` .. `q.Tuple8[A..H]`):
+   ```go
+   pairs, err := client.All[q.Tuple2[int64, string]](ctx,
+       q.Select(Users.ID, Users.Email).From(Users))
+   ```
 
-```go
-//qlx:row
-type UserSummary struct {
-    ID        int64
-    Email     string
-    OrderNum  int64
-    Nickname  qt.Null[string]
-    Ignored   string `qlx:"-"` // Omitted from SQL scanning
-}
+> **Outer-Join Nullability Rule**: A `NOT NULL` column on the optional side of a `LEFT`, `RIGHT`, or `FULL JOIN` can be `NULL` in results. Wrap it in `q.Nullable(col)` (produces `Expr[qt.Null[T]]`) and scan into `qt.Null[T]` — `qlxvet` V018 enforces this!
 
-// NOTE: Run `qlx rows ./...` after declaring or modifying this struct.
-
-users, err := client.All[UserSummary](ctx,
-    q.Select(
-        Users.ID,
-        Users.Email,
-        q.Count(Orders.ID).As("order_num"),
-        Users.Nickname,
-    ).
-    From(Users).
-    LeftJoin(Orders).On(Orders.UserID.EqX(Users.ID)).
-    GroupBy(Users.ID))
-```
-
-### Mode 2: By Name (`db:"..."` Tags)
-Used when a custom struct does not have `ScanTargets()`. Uses cached reflection by field offsets.
-
-```go
-type UserRow struct {
-    ID    int64  `db:"id"`
-    Email string `db:"email"`
-}
-// Note: Go field names do NOT automatically convert to snake_case.
-// Always provide explicit db:"column_name" tags.
-```
-
-### Mode 3: Scalar
-When `R` is a single primitive (`int64`, `string`, `bool`, `time.Time`, `qt.Null[T]`), the query must select **exactly one column**.
-
-```go
-count, err := client.One[int64](ctx, q.Select(q.CountAll()).From(Users))
-```
-
-### Mode 4: Tuples
-For quick inline queries returning 2 to 8 columns without declaring a struct:
-
-```go
-pairs, err := client.All[q.Tuple2[int64, string]](ctx,
-    q.Select(Users.ID, Users.Email).From(Users))
-```
+### 7.2 Query Tagging, Registration & Testing (`qtest`)
+* **`q.Tagged("user_by_id", stmt)`**: Prepends `/* qlx: user_by_id */ ` to SQL for logs, `pg_stat_activity`, and `otelqlx` span/metric labels.
+* **`q.Register("user_by_id", stmt)`**: Package-level registration (enforced by `qlxvet` V003/V005) enabling automated checks via `qtest`:
+  - `qtest.Render(t, dialect)`: Renders every registered query and checks for errors.
+  - `qtest.Snapshot(t, dialect, "queries.sql", update)`: Compares rendered SQL of all registered queries against a golden file.
+  - `qtest.VerifyPrepare(t, dialect, preparer)`: Asks PostgreSQL to `PREPARE`/parse every registered query against the real schema.
+  - `qtest.Dump(t, dialect, "queries.json")`: Writes JSON for offline checking via `qlx prepare -queries queries.json`.
+  - `qtest.RunRegress(t, cases, opts)`: Regression runner (`RegressOptions{Dialect, Normalize, Prepare, Known}`).
 
 ---
 
-## 8. Operators & Predicates
+## 8. Operators, Expressions & Predicates
 
-### 8.1 Comparisons
-- **Value comparisons** (binds `$n` parameter):
-  `col.Eq(v)`, `col.Ne(v)`, `col.Gt(v)`, `col.Gte(v)`, `col.Lt(v)`, `col.Lte(v)`
-- **Column / Expression comparisons** (identifier to identifier):
-  `col.EqX(other)`, `col.NeX(other)`, `col.GtX(other)`, `col.GteX(other)`, `col.LtX(other)`, `col.LteX(other)`
-- **Null checks**:
-  `col.IsNull()`, `col.IsNotNull()`
-- **Ranges & Sets**:
-  `col.Between(min, max)`, `col.In("a", "b", "c")`, `col.NotIn("a", "b")`
-  `col.Any(slice)`: Renders `col = ANY($1)` using PostgreSQL array parameter.
-- **String pattern matching**:
-  `col.Like("%pattern%")`, `col.ILike("%pattern%")`, `col.Contains("sub")`, `col.ContainsFold("sub")`, `col.HasPrefix("pre")`, `col.HasSuffix("post")`
+### 8.1 Comparisons & Predicates
+- **Value comparisons** (bind `$n`): `col.Eq(v)`, `col.Ne(v)`, `col.Gt(v)`, `col.Gte(v)`, `col.Lt(v)`, `col.Lte(v)`
+- **Column / Expression comparisons**: `col.EqX(other)`, `col.NeX(other)`, `col.GtX(other)`, `col.GteX(other)`, `col.LtX(other)`, `col.LteX(other)`
+- **Null checks**: `col.IsNull()`, `col.IsNotNull()`
+- **Booleans**: `boolCol.IsTrue()`, `boolCol.IsFalse()`, `q.Test(pred)` (turns `Pred` into `BoolExpr`)
+- **Ranges & Sets**: `col.Between(min, max)`, `col.In("a", "b")`, `col.NotIn("a", "b")`, `col.Any(slice)` (`col = ANY($1)` — keeps query shape constant!), `q.InSelect(expr, subQuery)`
+- **String pattern matching** (`TextExpr`): `Like`, `ILike`, `Contains`, `ContainsFold`, `HasPrefix`, `HasSuffix`, `Lower()`, `Upper()`
+- **Arrays** (`ArrayExpr[E]`): `Contains(vs...)` (`@>`), `ContainedBy(vs...)` (`<@`), `Overlaps(vs...)` (`&&`), `Has(v)` (`v = ANY(arr)`), `Cardinality()`, `Sort()` (PG 18), `Reverse()` (PG 18)
+- **JSON / JSONB** (`JSONExpr[T]`): `Get(key)` (`->`), `GetIdx(i)` (`-> int`), `GetText(key)` (`->>`), `Path(keys...)` (`#>`), `PathText(keys...)` (`#>>`), `Contains(rawJSON)` (`@>`), `HasKey(key)` (`?`)
 
-### 8.2 Boolean Combinations
+### 8.2 Boolean Combinations & Dynamic Conditional Filters (`...If`)
 ```go
 q.And(cond1, cond2, cond3)
 q.Or(cond1, cond2)
 q.Not(cond)
+q.If(cond, pred) // Includes pred only when Go bool cond is true
 ```
-
-### 8.3 Dynamic Conditional Filters (`...If`)
-When building search forms or REST APIs with optional query parameters, do NOT use `if filter != "" { query = query.Where(...) }`. Use the `...If` operator family with `qt.Opt[T]`. If the option is `qt.Unset[T]()`, the predicate is completely omitted from the SQL:
-
+For optional query parameters (`qt.Opt[T]`), use the `...If` operator family (omits the predicate from SQL when `Unset`):
 ```go
-tierOpt   := qt.Of("enterprise")
-minBalOpt := qt.Unset[int64]()
-searchOpt := qt.Of("alice")
-
 q.Select(Users.ID).From(Users).Where(
-    Users.Tier.EqIf(tierOpt),                         // Included: tier = $1
-    Users.Balance.BetweenIf(minBalOpt, qt.Unset[int64]()), // Omitted: both bounds unset
-    Users.Email.ContainsFoldIf(searchOpt),            // Included: lower(email) LIKE '%' || lower($2) || '%'
+    Users.Tier.EqIf(tierOpt),
+    Users.Balance.BetweenIf(minBalOpt, maxBalOpt),
+    Users.Email.ContainsFoldIf(searchOpt),
 )
 ```
 Available `...If` operators: `EqIf`, `NeIf`, `GtIf`, `GteIf`, `LtIf`, `LteIf`, `BetweenIf`, `InIf`, `IsNullIf`, `ContainsIf`, `ContainsFoldIf`, `HasPrefixIf`, `HasSuffixIf`, `LikeIf`, `ILikeIf`.
 
+### 8.3 Expressions, Case, Casts, Null Helpers & Typed Params
+- **Values & Params**:
+  - `q.Val(v)`: Wraps a Go value as a typed SQL expression `Expr[T]`.
+  - `p := q.NewParam[int64]()`: Creates a reusable placeholder (`col.EqX(p)`), bound at execution/render time with `p.Bind(42)`.
+- **CASE**:
+  ```go
+  q.Case[string]().
+      When(Users.Balance.Gt(1000), "vip").
+      WhenX(Users.Tier.Eq("pro"), q.Val("pro")).
+      Else("standard") // or .ElseX(expr) or .End() -> Expr[qt.Null[string]]
+  ```
+- **Casts**: `q.Cast(expr, q.PgText)` (or `q.CastN` for nullable operands, `q.ArrayOf(q.PgText)` for arrays, `q.NewPgType[T](schema, name)` for custom types). Built-in symbols: `PgInt2`, `PgInt4`, `PgInt8`, `PgFloat4`, `PgFloat8`, `PgNumeric`, `PgText`, `PgBool`, `PgBytea`, `PgUUID`, `PgTimestamptz`, `PgTimestamp`, `PgDate`, `PgXML`, `PgInterval`, `PgJSONB`, `PgJSON`, `PgInet`.
+- **Null helpers**:
+  - `q.Coalesce(nullableExpr, fallback)` -> `Expr[T]`
+  - `q.CoalesceOp(a, b)` -> `Expr[qt.Null[T]]`
+  - `q.CoalesceOpDefault(a, nonNullExpr)` -> `Expr[T]`
+  - `q.NullIf(a, b)` -> `Expr[qt.Null[T]]`
+  - `q.Nullable(nonNullExpr)` -> `Expr[qt.Null[T]]`
+  - `q.NotNull(nullableExpr)` -> `Expr[T]` (renders `error_on_null(...)` on PG 19)
+  - `q.Greatest(a, rest...)`, `q.Least(a, rest...)`
+
 ---
 
-## 9. Statements & Clauses
+## 9. Statements, Clauses & Advanced SQL
 
-### 9.1 SELECT Queries
+### 9.1 `SELECT`, Clauses & Row Locking
 ```go
 users, err := client.All[UserSummary](ctx,
     q.Select(
@@ -476,66 +568,76 @@ users, err := client.All[UserSummary](ctx,
         q.Count(Orders.ID).As("orders_count"),
         q.SumBig(Orders.Total).As("revenue"),
     ).
+    Distinct(). // or .DistinctOn(Users.Email)
     From(Users).
     LeftJoin(Orders).On(Orders.UserID.EqX(Users.ID)).
-    Where(
-        Users.Tier.In("pro", "enterprise"),
-        Users.DeletedAt.IsNull(),
-    ).
+    Where(Users.Tier.In("pro", "enterprise"), Users.DeletedAt.IsNull()).
     GroupBy(Users.ID, Users.Email).
     Having(q.Count(Orders.ID).Gt(0)).
     OrderBy(Users.CreatedAt.Desc().NullsLast()).
-    Limit(20).
-    Offset(40))
+    Limit(20).Offset(40)) // or .FetchFirst(20).WithTies()
 ```
+- **Row locking** (cannot be combined with `Distinct`, `GroupBy`, `Having`, aggregates, or window functions — enforced by `qlxvet` V028):
+  - `.ForUpdate()`, `.ForNoKeyUpdate()`, `.ForShare()`, `.ForKeyShare()`
+  - Modifiers: `.Of(Users)`, `.SkipLocked()`, `.NoWait()`
 
-### 9.2 Joins & Aliasing
+### 9.2 Joins, Aliasing, Derived Tables & `VALUES`
 ```go
-// Inner, Left, Right, Full Joins
+// Inner, Left, Right, Full, Cross Joins
 q.Select(...).From(Users).Join(Orders).On(Orders.UserID.EqX(Users.ID))
 q.Select(...).From(Users).LeftJoin(Orders).On(...)
+q.Select(...).From(Users).CrossJoin(Settings)
 
 // Self Join with Table Aliases
 u1, u2 := Users.As("u1"), Users.As("u2")
-q.Select(u1.Email, u2.Email).
-    From(u1).
-    Join(u2).On(u1.ManagerID.EqX(u2.ID))
+q.Select(u1.Email, u2.Email).From(u1).Join(u2).On(u1.ManagerID.EqX(u2.ID))
 
 // Foreign Key Join Helper
 u, o := Users.As("u"), Orders.As("o")
-q.Select(u.Email, o.Total).
-    From(u).
-    Join(o).OnFK(o.FKOrdersUserIDFkey(u))
+q.Select(u.Email, o.Total).From(u).Join(o).OnFK(o.FKOrdersUserIDFkey(u))
+
+// Derived Subquery & LATERAL in FROM/JOIN
+sub := q.Subquery(q.Select(Orders.UserID).From(Orders), "o")
+lat := q.Lateral(q.Select(Orders.ID).From(Orders).Where(Orders.UserID.EqX(Users.ID)).Limit(1), "latest")
+
+// Inline VALUES table (Values1..Values4)
+fID, fName := q.NewField[int64]("id"), q.NewField[string]("name")
+vals := q.Values2("v", fID, fName, q.Row2[int64, string]{1, "a"}, q.Row2[int64, string]{2, "b"})
 ```
 
-### 9.3 Aggregates & Window Functions
+### 9.3 Aggregates, Grouping Sets & Window Functions
 ```go
-// Aggregates
-q.CountAll()                        // count(*)
-q.Count(col)                        // count(col)
-q.CountDistinct(col)                // count(DISTINCT col)
-q.SumBig(col)                       // sum(col) returning int64
-q.Avg(col), q.Min(col), q.Max(col)
-q.StringAgg(col, ", ").OrderBy(...)
+// Aggregates:
+q.CountAll()                             // count(*) -> AggExpr[int64]
+q.Count(col)                             // count(col) -> AggExpr[int64]
+q.CountDistinct(col)                     // count(DISTINCT col) -> AggExpr[int64]
+q.Sum(smallIntCol)                       // sum(col) -> AggExpr[qt.Null[int64]]
+q.SumBig(bigIntCol)                      // sum(col) -> AggExpr[qt.Null[qt.Numeric]]
+q.SumFloat(floatCol)                     // sum(col) -> AggExpr[qt.Null[float64]]
+q.Avg(intCol), q.AvgFloat(floatCol)      // AggExpr[qt.Null[qt.Numeric]] / AggExpr[qt.Null[float64]]
+q.Min(col), q.Max(col)                   // AggExpr[qt.Null[T]]
+q.BoolAnd(b), q.BoolOr(b), q.ArrayAgg(c)
+q.StringAgg(col, ", ").OrderBy(...)      // Filtered: .Filter(cond)
+q.PercentileCont(0.5).WithinGroup(...)   // Ordered-set aggregates: PercentileDisc, Mode
+q.Rollup(...), q.Cube(...), q.GroupingSets(q.SetOf(...)), q.GroupingFn(...)
 
-// Filtered Aggregate
-q.CountAll().Filter(Orders.Status.Eq("paid")).As("paid_count")
-
-// Window Specification
+// Window Specification & Named Windows (.Windows(nw)):
 w := q.Window().
     PartitionBy(Orders.UserID).
     OrderBy(Orders.CreatedAt.Desc()).
-    Rows(q.UnboundedPreceding, q.CurrentRow)
+    Rows(q.UnboundedPreceding, q.CurrentRow) // also Range(...), Groups(...), Preceding(n), Following(n)
 
 q.Select(
     Orders.ID,
-    q.RowNumber().Over(w).As("row_num"),
-    q.Lag(Orders.Total).Over(w).As("prev_total"),
+    q.RowNumber().Over(w).As("row_num"), // also Rank, DenseRank, PercentRank, CumeDist, Ntile
+    q.Lag(Orders.Total).Over(w).As("prev_total"), // also LagN, LagBy, LagDefault, Lead*, FirstValue, LastValue, NthValue
     q.SumBig(Orders.Total).Over(w).As("running_total"),
 ).From(Orders)
 ```
 
-### 9.4 Keyset (Cursor) Pagination
+### 9.4 Keyset Pagination & Service-Layer Cursor Paging (`qpage`)
+
+#### Low-level keyset (`qlx.KeyAsc` / `KeyDesc`)
 ```go
 byDate := q.KeyDesc(Users.CreatedAt)
 byID   := q.KeyAsc(Users.ID)
@@ -548,50 +650,36 @@ if lastRow != nil {
 users, err := client.All[UserSummary](ctx,
     q.Select(Users.ID, Users.Email, Users.CreatedAt).
     From(Users).
-    Where(after). // Becomes (created_at, id) < ($1, $2)
+    Where(after).
     OrderBy(q.KeyOrder(byDate, byID)...).
     Limit(20))
 ```
 
-### 9.4b Service-Layer Cursor Pagination (`qpage`)
-For HTTP/API pagination without coupling to HTTP or JSON envelopes, use `qpage` with `client.Page[R]` (or `tx.Page[R]`):
-
+#### Service-Layer Cursor Pagination (`qpage`)
 ```go
-// Declare once at package level (panics at init if invalid: missing field, nullable key, expression)
 var userSorts = qpage.Sorts[UserSummary](
-    qpage.Sort("created", qpage.Desc(Users.CreatedAt)), // first sort is the default
+    qpage.Sort("created", qpage.Desc(Users.CreatedAt)), // first sort is default
     qpage.Sort("email", qpage.Asc(Users.Email)),
-    qpage.Tiebreak(qpage.Desc(Users.ID)),               // appended to every sort (must be NOT NULL + unique)
+    qpage.Tiebreak(qpage.Desc(Users.ID)),               // NOT NULL + unique (V033)
     qpage.Sizes(20, 100),                               // optional: default 20, max 100
 )
 
 // Once at startup (at least 16 bytes; pass previous secrets for zero-downtime rotation):
-if err := qpage.SetSecret(secret); err != nil {
-    log.Fatal(err)
-}
-// Optional startup sanity check (SortSet.Window reports ErrCursorKey on the first request if unset):
-if err := qpage.CheckSecret(); err != nil {
-    log.Fatal(err)
-}
+if err := qpage.SetSecret(secret); err != nil { log.Fatal(err) }
+if err := qpage.CheckSecret(); err != nil { log.Fatal(err) }
 
-// In service layer:
+// In service layer (base SELECT must NOT have OrderBy, Limit, Offset, or FetchFirst -> V032):
 page, err := client.Page[UserSummary](ctx,
     q.Select(Users.ID, Users.Email, Users.CreatedAt).From(Users).Where(Users.Active.IsTrue()),
     userSorts,
     qpage.Request{Sort: sort, Cursor: cursor, Size: size})
-// errors.Is(err, qpage.ErrSort) or errors.Is(err, qpage.ErrCursor) -> 400 Bad Request
-// errors.Is(err, qpage.ErrCursorKey) -> 500 (missing qpage.SetSecret)
-// Returns page.Items ([]UserSummary, never nil) and page.Next ("" on the last page).
+// errors.Is(err, qpage.ErrSort) / qpage.ErrCursor -> 400; qpage.ErrCursorKey -> 500
+// Returns page.Items ([]UserSummary, never nil) and page.Next ("" on last page).
 ```
-
-Rules & low-level use:
 - Key columns must be `NOT NULL` and selected in the base `SELECT` under their own names.
-- Cursor values are extracted from the last row the way `pgxexec` scans `R`: by position if `R` implements `ScanTargets` (generated rows, structs marked `//qlx:row`), so a DTO needs no `db` tag; otherwise by `db` tag or lowercased field name.
-- The base `SELECT` must **not** have its own `ORDER BY`, `LIMIT`, `OFFSET`, or `FETCH FIRST` (`qlxvet` rule V032 catches this at build time, and `Window.Apply` rejects it at runtime).
-- `qpage.Sorts` must always specify a unique `Tiebreak` (primary key), otherwise `qlxvet` rule V033 warns (suppress with `//qlx:ignore <reason>` if a Sort already ends with unique keys).
-- Without `pgxexec`, use the three steps: `w, err := userSorts.Window(req)` -> `sel, err := w.Apply(base)` (`w.Apply` has a pointer receiver and records column positions) -> execute `sel` -> `page, err := userSorts.Page(w, rows)`.
+- Without `pgxexec`: `w, err := userSorts.Window(req)` -> `sel, err := w.Apply(base)` -> execute `sel` -> `page, err := userSorts.Page(w, rows)`.
 
-### 9.5 Safe URL Sort Parser
+### 9.5 Safe URL Sort Parser (`q.NewSorts`)
 ```go
 var userSorts = q.NewSorts(map[string]q.Orderable{
     "email":   Users.Email,
@@ -599,74 +687,86 @@ var userSorts = q.NewSorts(map[string]q.Orderable{
 }).Default(Users.CreatedAt.Desc()).Tiebreak(Users.ID.Asc())
 
 order, err := userSorts.Parse(r.URL.Query().Get("sort")) // e.g. "-created,email"
-if err != nil { /* 400 Bad Request */ }
-
 q.Select(Users.ID).From(Users).OrderBy(order...)
 ```
 
-### 9.6 Common Table Expressions (WITH)
+### 9.6 CTEs (`WITH`, `WITH RECURSIVE`), Set Operations & Subqueries
 ```go
+// Standard CTE (data-modifying INSERT/UPDATE/DELETE with RETURNING also allowed):
 counts := q.NewCTE("counts",
     q.Select(Orders.UserID.As("user_id"), q.Count(Orders.ID).As("n")).
-        From(Orders).
-        GroupBy(Orders.UserID))
+        From(Orders).GroupBy(Orders.UserID)).Materialized() // or .NotMaterialized()
 
 userIDField := q.NewField[int64]("user_id")
 nCountField := q.NewField[int64]("n")
 
 users, err := client.All[UserSummary](ctx,
     q.Select(Users.Email, q.RefNum(counts, nCountField).As("order_count")).
-        With(counts).
-        From(Users).
+        With(counts).From(Users).
         Join(counts).On(q.RefNum(counts, userIDField).EqX(Users.ID)).
         Where(q.RefNum(counts, nCountField).Gt(5)))
-```
 
-### 9.7 Subqueries
-```go
-// EXISTS
+// Recursive CTE (with optional SearchDepthFirst / SearchBreadthFirst / Cycle):
+tree := q.Recursive("tree", anchorQuery, func(self q.CTE) q.Query {
+    return stepQueryReferencingSelf
+}).SearchDepthFirst("ord", Nodes.ID).Cycle("is_cycle", "path", Nodes.ID)
+
+// Set Operations (Union, UnionAll, Intersect, IntersectAll, Except, ExceptAll):
+combined := q1.UnionAll(q2)
+combined = combined.OrderBy(combined.ByName(Users.Email).Asc()).Limit(50)
+
+// Subqueries:
 q.Select(Users.Email).From(Users).Where(
-    q.Exists(q.Select(Orders.ID).From(Orders).Where(
-        Orders.UserID.EqX(Users.ID),
-        Orders.Total.Gt(100),
-    )),
+    q.Exists(q.Select(Orders.ID).From(Orders).Where(Orders.UserID.EqX(Users.ID))),
 )
 ```
+*(Reference helpers for CTE/table-func/VALUES columns: `q.Ref`, `q.RefNum`, `q.RefText`, `q.RefTime`, `q.RefBool`.)*
+
+### 9.7 Table Functions & SQL/JSON + XML
+- **Built-in Table Functions** (use in `From` / `Join`, always chain `.As(alias, cols...)` and optionally `.WithOrdinality(ordField)`):
+  - `q.Unnest(arr)`, `q.Unnest2(arr1, arr2)`
+  - `q.GenerateSeries(start, stop)`, `q.GenerateSeriesStep(start, stop, step)`, `q.GenerateSeriesTime(start, stop, intervalStep)`
+  - `q.JSONBArrayElements(doc)`, `q.JSONBEach(doc)`, `q.StringToTable(s, delim)`
+- **SQL/JSON Constructors & Query Functions**:
+  - `q.JSONObject(q.JSONKV(...)...)`, `q.JSONObjectAgg(...)`, `q.JSONArray(...)`, `q.JSONArrayFrom(subq)`, `q.JSONArrayAgg(v)`, `q.JSONScalar(v)`, `q.IsJSON(...)`, `q.JSONParse(...)`, `q.JSONSerialize(...)`
+  - `q.JSONExists(doc, path)`, `q.JSONValue(doc, path, asType)`, `q.JSONQuery(doc, path)`, `q.JSONTable(doc, path, alias, cols...)` (`Pass`, `JSONColOrdinality`, `JSONColValue`, `JSONColExists`, `JSONColQuery`, `JSONColNested`)
+- **SQL/XML**:
+  - `q.XMLElement`, `q.XMLAttribute`, `q.XMLConcat`, `q.XMLForest`, `q.XMLParse`, `q.XMLPI`, `q.XMLRoot`, `q.XMLSerialize`, `q.XMLExists`, `q.IsDocument`, `q.XMLTable`
 
 ### 9.8 Functions & Procedures (Built-in and User-Defined)
-- **Built-in Catalog Functions**: Available via `import "github.com/noobmaisfier/qlx/pg"` (flat facade: `pg.Lower`, `pg.Abs`, `pg.Now`, etc.) or domain-specific packages `pgcat/text`, `pgcat/num`, `pgcat/datetime`, `pgcat/jsonb`, etc.
+- **Built-in Catalog Functions**: `import "github.com/noobmaisfier/qlx/pg"` (`pg.Lower`, `pg.Abs`, `pg.Now`, etc.) or domain packages `pgcat/text`, `pgcat/num`, `pgcat/datetime`, `pgcat/jsonb`, `pgcat/network`, `pgcat/ext/...`.
 - **User-Defined Functions (`qlx gen`)**:
-  - **Plain scalar functions** with `IN` parameters are automatically generated as typed Go wrappers returning `qlx.Expr[T]`.
-  - **Strictness**: If the function is not `STRICT`, the return type is automatically wrapped in `qt.Null[T]`.
-  - **VARIADIC**: Functions with a `VARIADIC` parameter generate a Go variadic wrapper: `JoinAll(sep, parts ...qlx.Operand[string])` (also applies to procedures).
-  - **Default arguments**: Generates two wrappers: one omitting trailing defaults `Greet(who)` (leaving defaults to PostgreSQL) and one providing all arguments `GreetAll(who, greeting, punct)`.
-  - **Set-returning functions (SRF)**: Functions returning `SETOF` a scalar or having `TABLE` / `OUT` columns generate a `qlx.TableFunc` with a `<Name>Columns` struct and `<Name>Cols` descriptor for query projection/from clauses: `Pairs(n).As("p", PairsCols.Fields()...)` and referenced via `q.Ref(p, PairsCols.A)`. Columns are typed as `qt.Null[T]`.
-  - **Procedures** (`CREATE PROCEDURE`): Generated as functions returning `qlx.Command` for execution with `qlx.Call(...)`.
-  - **Skipped by generator**: `VARIADIC "any"`, variadics with default arguments, `INOUT` parameters, `OUT` on non-set functions, and `SETOF` composite/record without `OUT` columns.
-- **Generic / Manual Function Call**: Any custom function can always be invoked explicitly using `qlx.FuncCall[RetType](schema, name, args...)`.
+  - Plain scalar functions with `IN` parameters generate typed Go wrappers returning `qlx.Expr[T]` (wrapped in `qt.Null[T]` unless `STRICT`).
+  - `VARIADIC` generates a Go variadic wrapper (`JoinAll(sep, parts ...qlx.Operand[string])`).
+  - Default arguments generate two wrappers: omitting trailing defaults (`Greet(who)`) and all arguments (`GreetAll(who, greeting, punct)`).
+  - Set-returning functions (`SETOF` scalar or `TABLE`/`OUT` columns) generate a `qlx.TableFunc` with `<Name>Columns` and `<Name>Cols`.
+  - Procedures (`CREATE PROCEDURE`) generate functions returning `qlx.Command` executed via `qlx.Call(...)`.
+  - Skipped by generator: `VARIADIC "any"`, variadics with defaults, `INOUT` parameters, `OUT` on non-set functions, `SETOF` composite/record without `OUT` columns.
+- **Manual Escape Hatch**: `qlx.FuncCall[RetType](schema, name, args...)` and `qlx.Func(schema, name, args...)` (for table functions).
 
 ```go
-// Calling generated user function:
-q.Select(db.ComputeDiscount(Products.Price, q.Val(qt.NewNumeric("0.10")))).From(Products)
-
-// Variadic user function:
+q.Select(db.ComputeDiscount(Products.Price, q.Val(qt.Numeric("0.10")))).From(Products)
 q.Select(db.ConcatWithSeparator(q.Val("-"), Users.FirstName, Users.LastName, Users.Email))
 
-// Set-returning function (SRF) in FROM clause:
 srf := db.GenerateSeries(q.Val(1), q.Val(10)).As("s", db.GenerateSeriesCols.Fields()...)
 q.Select(q.Ref(srf, db.GenerateSeriesCols.GenerateSeries)).From(srf)
 
-// Manual invocation escape hatch:
 customExpr := qlx.FuncCall[string]("app", "format_label", qlx.Arg(Users.ID), qlx.Arg(q.Val("VIP")))
 ```
 
+### 9.9 `EXPLAIN`, `PlanAdvice` & Utility/Session Commands
+* **`EXPLAIN`**: `stmt.Explain(q.Analyze, q.Buffers, q.FormatJSON)` or `q.Explain(stmt, ...)`. Version-checked options include `Analyze`, `Verbose`, `Buffers`, `NoBuffers`, `Wal`, `Settings`, `GenericPlan` (PG 16), `Memory` (PG 17), `IO` (PG 19), `NoCosts`, `NoTiming`, `NoSummary`, `SerializeText`/`SerializeBinary` (PG 17), `FormatText`/`FormatJSON`/`FormatYAML`/`FormatXML`.
+* **`PlanAdvice`** (`planadvice.go`): Typed plan hints (`q.SeqScan`, `q.IndexScan`, `q.BitmapHeapScan`, `q.DoNotScan`, `q.On(table)`, `q.OnAlias(...)`).
+* **Session / Maintenance Commands**: `q.Prepare` / `q.Execute` / `q.Deallocate` / `q.DeallocateAll`, `q.DeclareCursor` / `q.FetchFrom` / `q.MoveIn` / `q.CloseCursor`, `q.SetConfig`, `q.RefreshMaterializedView`, `q.Truncate`, `q.Vacuum`, `q.AnalyzeTables`, `q.LockTable`, `q.Grant` / `q.Revoke`, `q.ResetAll`, `q.DiscardAll`.
+
 ---
 
-## 10. Mutations (INSERT, UPDATE, DELETE, MERGE)
+## 10. Mutations (`INSERT`, `UPDATE`, `DELETE`, `MERGE`)
 
-### 10.1 INSERT & Upsert
+### 10.1 `INSERT` & Upsert
 ```go
-// Single row insert with RETURNING
+// Single row insert with RETURNING (use .Columns(...).FromQuery(sel) for INSERT ... SELECT,
+// or .DefaultValues(), .OverridingSystemValue())
 newID, err := client.One[int64](ctx,
     q.InsertInto(Users).
         Row(
@@ -677,7 +777,7 @@ newID, err := client.One[int64](ctx,
         ).
         Returning(Users.ID))
 
-// Upsert (ON CONFLICT DO UPDATE)
+// Upsert (OnConflict / OnConflictConstraint -> DoNothing / DoUpdate / DoUpdateWhere / DoSelect [PG 19])
 _, err = client.Exec(ctx,
     q.InsertInto(Users).
         Row(Users.Email.To("bob@example.com"), Users.Balance.To(50)).
@@ -686,11 +786,10 @@ _, err = client.Exec(ctx,
         Returning(Users.ID))
 ```
 
-### 10.2 UPDATE
-> **IMPORTANT**: `q.Update(Table)` requires `.Where(...)` or explicit `.All()`. Omitting both fails static analysis (V002).
+### 10.2 `UPDATE`
+> **IMPORTANT**: `q.Update(Table)` requires `.Where(...)` or explicit `.All()` (enforced by `qlxvet` V002). Use `.From(...)` for `UPDATE ... FROM`.
 
 ```go
-// Standard Update
 _, err := client.Exec(ctx,
     q.Update(Users).
         Set(
@@ -699,48 +798,49 @@ _, err := client.Exec(ctx,
             Users.Nickname.ToNull(),
         ).
         Where(Users.ID.Eq(7)).
-        Returning(Users.Balance))
+        Returning(Users.Balance)) // Users.Balance.Old() / .New() available on PG 18+
 
 // Partial Update via Generated Patch Struct
 patch := db.UserPatch{
     Tier:    qt.Of("pro"),
     Balance: qt.Of(int64(250)),
 }
-_, err = client.Exec(ctx,
-    q.Update(Users).
-        SetPatch(patch).
-        Where(Users.ID.Eq(7)))
+_, err = client.Exec(ctx, q.Update(Users).SetPatch(patch).Where(Users.ID.Eq(7)))
 ```
 
-### 10.3 DELETE
-> **IMPORTANT**: `q.DeleteFrom(Table)` requires `.Where(...)` or explicit `.All()`.
+### 10.3 `DELETE`
+> **IMPORTANT**: `q.DeleteFrom(Table)` requires `.Where(...)` or explicit `.All()` (enforced by `qlxvet` V002). Use `.Using(...)` for `DELETE ... USING`.
 
 ```go
-// Filtered Delete
 _, err := client.Exec(ctx,
     q.DeleteFrom(Orders).
         Where(Orders.Status.Eq("cancelled")).
         Returning(Orders.ID))
 
-// Full Table Delete (Explicitly opt-in)
 _, err = client.Exec(ctx, q.DeleteFrom(AuditLogs).All())
 ```
 
-### 10.4 MERGE (PostgreSQL 15+)
+### 10.4 `MERGE` (PostgreSQL 15+)
+Constructor is `q.Merge(Target)` (NOT `MergeInto`), and branch actions are `ThenUpdate`, `ThenDelete`, `ThenDoNothing`, `ThenInsert`, `ThenInsertDefaults`:
+
 ```go
 _, err := client.Exec(ctx,
-    q.MergeInto(Users).
+    q.Merge(Users).
         Using(NewUsers).On(Users.ID.EqX(NewUsers.ID)).
-        WhenMatched().DoUpdate(Users.Email.ToX(NewUsers.Email)).
-        WhenNotMatched().DoInsert(
+        WhenMatched().ThenUpdate(Users.Email.ToX(NewUsers.Email)).
+        WhenNotMatched().ThenInsert(
             Users.ID.ToX(NewUsers.ID),
             Users.Email.ToX(NewUsers.Email),
-        ))
+        ).
+        WhenNotMatchedBySource().ThenDelete().
+        Returning(q.MergeAction(), Users.ID)) // q.MergeAction() requires PG 17+
 ```
 
 ---
 
 ## 11. Extensions (`qext/*`)
+
+For extension functions/operators not covered by the high-level `qext/*` helpers, use the generated catalog wrappers in `pgcat/ext/<name>`. Helpers require `CREATE EXTENSION` in migrations.
 
 ### 11.1 Full-Text Search (`qext/textsearch`)
 ```go
@@ -749,87 +849,126 @@ import "github.com/noobmaisfier/qlx/qext/textsearch"
 doc := textsearch.Document("english",
     textsearch.Weighted(textsearch.A, Articles.Title),
     textsearch.Weighted(textsearch.B, Articles.Body))
-query := textsearch.Web("english", q.Val(userSearchTerm))
+query := textsearch.Web("english", q.Val(userSearchTerm)) // also Plain, Phrase, Syntax
 
 articles, err := client.All[ArticleSummary](ctx,
     q.Select(
         Articles.ID,
         Articles.Title,
-        textsearch.Rank(doc, query).As("rank"),
+        textsearch.Rank(doc, query).As("rank"), // also RankCover
         textsearch.Headline("english", Articles.Body, query, textsearch.Highlight{
-            StartSel: "<mark>",
-            StopSel:  "</mark>",
-            MaxWords: 25,
+            StartSel: "<mark>", StopSel: "</mark>", MaxWords: 25,
         }).As("snippet"),
     ).
     From(Articles).
-    Where(textsearch.SearchIf(doc, "english", optUserSearchTerm)).
+    Where(textsearch.SearchIf(doc, "english", optUserSearchTerm)). // also Search, Match
     OrderBy(textsearch.Rank(doc, query).Desc()).
     Limit(10))
 ```
 
 ### 11.2 Vector Similarity Search (`qext/pgvector`)
+Supports `qt.Vector` and `qt.HalfVector`. Uses index-friendly operators (`L2`, `Cosine`, `NegativeInnerProduct`, `L1`), plus transaction-local tuning `SetEfSearch(n)` and `SetProbes(n)`:
 ```go
 import "github.com/noobmaisfier/qlx/qext/pgvector"
 
-targetVector := qt.Vector{0.02, 0.45, 0.81, /* ... 1536 floats */}
-
 matches, err := client.All[ItemMatch](ctx,
-    q.Select(
-        Items.ID,
-        Items.Title,
-        pgvector.Cosine(Items.Embedding, targetVector).As("cosine_dist"),
-    ).
+    q.Select(Items.ID, pgvector.Cosine(Items.Embedding, targetVector).As("dist")).
     From(Items).
     OrderBy(pgvector.Cosine(Items.Embedding, targetVector).Asc()).
     Limit(10))
 ```
 
 ### 11.3 Trigram Similarity (`qext/trgm`)
+Helpers: `Similar`, `WordSimilar`, `SimilarIf`, `Distance`, `Similarity`, `SetSimilarityThreshold`, `SetWordSimilarityThreshold`:
 ```go
 import "github.com/noobmaisfier/qlx/qext/trgm"
 
 users, err := client.All[UserSummary](ctx,
-    q.Select(Users.ID, Users.Name).
-    From(Users).
-    Where(trgm.Similar(Users.Name, "Jonathan")))
+    q.Select(Users.ID, Users.Name).From(Users).Where(trgm.Similar(Users.Name, "Jonathan")))
+```
+
+### 11.4 Cryptography (`qext/pgcrypto`)
+Helpers (qualified with `public`): `HashPassword(pw, cost)`, `PasswordMatches(hash, pw)`, `HMAC(data, key, alg)`, `Digest(data, alg)`, `RandomBytes(n)`, `Encrypt(data, key)`, `Decrypt(data, key)`:
+```go
+import "github.com/noobmaisfier/qlx/qext/pgcrypto"
+
+q.InsertInto(Users).Row(Users.Email.To(email), Users.PasswordHash.ToX(pgcrypto.HashPassword(q.Val(pw), 12)))
+q.Select(Users.ID).From(Users).Where(Users.Email.Eq(email), pgcrypto.PasswordMatches(Users.PasswordHash, q.Val(pw)))
+```
+
+### 11.5 Spatial Geography (`qext/postgis`)
+Works on `qt.Geography` (WGS84 meters, uses GIST indexes): `Point(lon, lat)`, `WithinMeters(col, p, meters)`, `DistanceMeters(a, b)`, `GeoJSON(col, digits)`.
+```go
+import "github.com/noobmaisfier/qlx/qext/postgis"
+
+origin := postgis.Point(q.Val(2.3522), q.Val(48.8566)) // lon, lat
+q.Select(Places.Name, postgis.DistanceMeters(Places.Loc, origin).As("m")).
+    From(Places).Where(postgis.WithinMeters(Places.Loc, origin, 5000))
+```
+
+### 11.6 Hierarchical Paths (`qext/ltree`)
+Works on `qt.LTree` / `qt.LQuery`: `IsDescendant(path, of)`, `IsAncestor(path, of)`, `Matches(path, pattern)`, `Depth(path)`.
+```go
+import "github.com/noobmaisfier/qlx/qext/ltree"
+
+q.Select(Nodes.Path).From(Nodes).Where(ltree.IsDescendant(Nodes.Path, q.Val(qt.LTree("top.science"))))
+```
+
+### 11.7 Key-Value Hstore (`qext/hstore`)
+Works on `qt.Hstore` (`map[string]qt.Null[string]`): `Get(col, key)`, `HasKey(col, key)`, `Contains(col, other)`, `Merge(a, b)`.
+```go
+import "github.com/noobmaisfier/qlx/qext/hstore"
+
+q.Select(Items.ID, hstore.Get(Items.Attrs, "color").As("color")).
+    From(Items).Where(hstore.HasKey(Items.Attrs, "color"))
 ```
 
 ---
 
-## 12. Transactions & Retries
-
-Transactions are started via `client.InTx`. The callback receives a `*pgxexec.Tx` and statements run directly on it:
+## 12. Transactions, Retries & Error Classification
 
 ```go
 err := client.InTx(ctx, pgx.TxOptions{
     IsoLevel: pgx.ReadCommitted,
 }, pgxexec.Retry{
-    Attempts: 3, // Automatically retries deadlocks and serialization failures (40001, 40P01)
+    Attempts: 3, // Default 5; retries deadlocks (40P01) and serialization failures (40001)
 }, func(ctx context.Context, tx *pgxexec.Tx) error {
-    _, err := tx.Exec(ctx,
-        q.Update(Accounts).
-            Set(Accounts.Balance.ToX(Accounts.Balance.Sub(100))).
-            Where(Accounts.ID.Eq(fromID)))
-    if err != nil {
-        return err // Automatically rolls back
+    if _, err := tx.Exec(ctx,
+        q.Update(Accounts).Set(Accounts.Balance.ToX(Accounts.Balance.Sub(100))).Where(Accounts.ID.Eq(fromID))); err != nil {
+        return err // Rolls back
     }
-
-    _, err = tx.Exec(ctx,
-        q.Update(Accounts).
-            Set(Accounts.Balance.ToX(Accounts.Balance.Add(100))).
-            Where(Accounts.ID.Eq(toID)))
-    if err != nil {
-        return err // Automatically rolls back
+    if _, err := tx.Exec(ctx,
+        q.Update(Accounts).Set(Accounts.Balance.ToX(Accounts.Balance.Add(100))).Where(Accounts.ID.Eq(toID))); err != nil {
+        return err // Rolls back
     }
-
-    return nil // Automatically commits
+    return nil // Commits
 })
+
+// Error helpers in pgxexec:
+// pgxexec.IsUnique(err, "users_email_key")
+// pgxexec.IsForeignKey(err, "")
+// pgxexec.IsNotNull(err, "")
+// pgxexec.IsCheck(err, "")
+// pgxexec.IsSerialization(err)
+// pgxexec.IsNoRows(err)
 ```
 
 ---
 
-## 13. Strict Rules & Anti-Hallucination Checklist
+## 13. Static Analyzer (`qlxvet`)
+
+Run as a `go vet` tool (`go install github.com/noobmaisfier/qlx/analyzer/cmd/qlxvet@latest`):
+```bash
+go vet -vettool=$(which qlxvet) -targets=16,17,18,19 ./...
+```
+* Flags: `-targets` (default `18,19`, keep in sync with `qlx.yaml` `targets`), `-audit` (reports all `//qlx:ignore` suppressions with V011).
+* Suppress a finding with a comment on the same or previous line: `//qlx:ignore <mandatory reason>` (missing reason triggers `V010`).
+* Key rule codes (`V001`–`V033`, `V027` retired):
+  - `V001` discarded immutable builder; `V002` `Update`/`DeleteFrom` without `Where`/`All`; `V003`/`V005` `Register` rules; `V004` discarded `SQL`/`Render`; `V006` out-of-scope column; `V007`/`V014` aggregate/GROUP BY mismatch; `V008` missing required INSERT columns; `V009` feature newer than `-targets`; `V012`/`V013` malformed/contradictory clauses; `V015` EXPLAIN option rules; `V018` result type `R` vs SELECT columns mismatch (count, order, names, Go types, nullability); `V019`/`V020` window rules; `V021`/`V022` table function / SQL-JSON rules; `V026` conflict target/assign table mismatch; `V028` `FOR UPDATE/SHARE` with `DISTINCT`/`GROUP BY`/aggregates/windows; `V029` `DISTINCT` vs `ORDER BY`; `V030` `ToNull()` on non-nullable column; `V031` `qt.Opt[qt.Null[T]]` without `json:",omitzero"`; `V032` `OrderBy`/`Limit`/`Offset`/`FetchFirst` on `qpage` base `SELECT`; `V033` `qpage.Sorts` without `Tiebreak`.
+
+---
+
+## 14. Strict Rules & Anti-Hallucination Checklist
 
 When generating Go code with QLX, you **MUST** follow these rules:
 
@@ -842,17 +981,22 @@ When generating Go code with QLX, you **MUST** follow these rules:
 3. **NEVER use `.To` to assign an expression in UPDATE/INSERT**:
    - ❌ `Users.Balance.To(Users.Balance.Add(10))`
    - ✅ `Users.Balance.ToX(Users.Balance.Add(10))`
-4. **NEVER use Go pointers (`*string`, `*int64`) for database nullability**:
+4. **NEVER invent `MergeInto` / `DoUpdate` / `DoInsert` on MERGE**:
+   - ❌ `q.MergeInto(Users)...WhenMatched().DoUpdate(...)`
+   - ✅ `q.Merge(Users)...WhenMatched().ThenUpdate(...)` / `.WhenNotMatched().ThenInsert(...)`
+5. **NEVER use `qt.NewNumeric(...)`**:
+   - ❌ `qt.NewNumeric("0.10")`
+   - ✅ `qt.Numeric("0.10")`
+6. **NEVER use Go pointers (`*string`, `*int64`) for database nullability**:
    - ❌ `type Row struct { Nickname *string }`
    - ✅ `type Row struct { Nickname qt.Null[string] }`
-5. **NEVER perform an `Update` or `DeleteFrom` without `.Where` or `.All`**:
+7. **ALWAYS wrap `NOT NULL` columns from the optional side of `LEFT`/`RIGHT`/`FULL JOIN` with `q.Nullable(...)`** and scan them into `qt.Null[T]`.
+8. **NEVER perform an `Update` or `DeleteFrom` without `.Where` or `.All`**:
    - ❌ `q.DeleteFrom(Orders)`
-   - ✅ `q.DeleteFrom(Orders).Where(Orders.ID.Eq(1))`
-   - ✅ `q.DeleteFrom(Orders).All()`
-6. **ALWAYS alias computed columns to match struct field names**:
+   - ✅ `q.DeleteFrom(Orders).Where(Orders.ID.Eq(1))` or `q.DeleteFrom(Orders).All()`
+9. **ALWAYS alias computed columns to match struct field names**:
    - ❌ `q.Select(q.CountAll()).From(...)` scanned into struct with `Count int64`
    - ✅ `q.Select(q.CountAll().As("count")).From(...)`
-7. **ALWAYS remember to place `//qlx:row` above custom result structs and instruct running `qlx rows ./...`**.
-8. **ALWAYS use `nonzero` instead of `required` for `qt.Date`, `qt.ID`, `qt.Timestamptz`, `qt.Range` in DTO validation**.
-9. **ALWAYS use `validate:"omitnil,..."` (not `omitempty`) on `qt.Opt` PATCH fields when `""` or `0` should fail validation, and `json:",omitzero"` (not `omitempty`) on `qt` struct fields**.
-10. **ALWAYS call `qpage.SetSecret` at startup, select all `qpage` sort/tiebreak key columns under their own names, and NEVER add `.OrderBy(...)` or `.Limit(...)` to the base `SELECT` passed to `client.Page` / `tx.Page` (enforced by `qlxvet` V032/V033)**.
+10. **ALWAYS place `//qlx:row` above custom result structs and run `qlx rows ./...`**.
+11. **ALWAYS use `nonzero` instead of `required` for `qt.Date`, `qt.ID`, `qt.Timestamptz`, `qt.Range` in DTO validation**, import `github.com/noobmaisfier/qlx/qjson/validator` as `qvalidator`, use `validate:"omitnil,..."` (not `omitempty`) on `qt.Opt` PATCH fields, and `json:",omitzero"` (not `omitempty`) on `qt` struct fields.
+12. **ALWAYS call `qpage.SetSecret` at startup** (and `qt.SetIDKey` if using `ids: string`), select all `qpage` sort/tiebreak key columns under their own names, and NEVER add `.OrderBy(...)` or `.Limit(...)` to the base `SELECT` passed to `client.Page` / `tx.Page` (enforced by `qlxvet` V032/V033).
